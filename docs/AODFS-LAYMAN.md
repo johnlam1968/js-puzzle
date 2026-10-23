@@ -5,9 +5,10 @@
 > argument, complexity). This file is the *layman's version*: what the algorithm does, why it exists,
 > and what it is allowed to claim. Where the two disagree, DESIGN.md wins.
 
-**Status of this document:** 2026-10-23 (17:25 UTC). The numbers marked ✅ are measured and
-reproducible with the snippets in §7. The numbers marked ⚠️ belong to work that was still **in flight**
-when this was written (the solver, `src/solver.py`, is not on `main` yet) — see §6.
+**Status of this document:** 2026-10-23 (18:05 UTC), against `main` = `cf21c25792`
+("Implements M4: the readings-driven AODFS solver"). Numbers marked ✅ are measured and reproducible
+with the snippets in §7. Numbers marked ⚠️ were measured during work that was still in flight and may
+have moved on — see §6.
 
 ---
 
@@ -128,8 +129,8 @@ The `d = 0` rule is by far the strongest, because a capitol pins the symmetry. M
 | 4×4, anchor (2,1) | 379 | **7** | 1.8% |
 | 11×11, anchor (6,8) | 2,422 | **7** | 0.3% |
 
-On the 4×4 the same rule cut the *generated candidate states* for one anchor from 664 to 155
-(4×) ⚠️.
+On the 4×4 the same rule cut the *generated candidate states* for one anchor from 1,123 to 297
+(3.8×) ✅ (the snippet is in §7).
 
 ### One trap worth writing down
 
@@ -155,19 +156,142 @@ the *existence* side is valid: a cell reading `v` has a capitol within Manhattan
   640 shape types / 562,308 tilings / 559,585 with at least one capitol.
 * **The growth machinery** (`src/grow.py`) is implemented and tested (`tests/test_grow.py`).
 
-### ⚠️ In flight at the time of writing (not on `main`)
+### ⚠️ Measured while the work was still in flight (read the date before quoting)
 
-* **The solver** (`src/solver.py`) merges "grow a state" and "place a state" into one DFS. It was
-  still being written when this document was written, and it is **not committed to `main`**.
-* **4×4 with all 16 cells hinted: 200,000 nodes and no answer yet.** With every cell constrained,
-  the search should be nearly trivial, so this is a *pruning* defect, not a scale problem.
-* **11×11 is running with a 3,000,000-node budget** and had not produced a result.
+* **The solver is on `main`** as of `cf21c25792` ("Implements M4: the readings-driven AODFS
+  solver", adding `src/solver.py` and `tests/test_solver.py`). It merges "grow a state" and
+  "place a state" into one DFS, and its verdict is three-valued (`unique` is true only when the
+  search was **exhaustive** *and* the answer set has one element).
+* **4×4 with every cell hinted: the search finds the right answers but does not finish.** It
+  returns `{112, 304}` — correct — but needs more than 400,000 nodes to do it, and it had not
+  exhausted the space. This is a *throughput* problem, not a correctness problem; see §6.1 and
+  §6.2.
+* **11×11 was running with a 3,000,000-node budget** and had produced no answers after the first
+  200,000 nodes (237 nodes/s).
 * Honest complexity budget (DESIGN.md §3.5): ~10⁴–10⁸ candidates per anchor, 10⁹–10¹¹ nodes
   overall ⇒ a **node budget is mandatory**, and exhausting it must be reported as `unknown` —
   never as "unique".
 
 > **The honest one-liner:** AODFS is currently *the only route that has been seriously argued* and
 > *the direction the implementation is actually taking* — it is **not** a finished solver.
+
+### 6.1 What the solver actually does today (measured)
+
+Five runs of `src/solver.py` as it stands on `main` = `cf21c25792` ✅:
+
+| instance | hints | budget | answers found | nodes | wall clock | rate |
+|---|---|---|---|---|---|---|
+| 4×4 `counterexample` (fully revealed) | 16/16 | 400,000 | **[112, 304]** ✅ = the fixture's expected set | 400,001 | 271 s | 1,476 /s |
+| 4×4 hand-built | 15/16 | 50,000 | none | 50,001 | 25 s | 1,973 /s |
+| 4×4 hand-built | 15/16 | 200,000 | none | 200,001 | 122 s | 1,638 /s |
+| 4×4 hand-built | 15/16 | 2,000,000 | **none** | 2,000,001 | 839 s | 2,383 /s |
+| 11×11 official | 33/121 | 200,000 (of 3,000,000) | none so far | 200,000 | 846 s | **237 /s** |
+
+Two things to read off this table:
+
+1. **The solver is not wrong — it is slow.** On the fully revealed 4×4 it returns exactly the
+   answer set the fixture predicts, `{112, 304}`, with `cardinality=2` — the hardest semantic case
+   in the family, and it gets it right. The completeness of the readings-driven path is therefore
+   *supported*, not merely hoped for.
+2. **But sparsity kills it.** 33 hints on 121 cells is a much weaker constraint than 16 hints on 16
+   cells, and at that sparsity the 4×4 finds *nothing* in 2,000,000 nodes. The 11×11 is the same
+   story with 237 nodes/s: 3,000,000 nodes would take **3.5 hours** and, on the 4×4 evidence, would
+   probably still return `answers=[]`.
+
+### 6.2 Where the time actually goes
+
+A `cProfile` run over 60,001 nodes of the fully revealed 4×4 (94.7 s under the profiler) ✅:
+
+| hot spot | cost | why |
+|---|---|---|
+| `rules.py:75 symmetry_group` | **25.3 s (27%)** | the *full point group* of a state, recomputed at every growth step |
+| `rules.py:137 capitol_of` | **27.7 s (29%)** | calls `symmetry_group` **again** ⇒ the group is computed twice per check |
+| `solver.py:83` (the LB inner scan) | 11.2 s (12%) | 13.9 M generator calls: for every hint, scan all n² cells |
+| `min` over that scan | 18.0 s (19%, overlapping) | the same scan's inner `min` |
+| `solver.py:63/69 _orbits` / `_fixed` | 8.0 s (8%) | 1.7 M cache *lookups* — hoisted out of the loop would vanish |
+| `solver.py:170` (orbit leaves the board) | 3.5 s | 4.3 M generator calls, re-checked for every symmetry at every state |
+
+Four concrete fixes, in the order I would make them:
+
+1. **Skip the point group for even-sized states.** A state can only have a capitol if its area is
+   **odd** (PLAN D43: a symmetry that fixes exactly one cell leaves the rest in pairs). The parity
+   of the area is known for free while growing — a pair-orbit adds 2, a quarter-turn orbit adds 4,
+   a fixed cell adds 1 — so half of all the `symmetry_group` calls can be skipped outright, and the
+   remaining ones halve again by not calling `capitol_of` on top of `symmetry_group`.
+2. **Make the lower-bound check proportional to the candidates, not to the board.** `solver.py:83`
+   scans all n² cells *per hint* and rebuilds a fresh big integer for each one. Iterating over the
+   **set bits** of `possible` instead (and building that list once per call, not once per hint)
+   turns O(hints × n²) into O(n² + hints × k), where k is the number of cells that can still be a
+   capitol — and k shrinks as the search deepens.
+3. **Precompute the board-feasible symmetries, per anchor.** The symmetry loop sweeps **all** 2,422
+   symmetries for every new state on the 11×11, and 89% of them die one line later because their
+   orbit leaves the frame. Measured ✅: for a given anchor only **261–287 of 2,422** symmetries
+   (≈11%) have an on-board orbit. The board never changes, so this is a static table
+   (2,422 × 121 entries) built once — a **~9× cut** on the symmetry fan-out.
+4. **Hoist `_orbits(sym)` / `_fixed(sym)` out of the inner loops** and compute the state→capitol
+   distances with **one BFS from the capitol** instead of one BFS per hinted cell inside the state
+   (`_ub_violates` / `_path_cost`).
+
+None of these change what the solver *decides*; they change how long it takes to decide it. That
+is why they come before any new pruning rule.
+
+### 6.3 The gap that matters most: no 4×4 regression gate
+
+`tests/test_solver.py` covers the 2×2 case and the semantics of budget exhaustion, but there is
+**no test that says "4×4, all 16 cells hinted ⇒ the right answer, in a bounded number of nodes"**.
+
+That single missing gate is why the current state is hard to read:
+
+* Without it, "slow" is unquantified — nobody can tell a 2× slowdown from a 100× one.
+* With it, every pruning change has a number to move, and the 11×11 work stops being a leap of
+  faith.
+
+The 4×4 with all 16 cells hinted is the cheapest possible benchmark: the answer is known, the
+tilings are enumerable (562,308 of them, 559,585 with a capitol), and the correct answer can be
+computed offline. A solver that cannot do that quickly has a defect that will only be 1000× more
+expensive on the 11×11.
+
+**Use the fixture that already exists.** `data/puzzles/counterexample-4x4-two-answers/` is a *fully
+revealed* 4×4 (all 16 cells hinted) whose cost field is compatible with **two** answers, 304 and
+112. It is the ideal gate because it exercises three things at once: the maximum number of hints,
+the "two answers" path, and the three-valued verdict (it must report `cardinality=2`,
+`unique=false`, and `exhaustive=true` once the search completes — PLAN V21).
+
+The solver already gets the **answers** right on it (§6.1); what is missing is the *node count* and
+the `exhaustive=true` part, which needs the search to finish rather than to hit a budget. A gate
+like `answers == {112, 304} and exhaustive is True and nodes < N` turns "the solver is slow" into
+a number that every optimisation has to move.
+
+⚠️ Note: that fixture is one of the two files with **1-based** hints — see §6.4 — so the gate must
+convert, or the fixtures must be normalised first.
+
+### 6.4 A contract bug found while writing this document
+
+The three puzzle fixtures in `data/puzzles/` **do not agree on the indexing of `hints[]`**:
+
+| fixture | `hints[0].row` | indexing |
+|---|---|---|
+| `official-11x11` | 0 | **0-based** ✅ (matches the schema) |
+| `official-example-5x5` | 1 | **1-based** ❌ |
+| `counterexample-4x4-two-answers` | 1 | **1-based** ❌ |
+
+`data/schema/puzzle.schema.json` says `grid` is "row-major, 0-based" and `hints` is "hint cells,
+0-based (row, col), consistent with grid[r][c]". `README.md` contradicts it ("1-based hints in
+`hints[]`"). And `src/solver.py`'s command line reads hints as 0-based — so the CLI agrees with the
+schema and with the 11×11, and **misreads the other two fixtures**.
+
+Three consequences, in increasing order of severity:
+
+1. The solver has **no validation** that a hint coordinate lies inside the frame, so a 1-based
+   file does not produce a clean error — it produces
+   `IndexError: list index out of range` from the Manhattan table.
+2. Any test or benchmark built on the 5×5 example or the 4×4 counterexample must convert
+   1-based → 0-based **by hand** until the fixtures are normalised.
+3. The target puzzle itself is the odd one out: it is the only file that already follows the
+   schema, so a future "normalisation" of the other two files must not touch it.
+
+This is worth fixing before the 4×4 gate is written, otherwise the gate will be measuring a
+coordinate offset rather than a pruning defect.
 
 ---
 
@@ -213,6 +337,50 @@ for g in sorted(groups, key=sorted):
 
 The last group has one element — the lonely cell `(2, 1)`, which is the capitol recorded in
 `truth.json` as `state_capitol[0] = [2, 1]`.
+
+**How much the `d = 0` rule buys on the candidate states** (§5):
+
+```python
+import sys; sys.path.insert(0, 'src')
+from solver import Solver
+from grow import grow_states
+
+hints = {(0,1):3,(0,2):6,(0,3):10,(1,0):3,(1,1):3,(1,2):6,(1,3):6,
+         (2,0):3,(2,1):0,(2,2):3,(2,3):3,(3,0):0,(3,1):3,(3,2):3,(3,3):0}
+s = Solver(4, hints)
+anchor = (2, 1)                      # a cell that reads 0 => it is a capitol
+
+def count(restrict):
+    n = 0
+    for sym in s._syms:
+        if restrict and anchor not in s._fixed(sym):
+            continue                 # the symmetry must fix the capitol
+        orb = s._orbits(sym)
+        if any(c not in s.idx for c in orb[anchor]):
+            continue                 # the orbit leaves the board
+        n += len(grow_states(anchor, sym, 4))
+    return n
+
+print(count(False), count(True))
+# 1123 297
+```
+
+**The fully revealed 4×4 benchmark of §6.1** (mind the 1-based hints of that fixture — see §6.4):
+
+```python
+import json, sys, time; sys.path.insert(0, 'src')
+from solver import solve_grid
+
+p = json.load(open('data/puzzles/counterexample-4x4-two-answers/puzzle.json'))
+hints = {(h['row'] - 1, h['col'] - 1): h['value'] for h in p['hints']}   # 1-based -> 0-based
+
+t0 = time.time()
+res = solve_grid(4, hints, budget=400_000)
+print(res['answers'], res['cardinality'], res['exhaustive'], res['nodes'], time.time() - t0)
+# [112, 304] 2 False 400001 271.0...
+```
+
+The expected answer set is the fixture's own `answers: [304, 112]`.
 
 ---
 
