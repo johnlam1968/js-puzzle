@@ -236,6 +236,10 @@ class Catalogue:
         cl = [self.cells[i] for i in range(self.n * self.n) if (mask >> i) & 1]
         return capitol_of(cl) is not None
 
+    def cells_of(self, mask: int) -> List[Cell]:
+        """The cells of a state mask."""
+        return [self.cells[i] for i in range(self.n * self.n) if (mask >> i) & 1]
+
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="enumerate legal states and tilings of an NxN frame")
