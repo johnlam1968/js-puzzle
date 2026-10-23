@@ -3,7 +3,9 @@
 import os
 import base64, json, os, urllib.request, time
 
-PLAN = os.path.join(HERE, "PLAN-puzzle-generator.md"
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, ".."))
+PLAN = os.path.join(ROOT, "PLAN.md")
 plan = open(PLAN, encoding="utf-8").read()
 
 PROMPT = f"""Adversarial review of an implementation plan. ANSWER DIRECTLY AND CONCISELY.
@@ -58,12 +60,12 @@ t0 = time.time()
 with urllib.request.urlopen(req, timeout=900) as r:
     raw = r.read().decode()
 d = json.loads(raw)
-open(os.path.join(HERE, "ds-final-raw.json", "w").write(raw)
+open(os.path.join(HERE, "ds-final-raw.json"), "w").write(raw)
 msg = d["choices"][0]["message"]
 c = msg.get("content") or ""
 print(f"finish={d['choices'][0].get('finish_reason')} content={len(c)} "
       f"reasoning={len(msg.get('reasoning_content') or '')} usage={json.dumps(d.get('usage'))} t={time.time()-t0:.0f}s")
-open(os.path.join(HERE, "REVIEW-deepseek-v4.1-flash.md", "w").write(
+open(os.path.join(HERE, "REVIEW-deepseek-v4.1-flash.md"), "w").write(
     "# DeepSeek-V4.1-Flash 对抗式评审（计划 v2）\n\n"
     "- 模型: `deepseek-flash` = DeepSeek-V4.1-Flash（DeepSeek 官方 API，effort=low 精简档）\n"
     "- 输入: 计划 v2 全文 + 官方题面规则原文\n"

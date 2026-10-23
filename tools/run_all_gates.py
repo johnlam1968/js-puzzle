@@ -46,6 +46,8 @@ def run(name: str, argv: list, timeout: int = 1800) -> bool:
 
 
 GATES = [
+    ("every python file compiles (py_compile over the whole tree)",
+     [PY, "tools/compile_all.py"], 300),
     ("data contract (fixtures vs engine, 0-based coordinates)",
      [PY, "tools/check_contract.py"], 600),
     ("test suite",
@@ -56,6 +58,10 @@ GATES = [
      [PY, "tools/validate.py", "--selftest"], 600),
     ("the 11x11's 33 numbers, re-derived from the source image",
      [PY, "tools/verify_11x11_numbers.py"], 300),
+    ("the 11x11 capitol bound: the engine against data/derived/",
+     [PY, "tools/capitol_bound_11x11.py"], 300),
+    ("the reviewers' claims, re-verified against the engine",
+     [PY, "tools/verify_reviews.py"], 300),
 ]
 
 

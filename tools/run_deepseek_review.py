@@ -7,8 +7,10 @@ effort=high, generous max_tokens (v1 died with finish_reason=length: all budget 
 import os
 import base64, json, os, sys, urllib.request, time
 
-PLAN = os.path.join(HERE, "PLAN-puzzle-generator.md"
-IMG = os.path.join(HERE, "metric-too.png"
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, ".."))
+PLAN = os.path.join(ROOT, "PLAN.md")
+IMG = os.path.join(ROOT, "assets", "metric-too.png")
 MODEL = "deepseek-flash"
 BASE = "https://api.deepseek.com/chat/completions"
 
@@ -124,15 +126,16 @@ def call(tag, content_parts, max_tokens=30000):
     with urllib.request.urlopen(req, timeout=1200) as r:
         raw = r.read().decode()
     d = json.loads(raw)
-    open(fos.path.join(HERE, "ds-{tag}-raw.json", "w").write(raw)
+    open(os.path.join(HERE, f"ds-{tag}-raw.json"), "w").write(raw)
     msg = d["choices"][0]["message"]
     content = msg.get("content") or ""
     reasoning = msg.get("reasoning_content") or ""
     u = d.get("usage", {})
     print(f"[{tag}] finish={d['choices'][0].get('finish_reason')} content_chars={len(content)} "
           f"reasoning_chars={len(reasoning)} usage={json.dumps(u)} t={time.time()-t0:.0f}s")
-    open(fos.path.join(HERE, "ds-{tag}.md", "w").write(content if content.strip() else
-                                                        "### (empty content — reasoning only)\n\n" + reasoning)
+    open(os.path.join(HERE, f"ds-{tag}.md"), "w").write(
+        content if content.strip() else
+        "### (empty content — reasoning only)\n\n" + reasoning)
     return content
 
 

@@ -76,6 +76,24 @@ class Solver:
         # y's nearest capitol is a valid path from x), so the state holding x has area
         # >= |D(x) - D(y)|.  The published numbers are the exact d values, so the bound is
         # sound for the solver's contract.
+        # d = 1 means the cheapest path to the nearest capitol is ONE step of cost 1.
+        # A step of cost 1 can only come from a 1x1 state, and a 1x1 state is always a
+        # capitol.  So every d=1 cell has a 1x1 state NEXT TO it -- a forced capitol.
+        # The candidate cells are the neighbours that are not a d>0 hint (a d>0 cell can
+        # never be a capitol).  Same predicate as hitting.singleton_candidates.
+        self._d1: List[Tuple[Cell, List[Cell]]] = []
+        for (r, c), v in self.hints.items():
+            if v != 1:
+                continue
+            cands = []
+            for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nb = (r + dr, c + dc)
+                if 0 <= nb[0] < self.n and 0 <= nb[1] < self.n \
+                        and self.hints.get(nb, 0) <= 0:
+                    cands.append(nb)
+            self._d1.append(((r, c), cands))
+        self._d1_mask: Dict[Cell, int] = {
+            x: self._mask(c) for x, c in self._d1}
         self._need: Dict[Cell, int] = {}
         for (r, c), v in self.hints.items():
             best = 0
@@ -271,9 +289,10 @@ class Solver:
                 cur: Optional[FrozenSet[Cell]], sym: Optional[Symmetry],
                 possible: int, closed_here: Set[FrozenSet[Cell]],
                 grown_here: Set[int],
-                orb: Optional[Dict[Cell, FrozenSet[Cell]]] = None,
+                *, orb: Optional[Dict[Cell, FrozenSet[Cell]]] = None,
                 omask: Optional[Dict[Cell, int]] = None,
-                fixed: Optional[FrozenSet[Cell]] = None):
+                fixed: Optional[FrozenSet[Cell]] = None,
+                singletons: int = 0):
             """Grow one state at a time; when it is closed, start the next one."""
             if not self.exhaustive:
                 return
@@ -315,7 +334,8 @@ class Solver:
                     if self._lb_violates(np):
                         continue
                     rec(rem & ~start_mask, chosen, frozenset(start), s, np,
-                        closed_here, set(), orb, omask, fixed)
+                        closed_here, set(), orb=orb, omask=omask, fixed=fixed,
+                        singletons=singletons)
                     if not self.exhaustive:
                         return
                 return
@@ -330,6 +350,20 @@ class Solver:
                 return
             grown_here.add(cur_mask)
             already_closed = cur in closed_here
+            # the d=1 demands: a forced 1x1 state must still be placeable next to the cell
+            if len(cur) == 1:
+                only = next(iter(cur))
+                if self.hints.get(only, 0) == 1:
+                    return          # a 1x1 state is a capitol, so its cost would be 0, not 1
+            new_singletons = singletons
+            if len(cur) == 1:
+                new_singletons = singletons | cur_mask
+            free_outside = rem & ~cur_mask          # still unassigned, outside this state
+            for x, cands in self._d1:
+                if new_singletons & self._d1_mask[x]:
+                    continue                        # satisfied (maybe by the state just closed)
+                if not any((free_outside >> self.idx[nb]) & 1 for nb in cands):
+                    return                        # no forced 1x1 state can be placed any more
             if self._can_close(cur, cur_mask) and not already_closed:
                 closed_here.add(cur)
                 cap = self._state_info(cur_mask, cur)[1]
@@ -340,7 +374,8 @@ class Solver:
                 if cap is not None:
                     np |= 1 << self.idx[cap]
                 if not self._lb_violates(np):
-                    rec(rem & ~cur_mask, chosen + [cur], None, None, np, set(), set())
+                    rec(rem & ~cur_mask, chosen + [cur], None, None, np, set(), set(),
+                        singletons=new_singletons)
                     if not self.exhaustive:
                         return
             frontier = {nb for x in cur for nb in ((x[0] + 1, x[1]), (x[0] - 1, x[1]),
@@ -367,7 +402,8 @@ class Solver:
                     continue
                 # the new orbit's cells leave the remaining region as well
                 rec(rem & ~o_mask, chosen, frozenset(newcur), sym, np,
-                    closed_here, grown_here, orb, omask, fixed)
+                    closed_here, grown_here, orb=orb, omask=omask, fixed=fixed,
+                    singletons=new_singletons)
                 if not self.exhaustive:
                     return
 
@@ -377,7 +413,7 @@ class Solver:
         for (r, c), v in self.hints.items():
             if v > 0:
                 start_possible &= ~(1 << self.idx[(r, c)])
-        rec(full, [], None, None, start_possible, set(), set())
+        rec(full, [], None, None, start_possible, set(), set(), singletons=0)
         return {
             "answers": sorted(self.answers),
             "cardinality": len(self.answers),
