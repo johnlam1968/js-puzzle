@@ -19,12 +19,12 @@ jobs:
           python-version: "3.11"
 
       - name: install dependencies
-        # The repository has no requirements.txt yet, but two gates need third-party
-        # packages: numpy (src/tiletable.py) and Pillow (the OCR chain that re-derives
-        # the 11x11's 33 numbers from the source image).  A clean runner has neither.
+        # The repository's own code is stdlib-only, but the gate suite needs numpy and
+        # Pillow (src/tiletable.py; the OCR chain that re-derives the 11x11's 33 numbers
+        # from the source image).  A clean runner has neither.
         run: |
           python3 -m pip install --upgrade pip
-          python3 -m pip install pillow numpy
+          python3 -m pip install -r requirements.txt
 
       - name: compile every python file
         run: |
