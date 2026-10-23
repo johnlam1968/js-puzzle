@@ -94,7 +94,10 @@ Pixels exist **only** at the ingest boundary. Everything downstream reads JSON.
 | `src/grow.py` | AODFS orbit growth: build states by adding symmetry orbits |
 | `src/hitting.py` | capitol positions as a hitting set (exact minimum + dual packing bound) |
 | `src/tilings.py` | legal states and the exact-cover tiling DP |
-| `check_contract.py` | 63 data-contract assertions; exit code 0 = all green |
+| `check_contract.py` | data-contract assertions (fixtures vs engine, 0-based coordinates); exit code 0 = all green |
+| `run_all_gates.py` | **runs every gate** (contract, tests, generator self-check, validator, 11×11 numbers) and fails if any fails |
+| `generator_selfcheck.py` | builds a puzzle, re-verifies it from scratch, and asks the solver to recover the answer from the hints alone |
+| `verify_11x11_numbers.py` | re-derives the official 11×11's 33 numbers from the source image and compares them with the fixture (33/33) |
 | `validate.py` | validate a candidate state partition against the published numbers |
 | `shapes4x4.py` | 4×4 shape catalogue + tiling counts (three countings) |
 | `tilings_by_capitols.py` | tilings stratified by number of capitols |
@@ -109,6 +112,19 @@ Pixels exist **only** at the ingest boundary. Everything downstream reads JSON.
 | `verify_reviews.py` | independently re-verifies claims made by reviewers |
 
 Everything is **Python standard library only**.
+
+### Running the gates
+
+```
+python3 tools/run_all_gates.py          # all five gates, non-zero exit if any fails
+python3 tools/run_all_gates.py --quick  # just the contract and the test suite
+```
+
+A gate with an exit code that nobody calls is not a gate, so there is also a GitHub
+Actions workflow (`.github/workflows/gates.yml`) that runs the same command on every push
+and pull request.  *If that file is missing from your checkout, the push token in use
+lacked the `workflow` scope; create it once with a token that has it, or paste the file
+in through the GitHub web UI — it is 20 lines.*
 
 ---
 
