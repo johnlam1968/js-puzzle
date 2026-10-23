@@ -35,24 +35,49 @@
  ],
  "hints": [
   {
-   "row": 1,
+   "row": 0,
+   "col": 0,
+   "value": 1
+  },
+  {
+   "row": 0,
    "col": 1,
    "value": 1
   },
   {
-   "row": 1,
+   "row": 0,
    "col": 2,
    "value": 1
   },
   {
-   "row": 1,
+   "row": 0,
    "col": 3,
    "value": 1
   },
   {
    "row": 1,
-   "col": 4,
-   "value": 1
+   "col": 0,
+   "value": 0
+  },
+  {
+   "row": 1,
+   "col": 1,
+   "value": 0
+  },
+  {
+   "row": 1,
+   "col": 2,
+   "value": 0
+  },
+  {
+   "row": 1,
+   "col": 3,
+   "value": 0
+  },
+  {
+   "row": 2,
+   "col": 0,
+   "value": 0
   },
   {
    "row": 2,
@@ -70,8 +95,8 @@
    "value": 0
   },
   {
-   "row": 2,
-   "col": 4,
+   "row": 3,
+   "col": 0,
    "value": 0
   },
   {
@@ -87,33 +112,9 @@
   {
    "row": 3,
    "col": 3,
-   "value": 0
-  },
-  {
-   "row": 3,
-   "col": 4,
-   "value": 0
-  },
-  {
-   "row": 4,
-   "col": 1,
-   "value": 0
-  },
-  {
-   "row": 4,
-   "col": 2,
-   "value": 0
-  },
-  {
-   "row": 4,
-   "col": 3,
-   "value": 0
-  },
-  {
-   "row": 4,
-   "col": 4,
    "value": 0
   }
  ],
- "hint_count": 16
+ "hint_count": 16,
+ "coordinate_base": 0
 }

@@ -49,7 +49,11 @@ data/schema/                 JSON Schema for both files
 
 Pixels exist **only** at the ingest boundary. Everything downstream reads JSON.
 
-* `grid[r][c]` = the hint value, or `null` for a blank cell (1-based hints in `hints[]`).
+* `grid[r][c]` = the hint value, or `null` for a blank cell.  **All coordinates in
+  `hints[]` are 0-based** (`row`, `col`), consistent with `grid[r][c]` and with
+  `data/schema/puzzle.schema.json`.  (The README used to say 1-based while the schema said
+  0-based, and two of the three fixtures really were 1-based -- `tools/check_contract.py`
+  now gates every fixture on this.)
 * `states[r][c]` = state label (0-based matrix); `state_sizes[k]` = cell count of label `k`.
 * `state_capitol[k]` = `[row, col]` or `null`; `capitols` = the capitol cells of states that have one.
 * Invariant: `capitols` == the set of cells where `d_field == 0`; `sum(row_sums) == sum(|S|²)`.

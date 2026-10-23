@@ -52,6 +52,16 @@ class Solver:
         self._syms = symmetry_choices(n)
         self._orb_cache: Dict[int, Dict[Cell, FrozenSet[Cell]]] = {}
         self._fixed_cache: Dict[int, FrozenSet[Cell]] = {}
+        # per symmetry: the mask of every cell's orbit, and the cells whose orbit lies
+        # fully on the board.  These are static (the board never changes), so the two
+        # per-node orbit checks become O(1) integer tests instead of two set scans.
+        self._orbdata_cache: Dict[int, Tuple[Dict[Cell, FrozenSet[Cell]],
+                                             Dict[Cell, int], FrozenSet[Cell]]] = {}
+        # per state mask: (has a non-trivial symmetry, capitol or None).  ONE symmetry
+        # group computation per state instead of two (capitol_of used to recompute it).
+        self._state_cache: Dict[int, Tuple[bool, Optional[Cell]]] = {}
+        # per anchor: the symmetries that can grow a state containing it
+        self._anchor_cache: Dict[Cell, list] = {}
         self.answers: Set[int] = set()
         self.solutions: List[List[FrozenSet[Cell]]] = []
         self.nodes = 0
@@ -61,6 +71,19 @@ class Solver:
         # per-hint cells ordered by Manhattan distance: the lower-bound check stops at the
         # FIRST still-possible cell instead of scanning the whole bitmask (the scan was
         # ~33 hints x 90 cells per node and dominated the runtime on the 11x11)
+        # L3/L2 area lower bound: for two ADJACENT hinted cells x and y the step between
+        # them costs w = min(size_x, size_y), and |d(x) - d(y)| <= w (the path x -> y ->
+        # y's nearest capitol is a valid path from x), so the state holding x has area
+        # >= |D(x) - D(y)|.  The published numbers are the exact d values, so the bound is
+        # sound for the solver's contract.
+        self._need: Dict[Cell, int] = {}
+        for (r, c), v in self.hints.items():
+            best = 0
+            for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nb = (r + dr, c + dc)
+                if nb in self.hints:
+                    best = max(best, abs(v - self.hints[nb]))
+            self._need[(r, c)] = best
         self._near: Dict[Cell, List[Tuple[int, int]]] = {}
         for (r, c), v in self.hints.items():
             row = self._manh[r * self.n + c]
@@ -79,6 +102,76 @@ class Solver:
         if k not in self._fixed_cache:
             self._fixed_cache[k] = sym.fixed_points(self.n)
         return self._fixed_cache[k]
+
+    def _orbitdata(self, sym: Symmetry):
+        """(orbits, orbit masks, on-board cells) for one symmetry -- computed once.
+
+        Only 261-287 of the 2,422 symmetries of an 11x11 board have their orbit fully
+        inside the board for a given anchor, so the previous "does the orbit leave the
+        board?" scan was rejecting ~89% of the branches one cell at a time.
+        """
+        k = id(sym)
+        d = self._orbdata_cache.get(k)
+        if d is None:
+            orb = self._orbits(sym)
+            masks: Dict[Cell, int] = {}
+            onboard = set()
+            for cell, o in orb.items():
+                if any(c not in self.idx for c in o):
+                    continue
+                m = 0
+                for c in o:
+                    m |= 1 << self.idx[c]
+                masks[cell] = m
+                onboard.add(cell)
+            d = (orb, masks, frozenset(onboard))
+            self._orbdata_cache[k] = d
+        return d
+
+    def _anchor_syms(self, anchor: Cell):
+        """The symmetries that can grow a state containing `anchor`, with their orbit data.
+
+        Static per anchor: the board never changes, so this is computed once per anchor
+        and reused.  For a given anchor only a small fraction of the lattice symmetries
+        have their orbit fully on the board (on the 11x11: 261-287 of 2,422), and the
+        old code discovered that one cell at a time, inside the search.
+        """
+        hit = self._anchor_cache.get(anchor)
+        if hit is None:
+            out = []
+            for sym in self._syms:
+                orb, omask, onboard = self._orbitdata(sym)
+                if anchor in onboard:
+                    out.append((sym, orb, omask, self._fixed(sym)))
+            hit = out
+            self._anchor_cache[anchor] = hit
+        return hit
+
+    def _state_info(self, cur_mask: int, cur: FrozenSet[Cell]) -> Tuple[bool, Optional[Cell]]:
+        """(has a non-trivial symmetry, capitol) for a state -- ONE group computation.
+
+        The rules module computed the symmetry group twice per state: once for the
+        legality test and once inside capitol_of.  The capitol is derived from the very
+        same group here, and the result is cached by the state's mask, so a state that
+        shows up in several branches is computed once.
+        """
+        hit = self._state_cache.get(cur_mask)
+        if hit is not None:
+            return hit
+        group = symmetry_group(cur)
+        cap: Optional[Cell] = None
+        if group:
+            # only an ODD-sized state can carry a capitol: a symmetry that fixes exactly
+            # one cell pairs up all the others, so the area is odd (PLAN D43)
+            if len(cur) % 2 == 1:
+                fixed = list(group.values())
+                if all(len(fs) == 1 for fs in fixed):
+                    unique = {next(iter(fs)) for fs in fixed}
+                    if len(unique) == 1:
+                        cap = unique.pop()
+        hit = (bool(group), cap)
+        self._state_cache[cur_mask] = hit
+        return hit
 
     # ------------------------------------------------------------------ #
     def _lb_violates(self, possible: int) -> bool:
@@ -105,12 +198,30 @@ class Solver:
         return False
 
     def _ub_violates(self, state: FrozenSet[Cell], cap: Cell) -> bool:
+        """The state is already cheaper than a published number: the branch is dead.
+
+        One BFS from the capitol gives the step count to every cell of the state; the
+        cost of a path is (steps x state size), because every step enters the state.
+        The old code ran a separate BFS per hinted cell of the state.
+        """
         size = len(state)
+        dist = {cap: 0}
+        frontier = [cap]
+        while frontier:
+            nxt = []
+            for (r, c) in frontier:
+                d = dist[(r, c)] + 1
+                for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    nb = (r + dr, c + dc)
+                    if nb in state and nb not in dist:
+                        dist[nb] = d
+                        nxt.append(nb)
+            frontier = nxt
         for (r, c), v in self.hints.items():
             if (r, c) not in state:
                 continue
-            cost = self._path_cost(state, (r, c), cap, size)
-            if cost is not None and cost < v:
+            steps = dist.get((r, c))
+            if steps is not None and steps * size < v:
                 return True
         return False
 
@@ -159,7 +270,10 @@ class Solver:
         def rec(rem: int, chosen: List[FrozenSet[Cell]],
                 cur: Optional[FrozenSet[Cell]], sym: Optional[Symmetry],
                 possible: int, closed_here: Set[FrozenSet[Cell]],
-                grown_here: Set[int]):
+                grown_here: Set[int],
+                orb: Optional[Dict[Cell, FrozenSet[Cell]]] = None,
+                omask: Optional[Dict[Cell, int]] = None,
+                fixed: Optional[FrozenSet[Cell]] = None):
             """Grow one state at a time; when it is closed, start the next one."""
             if not self.exhaustive:
                 return
@@ -184,17 +298,13 @@ class Solver:
                 # one set per ANCHOR: a state with k symmetries is reachable under each of
                 # them, so without this the same subtree is explored k times (M1)
                 closed_here: Set[FrozenSet[Cell]] = set()
-                for s in self._syms:
-                    fixed_all = self._fixed(s)
-                    if must_fix and anchor not in fixed_all:
+                for s, orb, omask, fixed in self._anchor_syms(anchor):
+                    if must_fix and anchor not in fixed:
                         continue
-                    orb = self._orbits(s)
                     start = orb[anchor]
-                    if any(c not in self.idx for c in start):
-                        continue                     # the orbit leaves the board
-                    if any(not (rem >> self.idx[c]) & 1 for c in start):
+                    start_mask = omask[anchor]
+                    if start_mask & ~rem:
                         continue                     # the orbit hits cells already taken
-                    fixed = self._fixed(s)
                     np = possible
                     for c in start:
                         if c not in fixed:
@@ -204,8 +314,8 @@ class Solver:
                             np |= 1 << self.idx[c]
                     if self._lb_violates(np):
                         continue
-                    rec(rem & ~self._mask(start), chosen, frozenset(start), s, np,
-                        closed_here, set())
+                    rec(rem & ~start_mask, chosen, frozenset(start), s, np,
+                        closed_here, set(), orb, omask, fixed)
                     if not self.exhaustive:
                         return
                 return
@@ -220,9 +330,9 @@ class Solver:
                 return
             grown_here.add(cur_mask)
             already_closed = cur in closed_here
-            if self._can_close(cur) and not already_closed:
+            if self._can_close(cur, cur_mask) and not already_closed:
                 closed_here.add(cur)
-                cap = capitol_of(cur)
+                cap = self._state_info(cur_mask, cur)[1]
                 np = possible
                 for c in cur:
                     if c != cap:
@@ -230,22 +340,21 @@ class Solver:
                 if cap is not None:
                     np |= 1 << self.idx[cap]
                 if not self._lb_violates(np):
-                    rec(rem & ~self._mask(cur), chosen + [cur], None, None, np, set(), set())
+                    rec(rem & ~cur_mask, chosen + [cur], None, None, np, set(), set())
                     if not self.exhaustive:
                         return
-            orb = self._orbits(sym)
-            fixed = self._fixed(sym)
             frontier = {nb for x in cur for nb in ((x[0] + 1, x[1]), (x[0] - 1, x[1]),
                                                   (x[0], x[1] + 1), (x[0], x[1] - 1))
                         if 0 <= nb[0] < self.n and 0 <= nb[1] < self.n and nb not in cur}
             for x in sorted(frontier):
-                o = orb.get(x)
-                if o is None or (o & cur):
-                    continue
-                if any(c not in self.idx for c in o):
+                o_mask = omask.get(x)
+                if o_mask is None:
                     continue                         # the orbit leaves the board
-                if any(not (rem >> self.idx[c]) & 1 for c in o):
+                if o_mask & cur_mask:
+                    continue                         # overlaps the state already grown
+                if o_mask & ~rem:
                     continue                         # the orbit hits cells already taken
+                o = orb[x]
                 newcur = cur | o
                 np = possible
                 for c in o:
@@ -257,8 +366,8 @@ class Solver:
                 if self._lb_violates(np):
                     continue
                 # the new orbit's cells leave the remaining region as well
-                rec(rem & ~self._mask(o), chosen, frozenset(newcur), sym, np,
-                    closed_here, grown_here)
+                rec(rem & ~o_mask, chosen, frozenset(newcur), sym, np,
+                    closed_here, grown_here, orb, omask, fixed)
                 if not self.exhaustive:
                     return
 
@@ -280,13 +389,20 @@ class Solver:
             "solutions": [[sorted(s) for s in p] for p in self.solutions[:5]],
         }
 
-    def _can_close(self, cur: FrozenSet[Cell]) -> bool:
+    def _can_close(self, cur: FrozenSet[Cell], cur_mask: int) -> bool:
         if not connected(cur):
             return False
-        group = symmetry_group(cur)
-        if not group:
+        # the state must be big enough to carry the difference of its hinted neighbours
+        need = 0
+        for c in cur:
+            nb = self._need.get(c)
+            if nb is not None and nb > need:
+                need = nb
+        if len(cur) < need:
+            return False
+        has_group, cap = self._state_info(cur_mask, cur)
+        if not has_group:
             return False                     # no symmetry -> not a state at all
-        cap = capitol_of(cur)
         if cap is not None and self._ub_violates(cur, cap):
             return False
         return True
@@ -314,6 +430,15 @@ if __name__ == "__main__":
     p = json.load(open(path))
     n = p["size"]
     hints = {(h["row"], h["col"]): h["value"] for h in p["hints"]}
+    # The hint coordinates are 0-based (data/schema/puzzle.schema.json).  A file that
+    # uses another base used to blow up as "IndexError: list index out of range" deep
+    # inside the Manhattan table; a clean error is much easier to act on.
+    bad = [c for c in hints if not (0 <= c[0] < n and 0 <= c[1] < n)]
+    if bad:
+        raise SystemExit(
+            f"{path}: {len(bad)} hint(s) are outside the {n}x{n} board, e.g. {bad[0]}. "
+            f"Hint coordinates must be 0-based (row 0..{n-1}, col 0..{n-1}); "
+            f"this file looks 1-based -- shift every hint by -1 before using it.")
     budget = int(sys.argv[2]) if len(sys.argv) > 2 else 2_000_000
     res = solve_grid(n, hints, budget, report_every=200000)
     print(json.dumps({k: v for k, v in res.items() if k != "solutions"}, indent=1))

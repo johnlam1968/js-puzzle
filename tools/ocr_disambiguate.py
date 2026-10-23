@@ -7,7 +7,9 @@ from PIL import Image, ImageDraw, ImageFont
 from collections import defaultdict, deque
 import json
 
-SRC = os.path.join(HERE, "metric-too.png"
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, ".."))
+SRC = os.path.join(ROOT, "assets", "metric-too.png")
 im = Image.open(SRC).convert("L")
 INK = np.array(im).astype(int) < 128
 CANVAS = (20, 30)
@@ -205,7 +207,8 @@ out = {
     "cells_with_ink": len(grid),
     "numbers": grid,
 }
-json.dump(out, open(os.path.join(HERE, "fixtures_official_11x11_numbers.json", "w"),
+json.dump(out, open(os.path.join(ROOT, "data", "puzzles", "official-11x11",
+                                  "ocr_numbers.json"), "w"),
           indent=1, ensure_ascii=False)
 print("\nsaved golden file -> /workspace/jspuzzle/fixtures_official_11x11_numbers.json")
 print(json.dumps(grid, indent=1, ensure_ascii=False))

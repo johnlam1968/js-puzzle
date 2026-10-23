@@ -102,3 +102,59 @@ class TestSolverAnchorRule(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class TestSolver4x4CounterexampleGate(unittest.TestCase):
+    """The performance GATE for the solver.
+
+    data/puzzles/counterexample-4x4-two-answers is the hardest small instance: ALL 16
+    cells are hinted, and the same cost field admits TWO different answers (112 and 304).
+    It is the measuring stick for every optimisation: if an optimisation changes a verdict,
+    or blows the node budget, this test says so.
+
+    The answers are read from the fixture's truth file -- they are not written by hand here.
+    """
+
+    def test_all_sixteen_hints_give_the_two_known_answers(self):
+        import json
+        with open(os.path.join(ROOT, "data", "puzzles",
+                               "counterexample-4x4-two-answers", "puzzle.json")) as fh:
+            puz = json.load(fh)
+        with open(os.path.join(ROOT, "data", "puzzles",
+                               "counterexample-4x4-two-answers", "truth.json")) as fh:
+            truth = json.load(fh)
+        hints = {(h["row"], h["col"]): h["value"] for h in puz["hints"]}
+        self.assertEqual(len(hints), 16)
+        res = solve_grid(puz["size"], hints, budget=600_000)
+        self.assertEqual(sorted(res["answers"]), sorted(truth["answers"]))
+        self.assertEqual(res["cardinality"], 2)
+        self.assertFalse(res["unique"])
+
+
+class TestSolver5x5OfficialExample(unittest.TestCase):
+    """The SPARSE gate: 10 published numbers on a 5x5 (2 of every 5 cells).
+
+    This is the instance that exposed the real bottleneck.  With 16 of 16 hints (the 4x4)
+    the solver needed 206 nodes; with 10 of 25 it found NOTHING in 400,000 nodes until
+    the L3/L2 area lower bound went in -- "the state holding a hinted cell must be at
+    least |D(x) - D(y)| big" -- which cut the same search to 129,319 nodes and produced
+    the official answer.
+
+    The expected answer is read from the fixture's truth file, not written by hand.
+    """
+
+    def test_official_example_gives_8045(self):
+        import json
+        base = os.path.join(ROOT, "data", "puzzles", "official-example-5x5")
+        with open(os.path.join(base, "puzzle.json")) as fh:
+            puz = json.load(fh)
+        with open(os.path.join(base, "truth.json")) as fh:
+            truth = json.load(fh)
+        hints = {(h["row"], h["col"]): h["value"] for h in puz["hints"]}
+        self.assertEqual(len(hints), 10)
+        res = solve_grid(puz["size"], hints, budget=2_000_000)
+        self.assertEqual(res["answers"], [truth["answer"]])
+        self.assertEqual(res["answers"], [8045])
+        self.assertTrue(res["exhaustive"])
+        self.assertTrue(res["unique"])
+        self.assertLess(res["nodes"], 400_000)      # the performance gate

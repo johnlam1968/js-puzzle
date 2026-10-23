@@ -42,7 +42,11 @@ chk(len(grid)==n and all(len(r)==n for r in grid), "grid is n x n")
 chk(sum(1 for r in grid for v in r if v is not None) == p11["hint_count"] == 33, "33 cells with ink")
 chk(p11["row_hint_counts"] == [4,1,3,4,3,3,3,4,3,1,4], "per-row hint counts 4/1/3/4/3/3/3/4/3/1/4")
 for h in p11["hints"]:
-    chk(grid[h["row"]-1][h["col"]-1] == h["value"], f"hint ({h['row']},{h['col']})={h['value']} consistent with grid")
+    # 0-based, consistent with data/schema/puzzle.schema.json.  The previous check read
+    # grid[row-1][col-1]: with 0-based hints that is a NEGATIVE index, so Python silently
+    # returned a cell of the LAST row and the check passed without testing anything.
+    chk(0 <= h["row"] < n and 0 <= h["col"] < n, f"hint ({h['row']},{h['col']}) in bounds")
+    chk(grid[h["row"]][h["col"]] == h["value"], f"hint ({h['row']},{h['col']})={h['value']} consistent with grid")
 chk(json.load(open(f"{D}/official-11x11/truth.json"))["status"] == "unsolved", "truth status == unsolved")
 
 print("=== counterexample-4x4-two-answers ===")
@@ -55,5 +59,23 @@ for alt in c["alternative_partitions"]:
     ans.append(R2["answer"])
 chk(ans == [304,112], f"two distinct answers {ans}")
 chk(c["alternative_partitions"][0]["d_field"] == c["alternative_partitions"][1]["d_field"], "same d-field for both partitions")
+print("=== coordinate contract: EVERY fixture ===")
+# The three fixtures disagreed about the coordinate base (two were 1-based, one 0-based)
+# and the checker above was reading the 11x11 with the wrong base, so it passed vacuously.
+# This gate is the one that keeps them honest: hints are 0-based, in bounds, and every
+# hint agrees with the grid cell at the SAME coordinates.
+import glob
+for path in sorted(glob.glob(f"{D}/*/puzzle.json")):
+    f = json.load(open(path))
+    m = f["size"]; g = f["grid"]; hs = f.get("hints", [])
+    inb = all(0 <= h["row"] < m and 0 <= h["col"] < m for h in hs)
+    chk(inb, f"{os.path.basename(os.path.dirname(path))}: all {len(hs)} hints in bounds (0-based)")
+    same = all(g[h["row"]][h["col"]] == h["value"] for h in hs)
+    chk(same, f"{os.path.basename(os.path.dirname(path))}: every hint matches its grid cell")
+    shift = all(0 <= h["row"]-1 < m and 0 <= h["col"]-1 < m
+                and g[h["row"]-1][h["col"]-1] == h["value"] for h in hs)
+    chk(not shift or not same,
+        f"{os.path.basename(os.path.dirname(path))}: hints are NOT 1-based (the shift must not also fit)")
+
 print("\nRESULT:", "ALL CHECKS PASSED" if ok else "FAILURES PRESENT")
 sys.exit(0 if ok else 1)

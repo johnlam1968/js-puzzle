@@ -7,10 +7,13 @@ No third-party deps beyond PIL. Prints:
   - template-matched digit values with a confidence margin
 """
 import os
+import json
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-SRC = os.path.join(HERE, "metric-too.png"
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, ".."))
+SRC = os.path.join(ROOT, "assets", "metric-too.png")
 im = Image.open(SRC).convert("L")
 a = np.array(im).astype(int)
 H, W = a.shape

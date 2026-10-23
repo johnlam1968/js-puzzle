@@ -51,54 +51,55 @@
  ],
  "hints": [
   {
-   "row": 1,
-   "col": 1,
+   "row": 0,
+   "col": 0,
    "value": 12
   },
   {
-   "row": 1,
-   "col": 5,
+   "row": 0,
+   "col": 4,
    "value": 17
   },
   {
-   "row": 2,
-   "col": 1,
+   "row": 1,
+   "col": 0,
    "value": 8
   },
   {
-   "row": 2,
-   "col": 3,
+   "row": 1,
+   "col": 2,
    "value": 6
   },
   {
-   "row": 2,
-   "col": 4,
+   "row": 1,
+   "col": 3,
    "value": 3
   },
   {
-   "row": 4,
-   "col": 2,
+   "row": 3,
+   "col": 1,
    "value": 7
   },
   {
-   "row": 4,
-   "col": 3,
+   "row": 3,
+   "col": 2,
    "value": 6
   },
   {
-   "row": 4,
-   "col": 5,
+   "row": 3,
+   "col": 4,
    "value": 10
   },
   {
-   "row": 5,
-   "col": 1,
+   "row": 4,
+   "col": 0,
    "value": 25
   },
   {
-   "row": 5,
-   "col": 5,
+   "row": 4,
+   "col": 4,
    "value": 0
   }
- ]
+ ],
+ "coordinate_base": 0
 }

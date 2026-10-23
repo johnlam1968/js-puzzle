@@ -3,5 +3,18 @@
  "size": 11,
  "status": "unsolved",
  "answer": null,
+ "numbers": {
+  "count": 33,
+  "coordinate_base": 0,
+  "source": "assets/metric-too.png (the official puzzle image)",
+  "method": "pixel grid-line detection (12 v-lines + 12 h-lines) -> per-cell ink -> self-supervised glyph templates learned from the 5x5 example panel (leave-one-out validation 10/10) + font-independent enclosed-hole-count feature",
+  "independent_reverification": "tools/verify_11x11_numbers.py re-runs the pipeline from the image and compares it with puzzle.json: 33/33 positions agree (gate runs in well under a second, on every commit)",
+  "golden_file": "data/puzzles/official-11x11/ocr_numbers.json",
+  "earlier_cross_checks": [
+   "author (human read; three cells were later found WRONG and corrected)",
+   "Verifier (ink-cell COUNT 33 confirmed; per-value not verified)",
+   "DeepSeek-V4.1-Flash (independent vision read; several column indices were wrong)"
+  ]
+ },
  "note": "The official grid draws NO state boundaries; the partition must be inferred from the 33 numbers. Answer uniqueness is NOT guaranteed (see plan R9). Populate 'states', 'state_sizes', 'state_capitol', 'd_field', 'row_sums', 'answer' once the solver converges; record whether the search was exhaustive."
 }

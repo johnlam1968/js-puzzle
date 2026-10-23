@@ -5,11 +5,14 @@ and independently verified), then classify the 11x11 grid glyphs with normalized
 Validation: leave-one-out over the example's own known digits.
 """
 import os
+import json
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 from collections import defaultdict
 
-SRC = os.path.join(HERE, "metric-too.png"
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, ".."))
+SRC = os.path.join(ROOT, "assets", "metric-too.png")
 im = Image.open(SRC).convert("L")
 A = np.array(im).astype(int)
 INK = A < 128
@@ -171,5 +174,5 @@ for conf, second, k, i, d in weak[:12]:
     print(f"  conf={conf} second={second} cell={k} glyph#{i} -> '{d}'")
 
 json.dump({f"{r},{c}": v for (r, c), v in transcript.items()},
-          open(os.path.join(HERE, "grid_11x11_transcript.json", "w"), indent=1)
+          open(os.path.join(HERE, "grid_11x11_transcript.json"), "w"), indent=1)
 print("\nsaved -> /workspace/jspuzzle/grid_11x11_transcript.json")
