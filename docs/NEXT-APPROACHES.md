@@ -759,6 +759,60 @@ one to use.
 landscape has nothing to climb, so what is needed is a good **big jump** — and choosing *where* to
 jump is exactly a judgement call, not an arithmetic one.**
 
+### 4.4h The multi-window ladder: speculate small, refute bigger, check globally
+
+The user's own way of playing, which turns out to be a well-founded strategy:
+
+> speculate locally on a small grid, refute/trim with the cell readings on a bigger one, then
+> check globally.
+
+**The formal shape of it.** The speculation inside a `k×k` window is a partition of its cells
+into groups — "which cells belong to the same state" — and the number of such partitions is the
+**Bell number B(k²)**:
+
+| window | speculation space B(k²) |
+|---|---|
+| 2×2 (4 cells) | **15** |
+| 3×3 (9 cells) | **21,147** |
+| 4×4 (16 cells) | **10,480,142,147** |
+
+⇒ **⇒ the ladder is not about making the enumeration smaller — the last rung is the same
+10-billion problem. It is about making the REFUTATION cheaper and more local**: a speculation that
+a bigger window's readings kill is discarded before it ever reaches the global search.
+
+**MEASURED — how strong is the local refutation really?** The only local force available is the
+**magnet** (the user's word): a cell reading 0 is a capitol, so its state must be symmetric about
+it, which forces the local pattern; a cell reading 1 must have a 1×1 state next to it. Counting the
+partitions of a 3×3 window that survive the magnet's symmetry constraint, on the real 11×11:
+
+| window | all local partitions | surviving the magnet | survive |
+|---|---|---|---|
+| 3×3 centred on a `d = 0` capitol | 21,147 (+203) | 6,988 | **32.7%** |
+| 3×3 centred on a `d = 1` cell | 42,497 | 13,783 | **32.4%** |
+
+⇒ **⇒ the local refutation removes about two thirds of the local patterns — useful, but nowhere
+near decisive.** The global arithmetic (the real d-field) is what does the work.
+
+**The caveat that explains why**: **symmetry and area are global properties.** A state's area is
+not determined by a window, and a state's symmetry is not either (the mirror of a cell inside the
+window may lie outside it). ⇒ **a window's readings cannot be evaluated in isolation at all** — the
+local step has to be a speculation about *structure*, with the global arithmetic as the referee.
+
+**⇒ ⇒ so the ladder's role, exactly: it is a PROPOSER, not a refuter.** And that is precisely the
+slot the System One model is being asked to fill (§2.4) — which makes the two ideas one thing:
+
+* the **ladder** = a deterministic proposer of local structures (which cells are grouped near each
+  magnet);
+* the **model** = a possibly better proposer of the same thing (it can read the *terrain*, which
+  the ladder cannot);
+* the **arithmetic** = the referee, always.
+
+⇒ **⇒ and one refinement worth making if the ladder is to be used: put the windows where the
+speculation space is small.** A window centred on a magnet and **aligned with a candidate symmetry**
+has a much smaller space than a Bell number, because the local pattern is then "which orbits of σ
+are included" rather than "which partition of the cells" — and a 3×3 window around a magnet has
+only a handful of orbits.
+
 ### 4.5 A caution about the probabilities in §2
 
 The decision model returns `probabilities`. **Those numbers are not calibrated** — a score of
