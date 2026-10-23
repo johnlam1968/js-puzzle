@@ -24,7 +24,7 @@ jobs:
         # the 11x11's 33 numbers from the source image).  A clean runner has neither.
         run: |
           python3 -m pip install --upgrade pip
-          python3 -m pip install pillow numpy
+          python3 -m pip install -r requirements.txt
 
       - name: compile every python file
         run: |
