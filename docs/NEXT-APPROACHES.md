@@ -28,7 +28,48 @@
 
 ## 1. The reframing that makes (1) legitimate — and the rule that makes (2) safe
 
-### 1.1 The official puzzle needs **one** answer, not a proof of uniqueness
+### 1.1 The official puzzle asks for **a number** — and does not promise that number is unique
+
+**The puzzle states**: the rules, an example that works with them, the numbers on the 11×11
+frame, and *"submit as your answer the sum of the squares of these row sums"*. **It never says the
+answer is unique.** If several tilings satisfy the rules and the cues and give different numbers,
+**there is no stated basis for rejecting any of them** — and the puzzle maker may not know either.
+
+**The repository already agrees** — this is not a new reading, it is `PLAN.md`:
+
+| the plan says | what it means |
+|---|---|
+| **R9** | "the 11×11 panel draws no state boundaries; the partition itself may not be unique ⇒ the official deliverable is **all candidate answers + their partitions + a uniqueness annotation**; if it is not unique, report that honestly" |
+| **D20** | "the same set of hints can correspond to **different answers**" (the 4×4 counter-example) |
+| **M6** | "if the answer is not unique, give **every candidate answer with its partition**" |
+| **D42** | "when the search is not exhaustive, **you may not output 'unique'**" |
+
+⇒ **Therefore the deliverable is an ANSWER SET plus an honest uniqueness annotation — not a
+proof of uniqueness.** `exhaustive=false` is a *legal, reportable* state.
+
+⇒ **What this changes in the search:**
+
+* **Finding one valid tiling is a complete deliverable** (modulo the annotation). The remaining
+  budget is spent looking for *more* answers, not on proving there are none.
+* **The 84%-free filler states stop being fatal.** We no longer need a constraint that pins every
+  filler area; we need one that finds a consistent assignment.
+* **The exact route's failure mode becomes explicit**: "26 M nodes, 0 answers" produced *nothing
+  reportable*, because with zero answers there is no answer to report — and the only thing
+  exhaustion would have added is the uniqueness annotation, which is optional.
+* **The near-miss diagnostic (§4.4) becomes more valuable**, not less: it is the one output the
+  exact route cannot produce at all.
+
+⇒ **A spec conflict to resolve** (flagged to the peer): **D39** says *"stop early as soon as a
+second distinct answer is found"*, while **R9/M6** say *"deliver **all** candidate answers"*.
+Both cannot hold — stopping at the second answer means not having all of them. The consistent
+reading: the early stop settles the **uniqueness verdict** (`unique=false`), but the **collection**
+of answers should keep going until the budget ends. The report should say how many were found and
+whether the search was exhaustive — never imply completeness without it.
+
+⇒ **One practical nuance** (not a contradiction, just a reporting matter): the *intended* answer is
+the one Jane Street's own generator produced, so a second valid answer will differ from the
+official one. The honest report leads with the answer that matches the official one when it is
+found, and lists every other valid answer with its proof.
 
 This is the single most important thing in this file.
 
