@@ -5,10 +5,10 @@
 > argument, complexity). This file is the *layman's version*: what the algorithm does, why it exists,
 > and what it is allowed to claim. Where the two disagree, DESIGN.md wins.
 
-**Status of this document:** 2026-10-23 (18:20 UTC), against `main` = `71092be59e`
-("Cuts the solver's work by 2.6x, and fixes the broken judge search path"). Numbers marked ✅ are
-measured and reproducible with the snippets in §7. Numbers marked ⚠️ were measured during work that
-was still in flight and may have moved on — see §6.
+**Status of this document:** 2026-10-23 (18:40 UTC), against `main` = `f4c427d`
+("README: how the gates run"), with the solver work in `53cfda0`. Numbers marked ✅ are measured and
+reproducible with the snippets in §7. Numbers marked ⚠️ were measured during work that was still in
+flight and may have moved on — see §6.
 
 ---
 
@@ -67,8 +67,9 @@ one cell until you come back.
 
 ### The example that makes it click
 
-Take the green state of the **official 5×5 example** (7 cells). Its symmetry is the anti-diagonal
-reflection `r + c = 3`, so the orbits are ✅ (measured):
+Take the **7-cell state of the official 5×5 example** (state label 0 in `truth.json`; in the
+puzzle image it is the **purple** region — the green region is a different, 3-cell state). Its
+symmetry is the anti-diagonal reflection `r + c = 3`, so the orbits are ✅ (measured):
 
 ```
 (0,0) <-> (3,3)      a mirror pair
@@ -80,6 +81,10 @@ reflection `r + c = 3`, so the orbits are ✅ (measured):
 **That lonely cell is the capitol.** The puzzle rule says a state has a capitol only if *every*
 non-trivial self-symmetry fixes **exactly one** cell. So in AODFS the capitol is not something you
 hunt for separately — it is the lonely cell that the symmetry hands you.
+
+The **3-cell green state** is the same idea in miniature ✅ (measured): cells `{(1,3), (2,2), (2,3)}`,
+symmetry `refD1`, orbits `{(1,3), (2,2)}` + the lonely cell `(2,3)` — which is its capitol.
+Three cells = one pair + one lonely one.
 
 (That also explains the parity theorem: a state with a capitol must have **odd** area, because all
 its other cells come in pairs.)
@@ -143,7 +148,7 @@ the *existence* side is valid: a cell reading `v` has a capitol within Manhattan
 
 ## 6. What is actually working, and what is not
 
-### ✅ Verified
+### ✅ Verified (as of `main` = `f4c427d`, solver work in `53cfda0`)
 
 * **The rule kernel** (symmetry group, capitol rule, cost field) is integer-only — no floating
   point, because floating point silently lost a capitol on the official example once already.
@@ -154,50 +159,39 @@ the *existence* side is valid: a cell reading `v` has a capitol within Manhattan
   answer is unique and the search was exhaustive.
 * **The 4×4 enumeration constants** all reproduce: 11,506 connected subsets / 1,130 legal states /
   640 shape types / 562,308 tilings / 559,585 with at least one capitol.
-* **The growth machinery** (`src/grow.py`) is implemented and tested (`tests/test_grow.py`).
-* **The readings-driven solver now solves the fully revealed 4×4** — `main` = `71092be59e`:
-  `answers=[112, 304]`, `cardinality=2`, `partitions=2`, `exhaustive=True`, **206 nodes, 0.03 s**
-  ✅ (measured).
+* **The 11×11's 33 published numbers are now reproducible from the source image**: the pixel
+  pipeline (grid-line detection → self-supervised glyph templates → enclosed-hole feature) was
+  re-run against `assets/metric-too.png` and agrees with `puzzle.json` in **33 of 33** cells. The
+  version *without* the disambiguation feature gets 2 cells wrong (8↔3 and 28↔23) — which is
+  exactly what the enclosed-hole feature exists to fix.
+* **The readings-driven solver now solves every benchmark with ground truth** ✅ (re-measured
+  independently for this document):
 
-> That last line is worth its own check, because it is easy to believe a solver that reports two
-> answers. Here is an independent argument that **two is the most there can be**: the published
-> 4×4 cost field has twelve cells reading 0, and a cell reading 0 *is* a capitol; a state has at
-> most one capitol, and a state with a capitol but more than one cell has an odd area, so the
-> other cells would read ≥ 1 — contradiction. Hence those twelve cells are twelve 1×1 states, and
-> the four remaining cells (the top row) can only be one 1×4 bar (answer 304) or two 1×2 dominoes
-> (answer 112). **Two is the truth, and the solver now reports it.**
+  | instance | hints | nodes | wall clock | verdict |
+  |---|---|---|---|---|
+  | 4×4 `counterexample` (fully revealed) | 16/16 | **206** | 0.03 s | `answers={112, 304}`, `cardinality=2`, `exhaustive` |
+  | 4×4 official fixture | 16/16 | **951** | 0.3 s | answer **680**, unique |
+  | 5×5 **official example** | 10/25 | **129,319** | 2.6–10.6 s | answer **8,045**, `exhaustive`, **unique** |
+  | 11×11 official | 33/121 | — | ~17,500 nodes/s | 0 answers at 4.2 M nodes (still running) |
 
-### ⚠️ The one thing that is still not working: sparse hints
+  The fully revealed 4×4 deserves its own check, because it is easy to believe a solver that
+  reports two answers. Here is an independent argument that **two is the most there can be**: the
+  published 4×4 cost field has twelve cells reading 0, and a cell reading 0 *is* a capitol; a
+  state has at most one capitol, and a state with a capitol but more than one cell has an odd
+  area, so the other cells would read ≥ 1 — contradiction. Hence those twelve cells are twelve
+  1×1 states, and the four remaining cells (the top row) can only be one 1×4 bar (answer 304) or
+  two 1×2 dominoes (answer 112). **Two is the truth, and the solver reports it.**
 
-| instance | hints | budget | answers | nodes | wall clock | rate |
-|---|---|---|---|---|---|---|
-| 4×4 `counterexample` (fully revealed) | 16/16 | 400,000 | **[112, 304]**, `exhaustive=True` | **206** | 0.03 s | 6,700 /s |
-| 5×5 **official example** | 10/25 | 400,000 | **none** | 400,001 | 46 s | 8,632 /s |
-| 11×11 official | 33/121 | 200,000 (of 3,000,000) | none so far | 200,000 | 846 s | 237 /s |
+### 6.1 The area lower bound: designed, implemented, and it is what cracked the sparse case
 
-**The bottleneck is density, not speed.** A fully revealed 4×4 is solved in 206 nodes; the official
-5×5 — which has a *known* answer of 8,045 and a published `truth.json` with the whole partition —
-finds nothing in 400,000 nodes. The 11×11 is sparser than either.
+`docs/DESIGN.md` §3.3 lists it as **L3/L2**. The derivation, in one line: the step between two
+adjacent cells costs `min(size_x, size_y)`, the difference in their d-values cannot exceed one
+step, therefore
 
-⇒ **The 5×5 example is the next gate to build**, not the 4×4: it is the cheapest instance that is
-simultaneously *sparse* and *has ground truth*, so it actually discriminates. The fully revealed
-4×4 no longer does (206 nodes).
+> **|d(x) − d(y)| ≤ min(size_x, size_y)** ⇒ **both** states have area ≥ |Δ|
 
-### 6.1 The prune that is designed but not implemented: the area lower bound
-
-`docs/DESIGN.md` §3.3 lists it as **L3/L2**, and `PLAN.md` has it too:
-
-> two adjacent cells that are *both* hinted, x and y ⇒ the state containing x has area ≥ |D(x) − D(y)|
-
-**The one-line derivation**: the step between two adjacent cells costs `min(size_x, size_y)`, which
-is at most `size_x`; the difference in their d-values cannot exceed one step; therefore
-`|Dx − Dy| ≤ size_x`.
-
-`src/solver.py` implements only two prunes — `_lb_violates` (Manhattan distance to a cell that
-could still be a capitol) and `_ub_violates` (the in-state path cost). **The area bound is not
-among them.**
-
-What it would buy, computed from the **published 5×5 numbers alone** (no ground truth needed) ✅:
+What it implies for the **published 5×5 numbers** (computed from the numbers alone, no ground
+truth) ✅:
 
 | hinted cell (0-based) | d | area lower bound | true area in the solution |
 |---|---|---|---|
@@ -210,15 +204,46 @@ What it would buy, computed from the **published 5×5 numbers alone** (no ground
 | (3,1) | 7 | ≥ 1 | 7 |
 | (3,2) | 6 | ≥ 1 | 7 |
 
-Every bound is consistent with the known solution, so **the prune does not kill the truth** — and
-two of them pin the big 11-cell state at ≥ 10, which is exactly the kind of constraint that
-strangles the "filler" states.
+Every bound is consistent with the known solution, so the prune does not kill the truth.
 
-It is cheap to implement: precompute `need[x] = max{|Dx − Dy| : y is a hinted neighbour of x}`
-once (O(hints × 4)), carry `need(S) = max{need[x] : x ∈ S}` while growing, and refuse to close a
-state with `|S| < need(S)`.
+**And it is the prune that changed everything.** The solver implements it in `src/solver.py`
+(`_need`, evaluated when a state is closed):
 
-### 6.2 A counting bug worth knowing about (it inflated a number you may have seen)
+| instance | before | after |
+|---|---|---|
+| 4×4 official fixture | 48,617 nodes / 16.3 s | **951 nodes / 0.3 s** (51×) |
+| 5×5 official example | 400,001 nodes / 46 s / **no answer** | **129,319 nodes / 2.6 s / answer 8,045, exhaustive** |
+
+⇒ The 5×5 is the instance that made the difference, and it is the *sparse* one. That is the
+opposite of what the node-rate alone suggested: the solver was never too slow, it was **not
+using the numbers**.
+
+### 6.2 The cheapest prune still on the table: a `d = 1` cell forces a 1×1 state
+
+**The lemma**: if `d(x) = 1`, the cheapest path from `x` costs 1, so it is a single step of cost 1.
+A step costs 1 only if one of the two states has area 1 — and a 1×1 state is always its own
+capitol. Therefore:
+
+> **Every cell reading 1 has a 1×1 state (a capitol) next to it.**
+
+For the 11×11 there are three such cells ✅:
+
+| cell reading 1 | where the 1×1 state (capitol) must be | candidates |
+|---|---|---|
+| (2,5) | an orthogonal neighbour that is not itself a published number | 4 |
+| (3,6) | ″ | 4 |
+| (4,10) | ″ | 3 |
+
+⇒ **48 combinations** in total — trivially enumerable, and each one pins a capitol and a
+single-cell state.
+
+**The interesting part**: `src/hitting.py` already computes exactly this, as
+`singleton_demands` ✅ — and **the solver does not use it**. (It is also consistent: all 120
+minimum hitting sets already satisfy the three constraints, 120/120.) So this is the cheapest
+remaining prune: it is already computed, it is already cross-checked, and it is simply not wired
+into the search.
+
+### 6.3 A counting bug worth knowing about (it inflated a number you may have seen)
 
 An earlier version of the solver reported **58,721 partitions** for the fully revealed 4×4. That
 number is **not real**: the solver counted the *same* tiling over and over, because different
@@ -231,10 +256,9 @@ deduplication the same instance reports **2** partitions, which is the correct a
 plausible against a small argument before trusting it.** 58,721 tilings of a 4×4 that has only two
 possible answers should have been obvious as absurd.
 
-### 6.3 Where the time goes (profile, as of `cf21c25792`)
+### 6.4 Where the time went (the profile that produced the 951 / 129,319 numbers)
 
-The solver was profiled before the optimisation round. A `cProfile` run over 60,001 nodes of the
-fully revealed 4×4 (94.7 s under the profiler) ✅:
+A `cProfile` run over 60,001 nodes of the fully revealed 4×4 (94.7 s under the profiler) ✅:
 
 | hot spot | cost | why |
 |---|---|---|
@@ -267,7 +291,7 @@ how long it takes to reach them:
    distances with **one BFS from the capitol** instead of one BFS per hinted cell inside the state
    (`_ub_violates` / `_path_cost`).
 
-### 6.4 A contract bug, and the reason nobody noticed
+### 6.5 The contract bug: found → fixed, and the reason it hid for so long
 
 The three puzzle fixtures in `data/puzzles/` **did not agree on the indexing of `hints[]`**:
 
@@ -278,27 +302,65 @@ The three puzzle fixtures in `data/puzzles/` **did not agree on the indexing of 
 | `counterexample-4x4-two-answers` | 1 | **1-based** ❌ |
 
 `data/schema/puzzle.schema.json` says `grid` is "row-major, 0-based" and `hints` is "hint cells,
-0-based (row, col), consistent with grid[r][c]". `README.md` contradicted it ("1-based hints in
-`hints[]`"). And `src/solver.py`'s command line read hints as 0-based — so the CLI agreed with the
-schema and with the 11×11, and **misread the other two fixtures**, with no bounds check, so a
+0-based (row, col), consistent with grid[r][c]"; `README.md` contradicted it ("1-based hints in
+`hints[]`"); and `src/solver.py`'s command line read hints as 0-based, with no bounds check, so a
 1-based file produced `IndexError: list index out of range` instead of a clean error.
 
-**The data itself was fine**: with the correct 0-based reading, the official 11×11's grid agrees
-with its 33 hints in **33 of 33** cells ✅. Only the check was rotten.
+**Status: found and fixed** in `53cfda0` — all three fixtures are now 0-based (the 11×11, the
+only one that was already right, was left alone), the CLI reports out-of-range hints in plain
+language, and a coordinate-contract gate now covers every fixture.
 
-**Why nobody noticed**: `tools/check_contract.py` on `main` (both `cf21c25792` and `71092be59e`)
-**exits with code 1** — 32 of the 33 hint checks fail, because the check reads
-`grid[row-1][col-1]` against 0-based hints, which is a negative index and therefore silently reads
-the *last* row of the frame. And the reason nobody saw the red gate is the real lesson:
+**Why it hid for so long**: `tools/check_contract.py` on `main` **exited with code 1** — 32 of
+the 33 hint checks failed, because the check read `grid[row-1][col-1]` against 0-based hints, which
+is a negative index and therefore silently reads the *last* row of the frame. And the reason
+nobody saw the red gate is the real lesson:
 
-> **The repository has no `.github/` directory and therefore no CI.** A gate with an exit code that
-> nobody ever calls is not a gate.
+> **The repository has no CI.** A gate with an exit code that nobody ever calls is not a gate.
 
-⇒ The single highest-value change to this repository is not a prune at all: it is one command
-that runs the contract check, the tests and the generator self-check and fails on any non-zero
-exit — wired into CI. Without it, a changed signature in the search path can pass a full green
-test suite (the fast table path never exercises the slow search path), and a stale check can sit
-red on `main` for hours.
+There is a second, sharper version of the same lesson. Four Python files in `tools/` **have never
+run successfully** — they contain fatal syntax errors ✅ (verified by compiling every file in the
+repository):
+
+| file | what is broken |
+|---|---|
+| `tools/capitol_bound_11x11.py` | **five** separate fatals: missing `)`, undefined `DATA`, an unclosed `json.dump(`, the output path written *inside* `os.path.join(...)` (so it writes to a **directory** named `capitol_hitting_set_11x11.json`), and a `known_cap` filter that can never fire because the candidate list already excludes every published cell |
+| `tools/run_deepseek_review.py` | syntax error, line 10 |
+| `tools/run_deepseek_final.py` | syntax error, line 6 |
+| `tools/verify_reviews.py` | syntax error, line 20 |
+
+The good news: the *data* those scripts claim to produce is fine — `src/hitting.py` reproduces
+the committed `data/derived/capitol_hitting_set_11x11.json` exactly (22 satisfied by the revealed
+capitols, 9 uncovered demands, a 64-cell candidate pool, ≥4 additional capitols, 120 minimum
+sets) ✅. The problem is that the standalone script **duplicates the engine's logic**, so the
+repository has two sources of truth for the same quantity — and the wrong one is the one that
+cannot run.
+
+⇒ Two cheap additions to `tools/run_all_gates.py` would have caught all of this:
+1. a **`py_compile` sweep** over every `*.py` in the repository (three lines);
+2. a check that the standalone tools **agree with the engine** — the engine is the single source
+   of truth (PLAN: "任何 fixture / 真值表 / 回归常量必须由引擎产出，禁止手写").
+
+The CI workflow itself is written but **cannot be pushed from either side**: GitHub rejects
+workflow files for a token without the `workflow` scope, and the API answers `404 Not Found` —
+which looks like "the path does not exist" but is really a permission error. Pushing the workflow
+through the GitHub web UI, or with a token that carries `workflow`, is the way through.
+
+### 6.6 What the solver still cannot do
+
+The 11×11 remains unsolved: 0 answers after 4.2 M nodes at ~17,500 nodes/s, with a 50 M-node
+budget running. The wall is unchanged — **sparsity**. Three levers, in the order I would pull
+them:
+
+1. **Wire `singleton_demands` into the solver** (§6.2) — already computed, already cross-checked,
+   not yet used.
+2. **Tight-edge coupling**: for a hinted cell `x`, the first step of its shortest path is some
+   neighbour `y`, so on a tight edge `min(size_x, size_y) = |D(x) − D(y)|` — two state sizes
+   become coupled, which is what constrains the *filler* states (the ones without capitols, and
+   therefore the real explosion source).
+3. **Seed the search with the capitol set** (DESIGN §7): solve the hitting set first, then grow
+   each state outward from its capitol. On the 11×11 only 4 of 33 cells have a published
+   neighbour, so the per-cell bounds are weak there — but a seeded search is bounded by the
+   capitol structure instead of by the raw grid.
 
 ---
 
@@ -390,19 +452,53 @@ print(res['answers'], res['cardinality'], res['partitions'], res['exhaustive'], 
 The expected answer set is the fixture's own `answers: [304, 112]`, and the expected partition
 count is 2 (see the argument in §6).
 
-**The sparse benchmark — the official 5×5 example** (§6). This is the one that still fails:
+**The sparse benchmark — the official 5×5 example** (§6.1). This is the instance the area
+lower bound cracked:
 
 ```python
 import json, sys, time; sys.path.insert(0, 'src')
 from solver import solve_grid
 
 p = json.load(open('data/puzzles/official-example-5x5/puzzle.json'))
-hints = {(h['row'] - 1, h['col'] - 1): h['value'] for h in p['hints']}   # 1-based -> 0-based
+hints = {(h['row'], h['col']): h['value'] for h in p['hints']}   # the fixtures are 0-based now
 
 t0 = time.time()
-res = solve_grid(5, hints, budget=400_000, report_every=100_000)
-print(res['answers'], res['exhaustive'], res['nodes'], time.time() - t0)
-# [] False 400001 46.3      <- the known answer 8045 is NOT found
+res = solve_grid(5, hints, budget=2_000_000)
+print(res['answers'], res['exhaustive'], res['unique'], res['nodes'], time.time() - t0)
+# [8045] True True 129319 2.6...
+```
+
+Before the area lower bound this same call returned `[] False 400001` — no answer at all.
+
+**The two example states of §3** (purple 7-cell and green 3-cell):
+
+```python
+import json, sys; sys.path.insert(0, 'src')
+from rules import symmetry_group, capitol_of
+from grow import symmetry_choices, orbits_of
+
+st = json.load(open('data/puzzles/official-example-5x5/truth.json'))['states']
+
+for label, name in ((0, 'purple, 7 cells'), (2, 'green, 3 cells')):
+    S = {(r, c) for r in range(5) for c in range(5) if st[r][c] == label}
+    print(name, sorted(S), 'capitol', capitol_of(S), 'symmetries', sorted(symmetry_group(S)))
+    best = None
+    for s in symmetry_choices(5):
+        if s.name not in symmetry_group(S):
+            continue
+        orb = orbits_of(s, 5)
+        groups = {}
+        for c in sorted(S):
+            groups.setdefault(frozenset(orb[c] & S), []).append(c)
+        if len(groups) > 1 and (best is None or len(groups) < len(best[1])):
+            best = (s, groups)                  # the generating symmetry = fewest orbits
+    s, groups = best
+    print('  ', s.name, s.params, '->',
+          ' | '.join(str(sorted(g)) for g in sorted(groups, key=sorted)))
+# purple, 7 cells [(0,0),(1,0),(2,0),(2,1),(3,1),(3,2),(3,3)] capitol (2, 1) symmetries ['refD2']
+#   refD2 (3,) -> [(0, 0), (3, 3)] | [(1, 0), (3, 2)] | [(2, 0), (3, 1)] | [(2, 1)]
+# green, 3 cells [(1, 3), (2, 2), (2, 3)] capitol (2, 3) symmetries ['refD1']
+#   refD1 (-1,) -> [(1, 3), (2, 2)] | [(2, 3)]
 ```
 
 **The area lower bound of §6.1**, computed from the published numbers alone:
