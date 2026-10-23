@@ -95,6 +95,47 @@ class Puzzle:
         self._dist_cache[src] = d
         return d
 
+    def cost_field_bucket(self) -> List[List[float]]:
+        """d(x) with a BUCKET queue (Dial's algorithm) instead of a heap.
+
+        The edge weights are the state sizes -- small integers -- so the distances can be
+        bucketed by value and swept in order: O(E + max weight) instead of O(E log V).
+        The annealing route evaluates the energy tens of thousands of times, and on an
+        11x11 the heap version was ~0.5 ms per evaluation, which caps the search at a
+        few thousand moves per second.
+        """
+        d = [[INF] * self.w for _ in range(self.h)]
+        if not self.capitols:
+            return d
+        maxw = max(self.sizes.values()) if self.sizes else 1
+        buckets: List[List[Tuple[int, int]]] = [[] for _ in range(maxw + 1)]
+        pending = 0
+        for lab, (r, c) in self.capitols.items():
+            d[r][c] = 0
+            buckets[0].append((r, c))
+            pending += 1
+        cur = 0
+        # the largest possible distance is bounded: every cell is within a few steps of
+        # a capitol and every step costs at most maxw
+        limit = self.h * self.w * maxw + 1
+        while pending and cur < limit:
+            bucket = buckets[cur % (maxw + 1)]
+            if not bucket:
+                cur += 1
+                continue
+            r, c = bucket.pop()
+            pending -= 1
+            if d[r][c] != cur:
+                continue                      # stale entry
+            for nb in self.neighbours((r, c)):
+                w = self.step_cost((r, c), nb)
+                nd = cur + w
+                if nd < d[nb[0]][nb[1]]:
+                    d[nb[0]][nb[1]] = nd
+                    buckets[nd % (maxw + 1)].append((nb[0], nb[1]))
+                    pending += 1
+        return d
+
     def cost_field(self) -> List[List[float]]:
         """d(x): least cost from x to ANY capitol.  Undefined (inf) if there is no capitol."""
         d = [[INF] * self.w for _ in range(self.h)]
