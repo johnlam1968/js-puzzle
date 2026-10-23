@@ -1,0 +1,12 @@
+# The versions the official 11x11's 33 numbers were re-derived on.
+#
+# The OCR chain rasterises glyphs (PIL.ImageFont), so a different Pillow can change the
+# pixels it reads and therefore the numbers it produces.  tools/verify_11x11_numbers.py
+# re-derives those numbers from the source image on every commit, so the environment has
+# to be pinned: otherwise the gate would go red for a VERSION reason and everybody would
+# go looking for a data problem that does not exist.
+#
+# Upgrading either of these means re-deriving the 33 numbers and re-checking them against
+# data/puzzles/official-11x11/puzzle.json.
+pillow==12.2.0
+numpy==2.4.6
