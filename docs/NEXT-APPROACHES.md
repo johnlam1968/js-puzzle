@@ -412,7 +412,47 @@ no temperature to tune.
    engine must confirm the answer set is `{112, 304}`.
 4. **11×11**: only after (1) passes.
 
-### 4.4 The honest limits
+### 4.4 The failure mode of the exact route is the *diagnostic* of the simulation route
+
+The exact route's failure looks like this: **26 M nodes, 0 answers, no information**. A simulation
+that also fails can do better than that:
+
+> **A near miss is an output, not a failure.**
+
+⇒ **Never stop at "E = 0 or nothing".** Record the *best* energy reached and, crucially, **which
+published numbers disagree and by how much**. A best energy of 2 with "the only mismatch is
+(7,2), off by 2" is a **constraint on the true solution** — exactly the kind of lead the exact
+search cannot produce, because it never reaches a partial state worth reporting.
+
+```
+def anneal_report(...):
+    best = None
+    for restart in range(R):
+        T, E = anneal(..., seed=restart)
+        if best is None or E < best.E: best = snapshot(T, E)
+        if E == 0: break
+    return {
+      "answer":        engine.answer(best.T),
+      "energy":        best.E,
+      "mismatches":    [(x, D(x), d_T(x)) for x in published if d_T(x) != D(x)],
+      "capitols":      engine.capitols(best.T),
+    }
+```
+
+**And "E = 0" is not enough on its own.** The 4×4 counter-example proves that this puzzle family
+can have **two different answers with the identical cost field** — so a single zero-energy
+solution does not certify the answer. The simulation must therefore collect an **answer set**
+over many restarts (task B of §1.1), and the report should say `answers_found = {304, 112}`
+rather than "the answer is 304".
+
+### 4.5 A caution about the probabilities in §2
+
+The decision model returns `probabilities`. **Those numbers are not calibrated** — a score of
+0.7 does not mean "70% of the time this shape is right". Treat them as **ranking keys only**;
+never as a probability in any threshold that claims to be a probability, and never as a
+likelihood in a Bayesian argument. A ranking that is badly calibrated is still a fine ranking.
+
+### 4.6 The honest limits
 
 * **It cannot prove uniqueness.** For our *generator* it is therefore unusable as-is; for the
   *official puzzle* it is legitimate (§1.1). A separate counter-example hunt (§1.1, task B) is
