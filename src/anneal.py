@@ -111,7 +111,13 @@ Cell = Tuple[int, int]
 State = frozenset
 
 
-BIG = 1000.0
+# The penalty for a structural violation has to live on the SAME scale as the mismatch
+# it is meant to be traded against.  With BIG = 1000 a single broken state cost more than
+# every d-mismatch put together, so a "kick" could never be undone and the search was
+# fenced inside the legal region it started in.
+BIG = 5.0
+# a cell that no capitol reaches: a finite penalty, not a wall
+INF_PENALTY = 5.0
 
 
 # --------------------------------------------------------------------------- #
@@ -146,14 +152,14 @@ def energy(states: Sequence[State], hints: Dict[Cell, int], n: int,
         puz = Puzzle([set(s) for s in states])
         d = puz.cost_field()
     except Exception:                    # noqa: BLE001 - a broken partition has no d field
-        return e + big * (len(hints) + 1)
+        return e + INF_PENALTY * (len(hints) + 1)
     for (r, c), v in hints.items():
         if not (0 <= r < n and 0 <= c < n):
             e += big
             continue
         dv = d[r][c]
         if dv == INF or dv != dv:       # INF, or NaN
-            e += big
+            e += INF_PENALTY
         else:
             e += abs(dv - v)
     return e
@@ -365,7 +371,10 @@ def anneal(hints: Dict[Cell, int], n: int, steps: int = 20000, seed: int = 0,
         if cand is None:
             continue
         new_e = energy(cand, hints, n)
-        if new_e <= cur_e + tolerance:
+        # record-to-record travel: accept anything no worse than the BEST energy seen
+        # (plus a tolerance).  A pure hill climb freezes: the trajectory was flat from
+        # 20k steps on.
+        if new_e <= best_e + tolerance:
             states, cur_e = cand, new_e
             if new_e < best_e:
                 best_e, best_states = new_e, list(cand)
