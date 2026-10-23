@@ -592,4 +592,5 @@ for (r, c), v in sorted(H.items()):
 | `src/hitting.py` | capitol positions as a hitting set (a lower bound, and candidate seeds) |
 | `docs/DESIGN.md` §3 | the authoritative AODFS design |
 | `docs/ALTERNATIVES.md` | the discussion log: the analogies, their exact translations, the experiments |
+| `docs/NEXT-APPROACHES.md` | the specification for the routes that followed: simulation, a fuzzy ranking layer, capitol-count speculation |
 | `PLAN.md` | the defect register — AODFS entries are D38, D48, D65, D85 |

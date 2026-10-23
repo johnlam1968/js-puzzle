@@ -362,6 +362,7 @@ print(res['singleton_demands'])
 |---|---|
 | `docs/DESIGN.md` §3 | the authoritative AODFS design |
 | `docs/AODFS-LAYMAN.md` | the layman's version of the same thing |
+| `docs/NEXT-APPROACHES.md` | the specification for the three routes that came out of it: simulation, a fuzzy ranking layer, capitol-count speculation |
 | `src/grow.py` | the growth itself: `grow_states`, `symmetry_choices`, `orbits_of` |
 | `src/hitting.py` | capitol positions as a hitting set; also `singleton_demands` (the `d = 1` rule) |
 | `src/solver.py` | the readings-driven solver: `_need` (area bound), the `d = 1` prunes, the tight-edge work |
