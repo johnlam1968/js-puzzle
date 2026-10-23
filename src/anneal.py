@@ -34,6 +34,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 from cost import INF, Puzzle
 from grow import grow_states, orbits_of, symmetry_choices
 from lazycatalogue import LazyCatalogue
+from moves import curvature, legal_neighbours
 from rules import connected, symmetry_group
 
 # Caches: the annealing evaluates the same states and the same growths over and over.
@@ -356,15 +357,31 @@ def anneal(hints: Dict[Cell, int], n: int, steps: int = 20000, seed: int = 0,
     history = []
     for step in range(steps):
         if since_improve >= kick_after:
-            # a kick: a few random moves, then back to the best
+            # A KICK.  Which kind of kick depends on the local curvature:
+            #   gentle (the cheapest legal neighbour is at most one unit away): random
+            #     moves are fine, the slope does the work;
+            #   cliff  (the cheapest legal neighbour is far): a random kick is a lottery
+            #     ticket, so take the CHEAPEST legal neighbour even though it is worse --
+            #     that is the "good jump" the landscape offers, and on a cliff it is the
+            #     only way out.  Measured: the 4x4's solutions are gentle (gap 0) and
+            #     the 5x5's is a cliff (gap 11).
             states = list(best_states)
             cur_e = best_e
-            for _ in range(rng.randrange(2, 6)):
-                mv = rng.choice(MOVES)
-                cand = mv(states, rng, n)
-                if cand is not None:
-                    states = cand
-            cur_e = energy(states, hints, n)
+            curve = curvature(states, lambda st: energy(st, hints, n), n)
+            if curve.get("classification") == "cliff":
+                cands = legal_neighbours(states, n)
+                if cands:
+                    scored = [(energy(c, hints, n), c) for c, _k, _d in cands]
+                    scored.sort(key=lambda t: t[0])
+                    states = scored[0][1]
+                    cur_e = scored[0][0]
+            else:
+                for _ in range(rng.randrange(2, 6)):
+                    mv = rng.choice(MOVES)
+                    cand = mv(states, rng, n)
+                    if cand is not None:
+                        states = cand
+                cur_e = energy(states, hints, n)
             since_improve = 0
         mv = rng.choice(MOVES)
         cand = mv(states, rng, n)
