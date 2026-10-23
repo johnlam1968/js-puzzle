@@ -171,6 +171,14 @@ ordering of small moves, it is a **good big jump**.
 
 ⇒ **The model's job: when the climb is stuck, say WHERE to jump and to WHAT.**
 
+> ⚠️ **REVISED after §4.4g.1.** A greedy descent does the walking, so the model is *not* needed to
+> choose the next step. Its remaining jobs are narrower and more honest:
+> **(a) escaping a local minimum** — the 11×11's descent stalls at E = 480 from the naive start;
+> **(b) a better start** — a capitol set from the hitting set instead of all-singletons;
+> **(c) a prior on the area map** — no local arithmetic expresses "a 40-cell state here is
+> unusual"; **(d) the vision read** of the d-field as a terrain, which the local bounds never look
+> at. It is a *proposer of starts and escapes*, not a guide for every step.
+
 ```
 KICK PROPOSAL (the model)
   state      : the stuck tiling, the published numbers, the d-field, the incumbent's areas
@@ -742,18 +750,109 @@ published 11×11 numbers force large states (the neighbours (10,8)=77 and (10,9)
 states have area ≥ 16), so the 11×11's solution is a *few large states* solution — the cliff
 regime, not the gentle one.
 
-⇒ **⇒ so the acceptance criterion is adaptive, and the curvature measurement is how you tell
-which regime you are in:**
+⇒ **⇒ the curvature measurement tells you which regime you are in** — and the *two-step* basin
+says how big the hole is. **MEASURED** (the minimum over the states *reached*, never over a set
+that includes the solution itself — the solution has E = 0 and would make every minimum read 0):
 
-| regime | signature | acceptance |
+| solution | cheapest 1-step | cheapest 2-step | |
+|---|---|---|---|
+| 4×4, answer 304 | 0 (the other answer) | 2 | gentle |
+| 4×4, answer 112 | 0 (the other answer) | 1 | gentle |
+| **5×5 official, answer 8045** | **11** | **17** | cliff |
+
+⇒ **⇒ the 5×5's neighbourhood FUNNELS UPWARD when measured *outward*.**
+
+> ⚠️ **⚠️ THAT MEASUREMENT WAS READ IN THE WRONG DIRECTION — see §4.4g.1. The landscape is a
+> funnel that funnels *inward*: entering the solution is ONE step from every neighbour.**
+
+⇒ ⇒ **and the density argument says this matters more and more as the puzzle gets sparser**: the
+E = 0 set of the 4×4 is 2 tilings in 559,585 (0.0004%); the 5×5's is far smaller; the 11×11's
+would be smaller still. ⇒ **⇒ at that density, "can you jump in the right direction" beats "how
+far you jump" by orders of magnitude.**
+
+### 4.4g.1 ⚠️ CORRECTION: the landscape is a funnel, and a **greedy descent** walks it
+
+The measurement above ("leaving the solution costs ≥ 11; two steps out costs 17") is **correct**,
+but it was read in the wrong direction, and the reading produced a wrong conclusion — which was
+then handed on as advice, so it is worth writing down properly.
+
+**MEASURED** — a **pure best-improvement descent** (no randomness, no annealing, no tolerance:
+*always move to the cheapest legal neighbour*):
+
+| instance | start | result |
 |---|---|---|
-| **gentle** (4×4) | cheapest neighbour E ≤ 1 | pure hill-climb + a small kick — measured: E = 0 in 79 s |
-| **cliff** (5×5) | cheapest neighbour E ≥ 10 | the current state must be allowed to get *worse* — a tolerance or a big kick is mandatory |
+| 4×4 counter-example | **60 random legal tilings (cold start)** | **60/60 reach E = 0**, average **3.0 steps** |
+| 5×5 official example | each of the **23 neighbours** of the solution | **23/23**: the single cheapest legal move lands **exactly on the solution** (E → 0) — from E = 11, 12, 15, 23, 25 and even 72 |
+| 11×11 official | the all-singletons start (121 states) | **stalls at E = 480** after 40 steps (82 states) — a local minimum with no improving neighbour |
 
-⇒ ⇒ **This partly rehabilitates the record-to-record tolerance that §4.4 removed**: it is not the
-default, but in a cliff landscape a tolerance is the only thing that lets the search leave. The
-tolerance is not a tuning knob; it is a **regime switch**, and the curvature measurement says which
-one to use.
+⇒ **⇒ entering the solution is ONE step from every one of its neighbours.** Leaving it is
+expensive; *entering* it is trivial. **The landscape is a funnel, and it funnels inward.**
+
+⇒ **⇒ so the conclusion reverses:**
+
+* ❌ "a cliff landscape forces the search to accept worsening moves" — **withdrawn**; the 5×5's
+  solution is reached by a **monotone descent** from every neighbour.
+* ❌ "the annealer needs a big kick and a tuned tolerance" — **not needed**. What the annealer did
+  was take *sampled* moves; a **random walk cannot walk a funnel**, whatever the tolerance. That
+  is why the tolerance sweep (0/5/11/15 → best E = 50) never moved: **the moves were random, not
+  greedy.** The fix is not a better schedule, it is a different rule.
+* ✅ **the right primitive is a greedy best-improvement descent**: enumerate the legal neighbours,
+  evaluate them, step to the cheapest. It is deterministic — and it was **already written**: the
+  peer's `src/moves.py::curvature()` returns `cheapest` and `cheapest_move`, i.e. **the descent
+  was implemented and then an annealer was run instead of it.**
+
+⇒ **⇒ and it is affordable.** The legal-move set is tiny next to the raw candidate set: from the
+all-singletons start, **220 of 7,260 merge pairs are legal (3%)** ⇒ ~220 energy evaluations per
+step ⇒ **~0.5 s/step** ⇒ a few hundred steps is a few minutes. The per-step cost is set by the
+number of *legal* moves, not by the number of candidates.
+
+⇒ **⇒ and where the 11×11 still needs help, the model's job is now precisely defined** (§2.4):
+
+* the descent **stalls at E = 480** from the all-singletons start ⇒ the instance needs a **better
+  start or an escape**, not a better step rule;
+* ⇒ **the obvious candidate is the seed data that is currently unused**: seed the descent with a
+  capitol set from the hitting set (DESIGN §7) instead of the all-singletons start, and see
+  whether the descent then runs to E = 0. That is *Route B feeding a greedy descent* — a new
+  algorithm that uses both halves of the work done so far;
+* ⇒ and the diagnostic to instrument is **"how often does the greedy descent stall, and at what
+  energy?"** — that number is what the model has to beat.
+
+### ⚠️ Corrected: the lever is a **good** jump, not a **big** one
+
+The first version of this note concluded that a cliff landscape *forces* the search to be allowed
+to get worse. **The peer tested that directly and it is false** — a tolerance sweep on the 5×5:
+
+```
+5x5 official example, 6 restarts x 30,000 steps:
+  tolerance  0: best 50   answers {}
+  tolerance  5: best 50   answers {}
+  tolerance 11: best 50   answers {}      <- the measured gap
+  tolerance 15: best 50   answers {}
+  tolerance 25: best 60   answers {}      <- worse
+```
+
+⇒ **⇒ allowing the current state to degrade is not enough.** A tolerance only *permits* a
+worsening; it does not say *which direction* to worsen in. The search wanders inside a band of
+radius 11 while the solution sits at one particular edge of that band.
+
+⇒ **⇒ the lever is a GOOD jump.** And the arithmetic can already offer the local version of one:
+the **cheapest legal neighbour**, even if it is worse — "the best jump this terrain offers". The
+**model's** version of the same thing is a jump chosen by the *terrain* (a wide plateau in the d-field
+= a large state), which is information the arithmetic cannot rank.
+
+⇒ **And the reason this matters more than the size of the jump** is density. The E = 0 set of the
+4×4 is **2 tilings in 559,585 (0.0004%)**; the 5×5's must be far sparser (of the same order as
+10⁻⁹). ⇒ **⇒ at that density, "can you jump in the RIGHT direction" beats "how far you jump" by
+several orders of magnitude.** That is the quantitative form of the model's role.
+
+⇒ **⇒ and the acceptance criterion for the model becomes measurable** (the peer's addition, and it
+is the right one):
+
+> **The model may change the ORDER of the candidates, never the SET.**
+> ⇒ Verify it by running with the model **off** and **on**, and comparing **how many restarts each
+> needs to reach E = 0** — *not* the final answer, which is identical either way. **That ratio is
+> the model's value, and it cannot be negative**, because the engine is the referee and the model
+> only reorders.
 
 ⇒ **⇒ and that is where the System One model earns its place (§2.5): a hill-climb in a cliff
 landscape has nothing to climb, so what is needed is a good **big jump** — and choosing *where* to

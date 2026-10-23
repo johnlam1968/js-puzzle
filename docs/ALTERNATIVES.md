@@ -206,6 +206,57 @@ measurement instrument** (954× → 1.00×) and a **diagnosis**: the duplication
 enumeration, and invisible in the pruned search. Which means the explosion on the 11×11 is **not**
 an ordering artefact — it is a genuine combinatorial problem.
 
+### The landscape is a funnel — and a **greedy descent** walks it
+
+**MEASURED** (a pure best-improvement descent: always move to the cheapest legal neighbour; no
+randomness, no annealing, no tolerance):
+
+| instance | start | result |
+|---|---|---|
+| 4×4 counter-example | 60 random legal tilings (cold start) | **60/60 reach E = 0**, average **3.0 steps** |
+| 5×5 official | each of the 23 neighbours of the solution | **23/23**: the single cheapest legal move lands exactly on the solution, from E = 11/12/15/23/25/72 |
+| 11×11 official | the all-singletons start | **stalls at E = 480** after 40 steps (82 states) |
+
+⇒ Leaving the solution is expensive; **entering it is one step**. The landscape is a funnel that
+funnels inward, and a **random walk cannot walk a funnel** — which is why the annealer's tolerance
+sweep (0/5/11/15 → best E = 50) never moved: the moves were *sampled*, not *greedy*.
+
+⇒ ⇒ **the right primitive is the descent, and it was already written**: `src/moves.py::curvature()`
+returns `cheapest` and `cheapest_move`. It was implemented, and then an annealer was run instead
+of it.
+
+⇒ ⇒ and it is affordable: from the all-singletons 11×11 start only **220 of 7,260 merge pairs are
+legal (3%)** ⇒ ~220 energy evaluations per step ⇒ **~0.5 s/step** ⇒ a few hundred steps is a few
+minutes. The per-step cost is set by the number of *legal* moves, not the number of candidates.
+
+### Where the model still earns its place
+
+The descent does the walking, so a decision model is **not** needed to pick the next step. What is
+left for it — and it is a real job, not a consolation prize:
+
+1. **Escaping a local minimum** — the 11×11's descent stalls at E = 480 from the naive start.
+2. **A better start** — the hitting set already produces candidate capitol sets; seeding the
+   descent with one of them instead of all-singletons is the obvious experiment, and it uses the
+   one half of the work that is currently unused.
+3. **A prior on the area map** — the area lower bound says "≥ 7"; nothing local says "a 40-cell
+   state here is unusual".
+4. **The terrain read** — the d-field is a picture; "the plateau around here looks like one large
+   state" is information the local bounds never look at.
+
+### A note on the revisions in this file
+
+Two claims in here were **withdrawn** after the peer session re-measured them, and both withdrawals
+are recorded rather than deleted, because the *reason* they failed is the reusable part:
+
+| withdrawn claim | why it failed | what replaced it |
+|---|---|---|
+| "the refined dichotomy (both ≥ Δ+1, or one exactly Δ) is a new, sharper bound" | it is **logically equivalent** to the bound it refines — a tautology with zero pruning power; and the "4–60×" that backed it was measured *after* the area was already known, so the solver cannot use it | the sharper statement is about **which branch is provable**, not about the union |
+| "a cliff landscape forces the search to accept worsening moves" | the measurement (leaving the solution costs 11, two steps out costs 17) is true but was read **outward**; inward, the solution is one step away from every neighbour | the landscape is a **funnel**, and the primitive is a **greedy descent**, not a tolerance |
+
+⇒ The common shape of both failures: **a statement that was true in one direction or one context
+was used as if it held in the other.** Both times, the peer caught it. Both times the fix was to
+measure *the thing the solver will actually do*.
+
 ### The "delta" reading, and what it says about growth order
 
 If a state's shape is a river delta — narrow at the root, fanning out downstream — then the
