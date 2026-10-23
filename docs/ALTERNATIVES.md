@@ -105,48 +105,79 @@ sinks. A path's step costs are the "width of the river" on each reach; a **tight
 reach where the drop equals the width exactly; a **delta** is where several flows merge into one
 reach.
 
-**MEASURED** — the official 5×5, using the true solution to find the tight edges:
+**MEASURED** — the official 5×5, using the true solution to find the tight edges.
 
-* 40 adjacent edges, **28 are tight (70%)**;
-* **every one of the 4 states has at least one tight edge** (16, 10, 18, 12 per state);
-* for **28 of 28** tight edges, `min(size_x, size_y) = Δ` exactly;
-* **the set of tight-edge drops is exactly `{3, 4, 7, 11}` — the state-size multiset.**
+**First, the two kinds of edge have to be kept apart** — they were mixed in the first version of
+this note, and the mix is what made a wrong conclusion look right:
 
-That last line is the strongest form of the idea: **the tight edges are a certificate of the
-state sizes.**
+| kind | step cost `w` | "tight" means | what the drop Δ means |
+|---|---|---|---|
+| **cross-state** (the two cells are in different states) | `min(size_x, size_y)` | `min = Δ` | the **smaller** of the two states has area exactly Δ |
+| **within-state** (same state) | that state's size | `Δ = size` | that state's own area is Δ |
 
-### The sharper form (this is the new knife)
+**MEASURED** on the official 5×5 ✅ (independently re-checked):
 
-A tight edge says `min(size_x, size_y) = Δ` — the **smaller** of the two states has area exactly
-Δ. So the bound of §2 splits into an exhaustive dichotomy:
+* 40 adjacent edges = **18 cross-state + 22 within-state**;
+* **all 18 cross-state edges are tight** — the 12 that are *not* tight are **100% within-state**;
+* the cross-state tight drops are `{3, 4, 7}` — the *smaller* member of each pair;
+* the within-state tight drops are `{3, 4, 7, 11}` — **every state's own area**.
 
-> either **both** states have area ≥ Δ+1 (the edge is *not* tight), or **one of them** has area
-> **exactly** Δ (the edge is tight).
+⇒ **The "Δ set = state-size multiset" certificate comes from the *within-state* tight edges**, not
+from the cross-state ones. (The cross-state drops cannot contain 11, because the 11-cell state is
+never the smaller member of a pair.) Both sets are useful; they are just not the same set.
 
-The current area lower bound only ever uses the union of those two cases ("both ≥ Δ"). Splitting
-them is what makes the second case bite, because an exact area is a *far* smaller shape space than
-a lower bound.
+### ❌ A withdrawn claim: the dichotomy is a tautology
 
-**MEASURED** — pruning power on the 4×4 catalogue (1,130 legal states), counting the legal states
-that contain a given anchor cell:
+This note originally proposed turning the bound into an exhaustive dichotomy:
 
-| anchor | target area k | area **exactly** k | area **≥ k** | cut |
+> either **both** states have area ≥ Δ+1 (the edge is not tight), or **one of them** has area
+> **exactly** Δ (the edge is tight)
+
+and claimed it was "the new knife", because "an exact area is a far smaller shape space than a
+lower bound" — measured on the 4×4 catalogue as **4–60×** (e.g. at an interior anchor, 16 legal
+states have area exactly 3 versus 762 with area ≥ 3).
+
+**That claim is withdrawn.** The dichotomy is exactly equivalent to the area lower bound of §2:
+since `min(size_x, size_y) ≥ Δ` and the areas are integers, "both ≥ Δ+1 or one exactly Δ" is the
+*same statement* as "both ≥ Δ". It is a tautology and **it prunes nothing**. The 4–60× figure was
+**post-hoc**: it counts the shapes *after* you already know the area, and the solver does not know
+the area. Worse, the inference "if the edge is not tight then some other state must be exactly Δ"
+is **not valid** — a cross-state edge may legally have `min(size) > Δ` (the two d-values are close,
+the step is simply a big one).
+
+⇒ **Tight edges are a diagnostic, not a pruning rule.** What they give is the *certificate* above,
+plus the observation below.
+
+### The honest limit, which is also the reason this knife is not the one we need
+
+A tight edge pins the **smaller** of the two states. A **filler state** (no capitol) is exactly
+the one that nothing else anchors, so a tight edge may pin its *neighbour* instead of itself. This
+is why the tight-edge route does not obviously cure the 11×11's disease: **the filler states are
+the big ones, and big states are never the "smaller member" of a pair.** On the 5×5 the 11-cell
+state is the frame's largest and is pinned only by a *within-state* edge.
+
+### What the same idea does say: the growth order is not canonical
+
+If a state's shape is a river delta — narrow at the root, fanning out downstream — then the
+**order** in which the orbits are added should be canonical: *by distance from the anchor*, like
+water running downstream. Today the solver picks any cell of the frontier (`sorted(frontier)`),
+which is water flowing in four directions at once.
+
+**MEASURED** — how much work that costs, counting growth paths against distinct shapes reached
+(the state-growth phase alone, over all anchors and symmetries):
+
+| frame | growth paths explored | distinct shapes | redundancy | shapes reachable by >1 path |
 |---|---|---|---|---|
-| (1,1) interior | 3 | 16 | 762 | **47.6×** |
-| (1,1) | 4 | 30 | 746 | 24.9× |
-| (1,1) | 7 | 67 | 574 | 8.6× |
-| (1,1) | 11 | 54 | 195 | 3.6× |
-| (0,1) edge | 3 | 9 | 561 | **62.3×** |
-| (0,1) | 4 | 14 | 552 | 39.4× |
+| 4×4 | 7,278 | 1,878 | **3.9×** | 100% |
+| 5×5 | 501,780 | 74,014 | **6.8×** | 100% |
 
-⇒ An exact area is worth **4–60×** on the state-shape branching, on top of everything the lower
-bound already gives.
+⇒ **Not a single shape is reached by only one path**, and the redundancy *grows with the frame*
+(3.9× → 6.8×). The solver's "deduplicate the intermediate sets with the same (anchor, symmetry)"
+is a patch applied *after* the duplicate work has already been done; a canonical order
+(Redelmeier-style: when an orbit is added, permanently disable every frontier orbit with a
+smaller sort key) removes the duplication at the root.
 
-**CONJECTURE (and the honest limit of this knife).** A tight edge pins the *smaller* of the two
-states. A **filler state** (no capitol) is exactly the one that is not otherwise anchored, so
-tight edges may pin its *neighbour* instead of itself. Whether the dichotomy propagates far
-enough to control the filler states — the explosion source on the 11×11 — is **not yet
-established**, and it is the single most important open question in this file.
+⇒ This is the strongest remaining lead, and it is the one being implemented next.
 
 ### The "delta" reading, and what it says about growth order
 
@@ -172,10 +203,13 @@ state-size multiset.
 13=3+3+7   14=3+11   17=3+3+11   25=3+11+11
 ```
 
-**CONJECTURE.** This is a *global* constraint — the solver's pruning is currently per-cell or
-per-adjacent-pair, and nothing links all 33 published numbers to the set of state sizes at once.
-On the 11×11 the constraint is weak when 1×1 states are available (everything decomposes as
-`d × 1`), so its value has to be checked rather than assumed.
+**CONJECTURE — and, on the 11×11, *certainly* dead.** This is a *global* constraint: the
+solver's pruning is currently per-cell or per-adjacent-pair, and nothing links all 33 published
+numbers to the set of state sizes at once. But the `d = 1` rule (§3) forces **three 1×1 states**
+in the 11×11, and once a 1 is available every d decomposes as `d × 1`. So on the 11×11 this
+constraint is not merely weak — it is **provably vacuous**. It is recorded here as an observation,
+not as a weapon. (On the 5×5 it is also vacuous *in that sense*: the 5×5's true solution has no
+1×1 state, which is why the decomposition happens to be informative there.)
 
 ---
 
@@ -240,9 +274,45 @@ for r in range(5):
 print(edges, tight, dict(per_state))     # 40 28 {0: 16, 1: 10, 3: 18, 2: 12}
 ```
 
-**The shape-count pruning ratio (4×4 catalogue)** — §4. See `src/tilings.py` for the enumerator;
-the numbers quoted are: area 3 → 52 placements, area 4 → 65, area 7 → 96, area 11 → 72 (1,130
-legal states in total; every even area has **no** capitol).
+**The growth-path redundancy** — §4, the evidence for the canonical order. For each (anchor,
+symmetry), count the legal *orderings* of orbit additions against the distinct shapes they
+reach:
+
+```python
+import sys, collections; sys.path.insert(0, 'src')
+from grow import symmetry_choices, orbits_of
+
+def redundancy(n):
+    board = {(r, c) for r in range(n) for c in range(n)}
+    tot_orders = tot_shapes = 0
+    for sym in symmetry_choices(n):
+        orb = orbits_of(sym, n)
+        orbits = sorted({frozenset(o) for o in orb.values() if o <= board}, key=sorted)
+        idx = {o: i for i, o in enumerate(orbits)}
+        start = idx.get(frozenset(orb[(0, 0)]))
+        if start is None: continue
+        paths = {1 << start: 1}                 # shape -> number of valid orderings
+        stack = [1 << start]; done = set()
+        while stack:
+            m = stack.pop()
+            if m in done: continue
+            done.add(m); p = paths[m]
+            inside = {c for i, o in enumerate(orbits) if (m >> i) & 1 for c in o}
+            border = {c for i, o in enumerate(orbits) if not (m >> i) & 1 for c in o} - inside
+            for i, o in enumerate(orbits):
+                if (m >> i) & 1 or not (o & border): continue
+                nm = m | (1 << i)
+                paths[nm] = paths.get(nm, 0) + p
+                if nm not in done: stack.append(nm)
+        tot_orders += sum(paths.values()); tot_shapes += len(paths)
+    return tot_orders, tot_shapes
+
+for n in (4, 5):
+    o, s = redundancy(n)
+    print(n, o, s, f'{o/s:.1f}x')
+# 4 7278 1878 3.9x
+# 5 501780 74014 6.8x
+```
 
 **The `d = 1` forced capitols (11×11)** — §3:
 
@@ -266,10 +336,12 @@ print(res['singleton_demands'])
 
 ## 8. Open questions
 
-1. **Does the tight-edge dichotomy actually control the filler states?** (§4) This is the crux.
-   Tight edges pin the smaller of the two states; filler states are the ones with no capitol and
-   therefore no anchor. If the propagation stalls, the 11×11 stays unsolved no matter how many
-   nodes are spent.
+1. **Does a canonical growth order control the filler states?** (§4) This is now the crux. The
+   tight-edge dichotomy was withdrawn as a tautology; what remains is that the growth order is not
+   canonical, with a measured **3.9× (4×4) / 6.8× (5×5)** redundancy and *every* shape reachable
+   by more than one path. If a Redelmeier-style order removes that duplication, the 11×11's
+   explosion is (in part) an artefact of ordering rather than of combinatorics — and if it does
+   not, the filler states need a different constraint entirely.
 2. **Can the d-decomposition constraint (§5) bite at all on the 11×11?** It is weak whenever 1×1
    states are available. Is there a variant that is not?
 3. **Is the tight-edge set a *certificate* in general?** On the 5×5 the tight-edge drops are

@@ -381,14 +381,16 @@ budget running. The wall is unchanged — **sparsity**. The levers, in the order
 
 1. ~~**Wire `singleton_demands` into the solver**~~ — **done** (§6.2). The `d = 1` rule is in, and
    it cut the 4×4 from 206 to 199 nodes without touching a verdict.
-2. **Tight-edge coupling** — the next knife, and the one that has to work. On the official 5×5,
-   70% of the adjacent edges are *tight* (the drop equals the step cost exactly), **every one of
-   the four states has at least one**, and the set of tight-edge drops is **exactly the state-size
-   multiset**. A tight edge says `min(size_x, size_y) = Δ` — the *smaller* of the two states has
-   area exactly Δ — so the loose bound "both ≥ Δ" splits into an exhaustive dichotomy: *both ≥ Δ+1,
-   or one of them exactly Δ*. The second branch is worth **4–60×** on the state-shape branching
-   (measured on the 4×4 catalogue). The open question is whether it reaches the *filler* states —
-   the ones with no capitol, which are the real explosion source. See
+2. **A canonical growth order** — the next knife, and the one that has to work. The current
+   frontier is picked in arbitrary order (`sorted(frontier)`), so the same shape is reached by
+   many different orders of adding its orbits. **MEASURED**: the growth phase explores 3.9×
+   (4×4) / 6.8× (5×5) more paths than there are distinct shapes, and *every* shape is reached by
+   more than one path. A Redelmeier-style order — when an orbit is added, permanently disable
+   every frontier orbit with a smaller sort key — removes the duplication at the root instead of
+   deduplicating after the work is done. The tight-edge structure is a **diagnostic**, not a
+   pruning rule: the "dichotomy" it suggests turns out to be exactly equivalent to the area lower
+   bound (a tautology), and it pins the *smaller* of two states, so it does not reach the filler
+   states that cause the 11×11 explosion. See
    [`ALTERNATIVES.md` §4](ALTERNATIVES.md#4-translation-c--rivers-become-a-flow-field-and-the-growth-order-should-be-canonical).
 3. **Seed the search with the capitol set** (DESIGN §7): solve the hitting set first, then grow
    each state outward from its capitol. The seed data is now verified and gated, but **no code
