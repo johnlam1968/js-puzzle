@@ -428,8 +428,13 @@ def anneal(N, hints, seed, iters, skeleton=None):
     for it in range(iters):
         T2 = propose(T, rng)                      # one legal move
         E2 = energy(T2, hints)
-        # record-to-record travel: accept anything close to the best-ever
-        if E2 <= best_E + THRESHOLD(it) or rng.random() < exp(-(E2 - E) / temperature(it)):
+        # ITERATED LOCAL SEARCH: pure hill-climb, plus a kick when stuck.
+        # NOT record-to-record: measured on the 4x4, a tolerance of 0 reached E=0 while
+        # tolerances of 5 and 20 stalled at E=90 -- the tolerance lets the current state
+        # drift away from the best-ever, so the search wanders inside the band instead of
+        # climbing.  On this landscape (integer, stepped, extremely sparse) climbing is
+        # exactly what works.  Keep the tolerance as an option, default 0.
+        if E2 <= E or (stuck(it) and kick(T, rng)):
             T, E = T2, E2
         if E < best_E:
             best, best_E = T, E
@@ -467,18 +472,37 @@ search cannot produce, because it never reaches a partial state worth reporting.
 
 ```
 def anneal_report(...):
+    found = Counter()          # answer -> how many restarts produced it
     best = None
     for restart in range(R):
         T, E = anneal(..., seed=restart)
         if best is None or E < best.E: best = snapshot(T, E)
-        if E == 0: break
+        if E == 0:
+            found[engine.answer(T)] += 1
     return {
-      "answer":        engine.answer(best.T),
-      "energy":        best.E,
-      "mismatches":    [(x, D(x), d_T(x)) for x in published if d_T(x) != D(x)],
-      "capitols":      engine.capitols(best.T),
+      "answers_found":     sorted(found),                 # what we ACTUALLY found
+      "discovery_counts":  dict(found),                  # how often each one appeared
+      "answers_exhaustive": False,                       # can we prove there are no others? no
+      "uniqueness":        False if len(found) > 1 else "unknown",
+      "best_energy":       best.E,
+      "mismatches":        [(x, D(x), d_T(x)) for x in published if d_T(x) != D(x)],
     }
 ```
+
+**The three layers must not be merged** — they answer different questions, and the simulation
+route's `unknown` has a *different reason* than the exact route's:
+
+| layer | question | simulation route | exact route |
+|---|---|---|---|
+| `answers_found` | what did we actually find? | the answers, each with its partition and engine verification | the same |
+| `answers_exhaustive` | could there be more? | **cannot be proved ⇒ always `false`/unknown** | `true` only if the search exhausted |
+| `uniqueness` | is the answer unique? | ≥2 found ⇒ `false`; 1 found ⇒ **`unknown`** | ≥2 ⇒ `false`; 1 found + exhausted ⇒ `true`; else `unknown` |
+
+⇒ **"we found exactly one answer" must NEVER be written as "the answer is unique".** Measured
+reason (peer, 4×4): 30 restarts × 20,000 steps gave `{304: 4, 112: 2}`; a shorter run
+(6 restarts) gave `{304: 2}` — **the rarer answer was simply missed.** ⇒ The *discovery rate* is
+itself a reportable quantity ("answer A appeared in 4 of 30 restarts, answer B in 2 of 30"), and it
+tells the reader how much more may be out there far better than a bare `unique=unknown` does.
 
 **And "E = 0" is not enough on its own.** The 4×4 counter-example proves that this puzzle family
 can have **two different answers with the identical cost field** — so a single zero-energy
@@ -526,41 +550,89 @@ quantitative statement, not a hope.
 
 ### 4.4c What the *right* move graph looks like
 
-The peer's first implementation failed the 5×5 gate, and the diagnosis is worth recording because
-it is the same shape as several earlier lessons.
+**The hard constraint on any move: the tiling must keep covering the frame.** That single fact
+rules out the most obvious formulation — *"replace one state with another legal state of a
+different area"*. If the areas differ, the cells of the old state are covered by nobody and the
+tiling is illegal. ⇒ **A move has to preserve the covering, which means it has to be a
+split or a merge, not a replacement.**
 
-**Symptom.** On the 4×4 — where the landscape is *known* to be benign (§4.4b) — 150,000 moves
-across four tolerances and five seeds never got below **E = 60**. So the failure was not the
-instance; it was the **move graph**.
-
-**Why a coarse move cannot walk a fine gradient.** Replacing a region of `k` states at once
-changes their areas by O(a) each, and every path that crosses those states changes cost by the
-same amount ⇒ **the d-field of a whole region shifts** ⇒ the energy jumps. The E = 1 neighbours
-are reachable only by changes that alter **one** state's area by **one**.
-
-**But a single cell cannot be moved.** A state's shape is fixed by its symmetry, so moving one
-cell out of it breaks the symmetry ⇒ the state is no longer legal. ⇒ **the natural atomic move is
-not "move a cell" but "replace one state with another legal state"** — and the one that keeps the
-energy on the scale the gradient lives on is a replacement whose area differs by **one**.
+⇒ **The atomic moves that change a state's area by exactly one, and need no state catalogue:**
 
 ```
-def neighbours_of(T):
-    """One legal state replaced by another legal state of area +/- 1, anchored nearby."""
+def neighbours(T):
+    """Every neighbour of T differs in ONE state, and the area DELTA is 1 where possible."""
     for S in T.states:
-        for S2 in legal_states_of_area(len(S) + 1, near=S.anchor):   # and len(S) - 1
-            if S2 is not None:
-                yield T.replace(S, S2)
+        # (1) PEEL: take one cell off S.  The cell becomes a 1x1 state -- which is a capitol --
+        #     and the rest must still be a legal state.  Area split: (1, |S|-1)  => delta 1.
+        for c in S:
+            rest = S - {c}
+            if rest and engine.is_legal_state(rest):
+                yield T.replace_state(S, rest, {c})
+        # (2) SPLIT: cut S into two legal states.  Area split: (p, |S|-p)  => delta can be 1.
+        for A in proper_subsets(S):
+            if engine.is_legal_state(A) and engine.is_legal_state(S - A):
+                yield T.replace_state(S, A, S - A)
+    # (3) MERGE: two adjacent legal states into one legal state.  (a, b) -> (a+b).
+    for (A, B) in adjacent_state_pairs(T):
+        if engine.is_legal_state(A | B):
+            yield T.replace_states(A, B, A | B)
 ```
 
-⇒ **the move graph**: single-state replacements with |Δarea| = 1, chosen by **greedy
-best-improvement** (the replacement that minimises the energy delta), with **record-to-record**
-acceptance to escape local minima. Larger re-partitions remain available as occasional "big"
-moves, but they are not the *unit* of progress.
+⇒ **the good news: the fine step (Δarea = 1) is catalogue-free.** The catalogue was only needed
+for the "replace with a different area" formulation, which was wrong. The peer's orbit-level
+move (add/remove one σ-orbit ⇒ Δarea ±2 or ±4) is a **coarser variant of the same idea**, not a
+necessity — so the 11×11 does not have to settle for ±2/±4.
 
-### 4.4d The relaxed d-field: removing the wall
+⇒ **But the area delta is not the whole story, and this is what the 4×4/5×5 difference is
+about.** A *peel* creates a new capitol, and a new capitol changes the d-field **globally** — so
+the energy can jump by much more than 1. Measured by the peer: on the 4×4 (16 published numbers,
+the d-field nearly pinned) the peel moves walk *down* the gradient; on the 5×5 (10 published
+numbers) they do not. ⇒ **the granularity of the energy change is governed by how well the
+published numbers pin the d-field, not by how fine the move is.** A finer move cannot fix a
+sparsely-pinned landscape; it can only help when the landscape is already nearly pinned.
 
-The true d-field is **undefined** when a partition has no capitol — and that is a **wall** local
-moves cannot cross (the peer's `BIG = 1000` penalty was the same wall, built differently).
+⇒ **⇒ therefore: do not guess the move set. Measure it.** The decisive experiment is tiny:
+
+```
+# 4x4: what connects an E=1 tiling to an E=0 tiling?
+for T in tilings_with_energy(1):                 # only 2 of them
+    for T2 in neighbours(T):                     # one legal split / merge / peel away
+        if energy(T2) == 0:
+            record(move = diff(T, T2), area_delta = ..., energy_delta = ...)
+```
+
+⇒ The answer is **the move the graph must contain, and the step size it must have** — and if no
+single move connects them, then the graph needs a wider step and the energy's granularity is
+coarser than the gap of 1 suggests. Either way the answer is a fact instead of a guess.
+
+### 4.4d The relaxed d-field: **withdrawn**
+
+*Originally proposed here: the true d-field is undefined when a partition has no capitol, so
+relax the capitol set to "every cell that is the unique fixed point of some symmetry of its own
+state", which makes the field defined everywhere and smooth.*
+
+**Withdrawn, and the peer's objection is right.** A state with **no symmetry at all** — the normal
+intermediate of a growth — has *no* uniquely-fixed cell, so it contributes *no* candidate capitol,
+so the relaxed field is **still undefined there**: the wall survives. The only way to make it
+defined is to let every cell of an asymmetric state be a candidate capitol — and then every cell
+is its own candidate at distance 0, so `d_relaxed ≡ 0` and **the objective loses all resolution**.
+
+⇒ **The wall is narrower than I thought, and it does not need a new objective.** The d-field of a
+partition is defined as long as the partition has **at least one capitol**; a *legal* state with no
+capitol (a 1×3 bar) is no obstacle at all, because its cells flow to some *other* state's capitol.
+The only undefined case is "the whole partition has no capitol" — and that state is rare and
+**self-escaping**: the working move (peel a cell into a 1×1 state) *creates* a capitol.
+
+⇒ So the wall is removed by **making the penalty climbable**, not by smoothing the objective:
+same-scale penalty (the peer's `BIG = 5` instead of `BIG = 1000`) + a pure hill-climb gets the 4×4
+to `E = 0` directly, and no relaxed field is needed. Measured: `BIG = 1000` never recovered;
+`BIG = 5` reached `E = 0` in 79 s.
+
+⇒ **Two rules that came out of that** (also added to the cross-agent rules):
+1. **A penalty must be on the scale of the objective, and a penalised configuration must have a
+   path back.** A penalty an order of magnitude above the objective is a **wall**, not a penalty.
+2. **When a search stalls, measure the landscape before tuning parameters.** Gate 0 answered in
+   three minutes what a week of parameter fiddling would not have.
 
 > **Relaxed definition.** The candidate capitol set of a partition = every cell that is the unique
 > fixed point of some symmetry of its own state (a *capitol candidate*). Define
