@@ -162,6 +162,52 @@ The intuition: if two plausible shapes want the same cells, **at most one of the
 true tiling** — so the one that conflicts with *more* of the plausible set is the less likely one.
 This is a *ranking* signal; it is not a proof, and it must never be used to delete a candidate.
 
+### 2.4 The model's actual job in this project: **propose the kick**
+
+The general form of a fuzzy layer is "rank the candidates". In *this* project the measurement
+(§4.4g) says something sharper: a hill-climb in a **cliff** landscape has nothing to climb — the
+cheapest neighbour of the 5×5's solution costs 11 — so what the search needs is not a better
+ordering of small moves, it is a **good big jump**.
+
+⇒ **The model's job: when the climb is stuck, say WHERE to jump and to WHAT.**
+
+```
+KICK PROPOSAL (the model)
+  state      : the stuck tiling, the published numbers, the d-field, the incumbent's areas
+  questions  :
+      Noul  "which regions are legal to re-partition at all?"      -> the ENGINE, not the model
+      Score "is this region a wide plateau in the d-field?"       -> model (the terrain read)
+      Score "is this re-partition plausible (area, symmetry)?"    -> model
+      Score "does it conflict with the other high-scoring plans?" -> model (the overlap signal)
+      Choice "which single plan should we try?"                    -> model, returns probabilities
+  output     : one proposed move, with a confidence
+  then       : the ENGINE checks legality; the ARITHMETIC scores it; the annealer accepts or rejects
+```
+
+**Why this is safe** — the architecture is *propose, don't verify*:
+
+* the model never decides legality (the engine does) and never decides truth (the arithmetic does);
+* a model answer only ever **replaces the deterministic default** for the kick, so a garbage model
+  costs speed and nothing else;
+* **confidence gating**: below the floor, fall back to the deterministic kick;
+* the model's scores are **ranking keys, not probabilities** (§4.5).
+
+**Why it is not redundant with the arithmetic** — three places where it has information the
+arithmetic does not:
+
+1. **A prior over areas.** The area lower bound gives a *floor* (`need[x]`) and never an upper
+   preference. A model can say "a 40-cell state here is unusual", which the bound cannot.
+2. **The terrain read.** The area bound uses only *adjacent* published cells; the *global shape* of
+   the d-field (a wide plateau) is information the local bound never sees.
+3. **Conflict.** "Two plausible shapes want the same cells" has no arithmetic counterpart at all —
+   it is the user's "overlap" idea, and it is a statement about the *competition* between plans,
+   not about one plan.
+
+⇒ ⇒ **And the vision variant has a precise home here**: the d-field rendered as a picture is a
+terrain; "the plateau around rows 5–8, columns 9–11 looks like one large state" is exactly the
+kind of proposal the cliff regime needs — and it is a proposal, so it can be wrong without
+endangering the search.
+
 ### 2.4 Pseudo-code: the ranking layer, with a deterministic fallback
 
 ```python
@@ -662,6 +708,56 @@ state sizes). A heap-based Dijkstra is ~0.5 ms in Python ⇒ 10⁴ moves/s would
 second of annealing. ⇒ Use a **bucket queue (Dial's algorithm)** — the weights are small integers,
 so the bucket queue is O(E + max weight) and several times faster — and cache the d-field per
 candidate state set.
+
+### 4.4g The local curvature: measured, and it decides the acceptance regime
+
+**The measurement that the move graph needed.** No table, no oracle: take a *known* solution, list
+its legal neighbours (peel / split / merge), and compute the energy of each. The lowest one is the
+**local curvature** — how expensive the cheapest step away from the solution is.
+
+**MEASURED** ✅ (the two 4×4 solutions and the official 5×5 solution):
+
+| solution | neighbours | energy distribution of the neighbours | cheapest neighbour |
+|---|---|---|---|
+| 4×4, answer **304** (12 singletons + one 4-bar) | 20 | 0×1, 1×2, 2×10, 4×4, 6×3 | **E = 0** — the split of the 4-bar into two 2-dominoes *is* the other solution |
+| 4×4, answer **112** (12 singletons + two dominoes) | 24 | 0×1, 2×16, 4×4, 6×3 | **E = 0** — the merge of the dominoes *is* the other solution |
+| 5×5 official, answer **8045** (states 3/4/7/11) | **9** | 11×1, 12×2, 15×1, 23×3, 25×1, **72×1** | **E = 11** — *no neighbour below 10 at all* |
+
+⇒ **The two 4×4 solutions are one split/merge apart.** That is the edge the annealer walks, and it
+is why the 4×4 works.
+
+⇒ **And the 5×5's solution sits on a cliff**: the cheapest step away costs 11, and it has only nine
+neighbours at all. **That is why the annealer cannot reach it** — not because the move set is
+coarse, but because the local geometry offers nothing to climb.
+
+**The mechanism is the solution's *shape*, not the hint density.** Repeating the 4×4 measurement
+with random subsets of the published numbers leaves the cheapest neighbour at E = 0 all the way down
+to **2 of 16 hints** (measured) — so sparsity alone is not what creates the cliff. What creates it
+is a solution made of **few large states**: every move then changes a state's area by a lot, and
+every path crossing that state changes cost ⇒ the d-field shifts ⇒ the energy jumps. A solution
+made of many small states (the 4×4: twelve singletons) has a neighbourhood of cheap moves.
+
+⇒ **⚠️ The consequence that matters for the 11×11: the 4×4's success does not transfer.** The
+published 11×11 numbers force large states (the neighbours (10,8)=77 and (10,9)=61 ⇒ **both**
+states have area ≥ 16), so the 11×11's solution is a *few large states* solution — the cliff
+regime, not the gentle one.
+
+⇒ **⇒ so the acceptance criterion is adaptive, and the curvature measurement is how you tell
+which regime you are in:**
+
+| regime | signature | acceptance |
+|---|---|---|
+| **gentle** (4×4) | cheapest neighbour E ≤ 1 | pure hill-climb + a small kick — measured: E = 0 in 79 s |
+| **cliff** (5×5) | cheapest neighbour E ≥ 10 | the current state must be allowed to get *worse* — a tolerance or a big kick is mandatory |
+
+⇒ ⇒ **This partly rehabilitates the record-to-record tolerance that §4.4 removed**: it is not the
+default, but in a cliff landscape a tolerance is the only thing that lets the search leave. The
+tolerance is not a tuning knob; it is a **regime switch**, and the curvature measurement says which
+one to use.
+
+⇒ **⇒ and that is where the System One model earns its place (§2.5): a hill-climb in a cliff
+landscape has nothing to climb, so what is needed is a good **big jump** — and choosing *where* to
+jump is exactly a judgement call, not an arithmetic one.**
 
 ### 4.5 A caution about the probabilities in §2
 
