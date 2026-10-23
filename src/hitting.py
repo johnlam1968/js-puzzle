@@ -81,7 +81,9 @@ def singleton_candidates(n: int, hints: Dict[Cell, int]) -> Dict[Cell, List[Cell
         r, c = x
         cands = []
         for nb in ((r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1)):
-            if 0 <= nb[0] < n and 0 <= nb[1] < n and nb not in hints:
+            # exclude only cells that are hinted with d>0 (they can never be capitols);
+            # a hinted d=0 cell IS a revealed capitol and may still be a 1x1 state
+            if 0 <= nb[0] < n and 0 <= nb[1] < n and hints.get(nb, 0) <= 0:
                 cands.append(nb)
         out[x] = cands
     return out

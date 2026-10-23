@@ -49,6 +49,37 @@ Hard-won rules the code MUST respect (each was a real bug found in review):
     built from its smallest cell, cells are added in increasing order, and an already
     processed cell must be excluded for all later siblings.
 
+Rules added by the later rounds (the generator/judge/grow code must respect them too):
+ 12. A d = 1 hint must be served by a capitol that sits in a 1x1 state (the capitol of a
+     1x1 state is that cell), and that requirement has to travel with the demand.
+ 13. Connectivity is checked when a state is CLOSED, not at every intermediate growth
+     step: the first orbit of a state can be disconnected (the anti-diagonal L-tromino
+     starts from {(0,0),(1,1)}), so requiring it mid-growth makes legal states unreachable.
+ 14. The uniqueness judge is THREE-valued. "I did not find a second answer" is NOT
+     uniqueness: unique == (search exhausted) AND (answer set has exactly one element).
+ 15. The judge may only prune with SOUND bounds: an upper bound (a hinted cell whose own
+     state already reaches a capitol for less than its published value) and a lower bound
+     over the cells that are still POSSIBLE capitols. A bound computed over the REVEALLED
+     capitols alone is invalid.
+ 16. The generator may only ship a puzzle whose answer-uniqueness was PROVED (exhaustive);
+     if the full hint set is not answer-unique then NO hint subset can repair it (deleting
+     hints only relaxes), so the partition must be rejected outright.
+ 17. Hint minimisation may use one pass: deleting hints only relaxes the constraint set, so
+     a hint that is required now stays required forever.
+ 18. The tiling table is a CACHE, not a deliverable: it must be rebuildable from scratch
+     and must never be the only source of truth.
+
+Rules added by the scale-out round (the code must respect them too):
+ 19. NOTHING may be enumerated globally for a big frame: the catalogue of all connected
+     subsets is hopeless from 6x6 up, so the legal states of a cell must be generated ON
+     DEMAND from that cell (orbit growth), and nothing may depend on a global catalogue.
+ 20. The offline tiling table is a CACHE: it must carry a stamp of the rule engine it was
+     built from and must be IGNORED when that stamp does not match the current sources, and
+     its row count must be cross-checked. A stale table must never be able to report
+     "exhaustive: True".
+ 21. The uniqueness judge must be able to run WITHOUT the table (search path) and must
+     report honestly when its budget was exhausted (unique = unknown, never silently true).
+
 Known reference numbers the code must reproduce (4x4):
   connected subsets 11,506 | legal states 1,130 | shape types (up to translation) 640
   legal tilings 562,308 | by number of blocks: 1,79,674,4203,18653,55516,108356,139234,

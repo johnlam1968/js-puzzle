@@ -30,6 +30,7 @@ from typing import Dict, List, Optional, Sequence, Set, Tuple
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from cost import Puzzle
+from lazycatalogue import LazyCatalogue
 from rules import capitol_of
 from tilings import Catalogue
 from tiletable import answers_for_hints, load_table
@@ -41,30 +42,54 @@ INF = float("inf")
 class Judge:
     """Answers "is the answer unique?" for a given frame size."""
 
-    def __init__(self, n: int, use_table: bool = True):
+    def __init__(self, n: int, use_table: bool = True, lazy: Optional[bool] = None):
         self.n = n
-        self.cat = Catalogue(n)
-        self.by_cell = self.cat.by_cell
-        self._cap_of_mask = self.cat._cap_of_mask
-        self._cell_of_bit = {}
-        for i, c in enumerate(self.cat.cells):
-            self._cell_of_bit[1 << i] = c
+        # For n <= 4 the full catalogue is cheap and gives the regression constants.
+        # For n >= 5 it is hopeless (2.3M connected subsets at 5x5), so the states are
+        # generated per anchor ON DEMAND instead (GLM code review, BLOCKER).
+        if lazy is None:
+            lazy = n >= 5
+        self.lazy = lazy
+        if lazy:
+            self.cat = LazyCatalogue(n)
+            self.by_cell = None
+        else:
+            self.cat = Catalogue(n)
+            self.by_cell = self.cat.by_cell
         # manhattan distance table
         self._manh = [[abs(a[0] - b[0]) + abs(a[1] - b[1]) for b in self.cat.cells]
                       for a in self.cat.cells]
         # the offline table makes every query a scan; the DFS is the fallback
-        self._table = load_table(n) if use_table else None
+        self._table = load_table(n) if (use_table and not lazy) else None
         self.source = "table" if self._table is not None else "search"
 
     # ------------------------------------------------------------------ #
+    def _cells_of(self, mask: int) -> List[Cell]:
+        """The cells of a state mask (works for both catalogue flavours)."""
+        if self.lazy:
+            return [(r, c) for r in range(self.n) for c in range(self.n)
+                    if (mask >> (r * self.n + c)) & 1]
+        return self.cat.cells_of(mask)
+
+    def _mask_of(self, cells) -> int:
+        """Bitmask of a cell set (used by the lazy catalogue, which hands back sets)."""
+        m = 0
+        for (r, c) in cells:
+            m |= 1 << (r * self.n + c)
+        return m
+
     def _capitol_of_mask(self, mask: int) -> Optional[Cell]:
-        cl = self.cat.cells_of(mask)
+        if self.lazy:
+            cl = [(r, c) for r in range(self.n) for c in range(self.n)
+                  if (mask >> (r * self.n + c)) & 1]
+        else:
+            cl = self.cat.cells_of(mask)
         return capitol_of(cl)
 
     def _path_cost_inside(self, mask: int, src: Cell, dst: Cell) -> Optional[int]:
         """Cheapest path from src to dst staying inside the state `mask`
         (each step inside one state costs the state size).  None if unreachable."""
-        S = set(self.cat.cells_of(mask))
+        S = set(self._cells_of(mask))
         size = len(S)
         dist = {src: 0}
         frontier = [src]
@@ -81,22 +106,23 @@ class Judge:
         return dist.get(dst)
 
     # ------------------------------------------------------------------ #
-    def _ub_violates(self, hints: Dict[Cell, int], chosen: Sequence[int]) -> bool:
+    def _ub_violates(self, hints: Dict[Cell, int], mask: int) -> bool:
         """Upper bound: a hinted cell whose own state already reaches a capitol for less
-        than its published value cannot be part of a solution."""
-        for m in chosen:
-            if not self._cap_of_mask.get(m):
+        than its published value cannot be part of a solution.
+
+        Only the NEWLY placed state is checked: every older state was checked when it was
+        appended, so re-checking them all made each node O(|chosen|).
+        """
+        cap = self._capitol_of_mask(mask)
+        if cap is None:
+            return False
+        for (r, c), v in hints.items():
+            i = r * self.n + c
+            if not (mask >> i) & 1:
                 continue
-            cap = self._capitol_of_mask(m)
-            if cap is None:
-                continue
-            for (r, c), v in hints.items():
-                i = r * self.n + c
-                if not (m >> i) & 1:
-                    continue
-                cost = self._path_cost_inside(m, (r, c), cap)
-                if cost is not None and cost < v:
-                    return True
+            cost = self._path_cost_inside(mask, (r, c), cap)
+            if cost is not None and cost < v:
+                return True
         return False
 
     def _lb_violates(self, hints: Dict[Cell, int], possible: int) -> bool:
@@ -115,7 +141,25 @@ class Judge:
     def decide(self, hints: Dict[Cell, int], budget: int = 2_000_000) -> Dict[str, object]:
         n = self.n
         if self._table is not None:
-            fields, answers = self._table
+            fields, answers, n_kept = self._table
+            if len(fields) != n_kept:
+                # a truncated / tampered cache must never be able to claim exhaustiveness
+                print(f"[judge] tiling table for {n}x{n} has {len(fields)} rows but claims "
+                      f"{n_kept}; ignoring it")
+                self._table = None
+            else:
+                ans, count = answers_for_hints(fields, answers, n, hints)
+                return {
+                    "answers": ans,
+                    "cardinality": len(ans),
+                    "partitions": count,
+                    "exhaustive": True,      # the table holds EVERY legal tiling
+                    "nodes": 0,
+                    "unique": (len(ans) == 1),
+                    "source": "table",
+                }
+        if self._table is not None:
+            fields, answers = self._table[0], self._table[1]
             ans, count = answers_for_hints(fields, answers, n, hints)
             return {
                 "answers": ans,
@@ -142,7 +186,7 @@ class Judge:
                 exhausted = False
                 return
             if rem == 0:
-                puz = Puzzle([self.cat.cells_of(m) for m in chosen])
+                puz = Puzzle([self._cells_of(m) for m in chosen])
                 if not puz.capitols:
                     return
                 d = puz.cost_field()
@@ -153,24 +197,27 @@ class Judge:
                 answers.add(puz.answer())
                 return
             first = (rem & -rem).bit_length() - 1
-            for m in self.by_cell[first]:
-                if m & ~rem:
+            cands = (self.cat.cell_states(self.cat.cells[first]) if self.lazy
+                     else self.by_cell[first])
+            for m in cands:
+                mask_m = m if isinstance(m, int) else self._mask_of(m)
+                if mask_m & ~rem:
                     continue
-                if self._ub_violates(hints, chosen + [m]):
+                if self._ub_violates(hints, mask_m):
                     continue
                 # cells of this state that are NOT its capitol cannot be capitols
-                cap = self._capitol_of_mask(m)
+                cap = self._capitol_of_mask(mask_m)
                 keep = 0
                 for i in range(n * n):
-                    if not (m >> i) & 1:
+                    if not (mask_m >> i) & 1:
                         continue
                     if cap is not None and self.cat.cells[i] == cap:
                         keep |= 1 << i
                     # a state without a capitol contributes nothing
-                new_possible = possible & ~m | keep
+                new_possible = possible & ~mask_m | keep
                 if self._lb_violates(hints, new_possible):
                     continue
-                rec(rem ^ m, chosen + [m], new_possible)
+                rec(rem ^ mask_m, chosen + [mask_m], new_possible)
                 if not exhausted:
                     return
 

@@ -28,6 +28,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from cost import Puzzle
 from grow import grow_states, symmetry_choices
 from judge import Judge
+from lazycatalogue import LazyCatalogue
 from rules import capitol_of, connected, symmetry_group
 from tilings import Catalogue
 
@@ -37,35 +38,41 @@ Cell = Tuple[int, int]
 class Generator:
     """Builds puzzles for a given frame size."""
 
-    def __init__(self, n: int):
+    def __init__(self, n: int, lazy: Optional[bool] = None):
         self.n = n
-        self.cat = Catalogue(n)
-        self.judge = Judge(n)
-        # the state library the SOLVER can construct: unions of orbits of one symmetry
+        if lazy is None:
+            lazy = n >= 5
+        self.lazy = lazy
+        # The state library always comes from the LAZY catalogue: it caches per anchor, so
+        # repeated Generator instances do not recompute the whole constructible library
+        # (that cost ~10 s per instance for 4x4).
+        self.cat = LazyCatalogue(n)
+        self.judge = Judge(n, lazy=lazy)
         self.by_cell: Dict[Cell, List[FrozenSet[Cell]]] = {}
         self._add_constructible_states()
 
     # ------------------------------------------------------------------ #
     def _add_constructible_states(self) -> None:
         """Every legal state must be reachable by the solver's orbit growth -- otherwise the
-        generator could produce a puzzle the solver cannot even represent."""
+        generator could produce a puzzle the solver cannot even represent.
+
+        For big frames this is done per anchor ON DEMAND (LazyCatalogue); for small frames
+        the whole library is built once and cached.
+        """
         n = self.n
-        syms = symmetry_choices(n)
+        if self.lazy:
+            self.by_cell = {}                 # filled lazily by cell_states()
+            return
+        # the lazy catalogue already yields exactly the states the solver can construct
+        # (it grows them by symmetry orbits), and it caches per anchor
         for anchor in self.cat.cells:
-            seen: Set[FrozenSet[Cell]] = set()
-            for sym in syms:
-                for st in grow_states(anchor, sym, n):
-                    if st in seen:
-                        continue
-                    seen.add(st)
-                    if not connected(st):
-                        continue
-                    group = symmetry_group(st)
-                    if not group:
-                        continue
-                    self.by_cell.setdefault(anchor, []).append(st)
-        for anchor in self.by_cell:
-            self.by_cell[anchor].sort(key=lambda s: (-len(s), sorted(s)))
+            self.by_cell[anchor] = self.cat.cell_states(anchor)
+
+    def cell_states(self, anchor: Cell) -> List[FrozenSet[Cell]]:
+        """Legal states containing `anchor` (lazy for big frames)."""
+        if self.lazy:
+            return self.cat.cell_states(anchor)
+        return self.by_cell.get(anchor, [])
 
     # ------------------------------------------------------------------ #
     def random_tiling(self, rng: random.Random, tries: int = 200) -> Optional[List[FrozenSet[Cell]]]:
@@ -79,14 +86,15 @@ class Generator:
             ok = True
             while rem:
                 first = min(rem)
-                cands = [s for s in self.by_cell.get(first, []) if s <= rem]
+                cands = [s for s in self.cell_states(first) if s <= rem]
                 if not cands:
                     ok = False
                     break
-                # Sample with a strong preference for SMALL states: the candidate list is
-                # sorted by size descending, so an unweighted pick would always take one of
-                # the largest shapes and every seed would produce the same degenerate
-                # "one huge state + a singleton" partition.
+                # Sample with a strong preference for SMALL states.  The candidate list is
+                # sorted by size descending, and an earlier version picked uniformly among
+                # the first few entries -- which is a biased-towards-large sample, and it
+                # made every seed produce the same degenerate "one huge state + a
+                # singleton" partition.
                 weights = [1.0 / (len(s) ** 2) for s in cands]
                 s = rng.choices(cands, weights=weights)[0]
                 chosen.append(s)
@@ -182,9 +190,11 @@ class Generator:
         ladder = []
         remaining = dict(minimal)
         # hardest first: the irreducible set on its own
+        res = self.judge.decide(remaining, budget)
         ladder.append({"step": len(ladder) + 1, "hints": dict(remaining),
-                       "answers": sorted(self.judge.decide(remaining, budget)["answers"]),
-                       "cardinality": self.judge.decide(remaining, budget)["cardinality"]})
+                       "answers": sorted(res["answers"]),
+                       "cardinality": res["cardinality"],
+                       "exhaustive": res["exhaustive"]})
         # then add the remaining hints back, each time choosing the one that helps most
         pool = {k: v for k, v in all_hints.items() if k not in remaining}
         while pool:
@@ -192,14 +202,19 @@ class Generator:
             for cell, val in pool.items():
                 trial = dict(remaining); trial[cell] = val
                 res = self.judge.decide(trial, budget)
-                score = (res["cardinality"], -len(res["answers"]))
-                if best_score is None or score > best_score:
+                # The most informative hint is the one that leaves the FEWEST consistent
+                # tilings: adding it shrinks the solution space the most.  (cardinality is
+                # 1 at every rung -- the set is already answer-unique -- so it cannot
+                # discriminate.)  Note the comparison is a MINIMUM.
+                score = (res["partitions"], res["cardinality"])
+                if best_score is None or score < best_score:
                     best, best_score = cell, score
             remaining[best] = pool.pop(best)
             res = self.judge.decide(remaining, budget)
             ladder.append({"step": len(ladder) + 1, "hints": dict(remaining),
                            "answers": sorted(res["answers"]),
-                           "cardinality": res["cardinality"]})
+                           "cardinality": res["cardinality"],
+                           "exhaustive": res["exhaustive"]})
         ladder.reverse()                      # easiest first
         for i, row in enumerate(ladder):
             row["step"] = i + 1
@@ -218,9 +233,12 @@ class Generator:
                 continue
             if v == 1:
                 cands = []
+                hinted = {(r, c) for (r, c) in hints}
                 for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
                     nb = (r + dr, c + dc)
-                    if 0 <= nb[0] < self.n and 0 <= nb[1] < self.n:
+                    # a hinted cell with d>0 can never be a capitol; a hinted d=0 cell is
+                    # a revealed capitol whose state may or may not be a singleton
+                    if 0 <= nb[0] < self.n and 0 <= nb[1] < self.n and nb not in hinted:
                         cands.append([nb[0], nb[1]])
                 steps.append({"cell": [r, c], "rule": "SINGLETON_NEIGHBOUR", "value": v,
                               "implies": "a 1x1 state (its own capitol) must be adjacent; "

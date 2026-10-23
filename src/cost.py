@@ -48,6 +48,10 @@ class Puzzle:
             raise ValueError(
                 "the states do not partition a full rectangle; "
                 f"{len(holes)} uncovered cell(s), first at {holes[0]}")
+        claimed = sum(len(s) for s in self.states)
+        if claimed != self.h * self.w:
+            raise ValueError(
+                f"the states overlap: {claimed} cells claimed for a {self.h}x{self.w} frame")
         self.capitols: Dict[int, Cell] = {}
         for lab, s in enumerate(self.states):
             cap = capitol_of(s)

@@ -136,8 +136,14 @@ def orbits_of(sym: Symmetry, n: int) -> Dict[Cell, FrozenSet[Cell]]:
 
 
 def grow_states(anchor: Cell, sym: Symmetry, n: int,
-                blocked: Iterable[Cell] = ()) -> List[State]:
-    """All CONNECTED orbit-unions that contain `anchor` and grow along `sym`.
+                blocked: Iterable[Cell] = (), max_cells: Optional[int] = None,
+                budget: Optional[int] = None,
+                stats: Optional[dict] = None) -> List[State]:
+    """All orbit-unions containing `anchor` that grow along `sym`.
+
+    The returned sets are NOT necessarily connected: connectivity is checked when a state
+    is CLOSED (close_state / the callers), because the first orbit of a state can be
+    disconnected (the anti-diagonal L-tromino starts from {(0,0),(1,1)}).
 
     `blocked` = cells that are already taken by other states.
     Intermediate sets that are not connected are pruned (PLAN D65).
@@ -155,6 +161,8 @@ def grow_states(anchor: Cell, sym: Symmetry, n: int,
     results: List[State] = []
     seen = set()
 
+    nodes = [0]
+
     def expand(mask: frozenset, frontier: Set[Cell]):
         # NOTE: connectivity is NOT required at intermediate steps -- only at closure
         # (close_state).  The first orbit of a state can be disconnected: the
@@ -163,9 +171,16 @@ def grow_states(anchor: Cell, sym: Symmetry, n: int,
         # step (as an earlier draft did) makes such states unreachable.
         # Completeness is instead guaranteed by the frontier being computed from the WHOLE
         # current set, not just the anchor's component.
+        nodes[0] += 1
+        if budget is not None and nodes[0] > budget:
+            if stats is not None:
+                stats["truncated"] = True
+            return
         if mask in seen:
             return
         seen.add(mask)
+        if max_cells is not None and len(mask) > max_cells:
+            return
         results.append(mask)
         for x in sorted(frontier):
             o = orb[x]

@@ -31,6 +31,25 @@ def table_path(n: int) -> str:
     return os.path.join(CACHE_DIR, f"tiling_table_{n}x{n}.npz")
 
 
+def rules_stamp(n: int) -> str:
+    """Identity of the rule engine the table was built with.
+
+    The table is a CACHE, never a source of truth (rule 18): if the rule kernel changes,
+    a table built from the old rules would silently produce wrong answers while still
+    claiming `exhaustive: True`.  So the table carries a stamp of the sources it depends
+    on, and it is IGNORED when that stamp does not match the current sources.
+    """
+    import hashlib
+    h = hashlib.sha256()
+    h.update(str(n).encode())
+    here = os.path.dirname(os.path.abspath(__file__))
+    for f in ("rules.py", "cost.py", "tilings.py"):
+        p = os.path.join(here, f)
+        with open(p, "rb") as fh:
+            h.update(fh.read())
+    return h.hexdigest()[:16]
+
+
 def _one_partition(args):
     (n, masks) = args
     cells = [(r, c) for r in range(n) for c in range(n)]
@@ -91,19 +110,30 @@ def build_table(n: int, workers: int = 0) -> str:
     keep = answers >= 0
     fields, answers = fields[keep], answers[keep]
     path = table_path(n)
-    np.savez_compressed(path, fields=fields, answers=answers)
+    np.savez_compressed(path, fields=fields, answers=answers,
+                        stamp=np.array(rules_stamp(n)),
+                        n_tilings=np.array(len(parts)),      # every legal tiling
+                        n_kept=np.array(len(answers)))       # those with a capitol
     print(f"[{n}x{n}] table saved: {len(answers):,} rows -> {path} "
           f"({os.path.getsize(path)/1e6:.1f} MB, {time.time()-t0:.0f}s)", flush=True)
     return path
 
 
 def load_table(n: int):
+    """Load the cached table ONLY if it was built by the current rule engine."""
     path = table_path(n)
     if not os.path.exists(path):
         return None
     try:
         d = np.load(path)
-        return d["fields"], d["answers"]
+        want = rules_stamp(n)
+        got = str(d["stamp"]) if "stamp" in d else None
+        if got != want:
+            print(f"[tiletable] cache {os.path.basename(path)} was built by a different "
+                  f"rule engine (stamp {got} != {want}); ignoring it")
+            return None
+        kept = int(d["n_kept"]) if "n_kept" in d else 0
+        return d["fields"], d["answers"], kept
     except Exception:
         return None
 

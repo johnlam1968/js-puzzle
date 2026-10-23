@@ -138,6 +138,8 @@ class Catalogue:
             types.add(shape_key([self.cells[i] for i in range(n * n) if (m >> i) & 1]))
         self.shape_type_count = len(types)
         self.seconds = time.time() - t0
+        # cache the FINISHED object (a half-built one must never be cached)
+        _CATALOGUE_CACHE[n] = self
 
     # ------------------------------------------------------------------ #
     def count_tilings(self, by_blocks: bool = False, by_capitols: bool = False) -> Dict[str, object]:
@@ -230,11 +232,6 @@ class Catalogue:
             out["tilings_without_capitol"] = dist.get(0, 0)
             out["tilings_with_capitol"] = sum(v for k, v in dist.items() if k >= 1)
         return out
-
-    def _has_capitol(self, mask: int) -> bool:
-        """kept for readability; the hot path uses the precomputed _cap_of_mask table"""
-        cl = [self.cells[i] for i in range(self.n * self.n) if (mask >> i) & 1]
-        return capitol_of(cl) is not None
 
     def cells_of(self, mask: int) -> List[Cell]:
         """The cells of a state mask."""

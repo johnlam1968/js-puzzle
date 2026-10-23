@@ -34,7 +34,9 @@ class TestGeneratorLibrary(unittest.TestCase):
         for states in self.gen.by_cell.values():
             for s in states:
                 constructed.add(frozenset(s))
-        legal = {frozenset(self.gen.cat.cells_of(m)) for m, _, _ in self.gen.cat.states}
+        from tilings import Catalogue
+        cat = Catalogue(4)
+        legal = {frozenset(cat.cells_of(m)) for m, _, _ in cat.states}
         self.assertEqual(len(legal), 1130)
         self.assertEqual(len(constructed - legal), 0, "growth produced an illegal state")
         self.assertEqual(len(legal - constructed), 0,
@@ -95,7 +97,8 @@ class TestGeneratedPuzzle(unittest.TestCase):
         sizes = [len(r["hints"]) for r in ladder]
         self.assertEqual(sizes, sorted(sizes, reverse=True), "the ladder must shrink monotonically")
         for row in ladder:
-            self.assertTrue(row["exhaustive"] if "exhaustive" in row else True)
+            self.assertTrue(row["exhaustive"], "every ladder rung must be a proven judgement")
+            self.assertEqual(row["cardinality"], len(row["answers"]))
 
     def test_worked_trace_rules_are_sound(self):
         """Every trace step must be re-derivable from the engine."""
