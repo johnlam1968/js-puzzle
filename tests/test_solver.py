@@ -50,6 +50,27 @@ class TestSolverSmallInstances(unittest.TestCase):
         self.assertFalse(res["unique"])
 
 
+class TestSolver4x4Regression(unittest.TestCase):
+    """The 4x4 fixture is the one instance with a KNOWN answer (680), so it is the only
+    end-to-end regression available for the solver.
+
+    It took 125,534 nodes before the three pruning fixes of the fourth review round
+    (tight lower-bound radius, per-anchor state dedupe, capitol-free hints removed from the
+    pool of possible capitols); before them the search had not found the answer after
+    200,000 nodes."""
+
+    HINTS = {(0, 1): 3, (0, 2): 6, (0, 3): 10, (1, 0): 3, (1, 1): 3, (1, 2): 6, (1, 3): 6,
+             (2, 0): 3, (2, 1): 0, (2, 2): 3, (2, 3): 3, (3, 0): 0, (3, 1): 3, (3, 2): 3,
+             (3, 3): 0}
+
+    def test_known_answer_680(self):
+        res = solve_grid(4, self.HINTS, budget=400_000)
+        self.assertIn(680, res["answers"])
+        self.assertEqual(res["cardinality"], 1)
+        # the partition is unique up to the order of the states
+        self.assertEqual(res["partitions"], 1)
+
+
 class TestSolverAnchorRule(unittest.TestCase):
     def test_capitol_anchor_restricts_the_symmetries(self):
         """A d=0 anchor is a capitol, so only symmetries that FIX it can grow its state

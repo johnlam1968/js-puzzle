@@ -75,13 +75,25 @@ class Solver:
     # ------------------------------------------------------------------ #
     def _lb_violates(self, possible: int) -> bool:
         """The nearest cell that can still be a capitol must be within the published
-        distance of every hinted cell."""
+        distance of every hinted cell.
+
+        The radius is the TIGHT one from the step-count lemma: a hint of value v has its
+        nearest capitol within Manhattan distance floor((v+1)/2) -- not v.  Using the
+        loose radius made the prune far weaker than the codebase's own proof.
+        """
         if possible == 0:
             return True
         for (r, c), v in self.hints.items():
+            poss = possible          # reset per hint: the bit scan consumes it
             row = self._manh[r * self.n + c]
-            best = min(row[cc] for cc in range(self.n * self.n) if (possible >> cc) & 1)
-            if best > v:
+            best = 1 << 30
+            while poss:
+                b = poss & -poss
+                poss ^= b
+                cc = b.bit_length() - 1
+                if row[cc] < best:
+                    best = row[cc]
+            if best > (v + 1) // 2:
                 return True
         return False
 
@@ -139,7 +151,7 @@ class Solver:
 
         def rec(rem: int, chosen: List[FrozenSet[Cell]],
                 cur: Optional[FrozenSet[Cell]], sym: Optional[Symmetry],
-                possible: int):
+                possible: int, closed_here: Set[FrozenSet[Cell]]):
             """Grow one state at a time; when it is closed, start the next one."""
             if not self.exhaustive:
                 return
@@ -161,6 +173,9 @@ class Solver:
                 # it, so most symmetries are impossible from the start.  This is the single
                 # biggest pruning win on a big frame (150 candidate symmetries -> ~8).
                 must_fix = self.hints.get(anchor) == 0
+                # one set per ANCHOR: a state with k symmetries is reachable under each of
+                # them, so without this the same subtree is explored k times (M1)
+                closed_here: Set[FrozenSet[Cell]] = set()
                 for s in self._syms:
                     fixed_all = self._fixed(s)
                     if must_fix and anchor not in fixed_all:
@@ -181,13 +196,15 @@ class Solver:
                             np |= 1 << self.idx[c]
                     if self._lb_violates(np):
                         continue
-                    rec(rem & ~self._mask(start), chosen, frozenset(start), s, np)
+                    rec(rem & ~self._mask(start), chosen, frozenset(start), s, np, closed_here)
                     if not self.exhaustive:
                         return
                 return
 
             # a state is being grown: close it, or extend it by one orbit
-            if self._can_close(cur):
+            already_closed = cur in closed_here
+            if self._can_close(cur) and not already_closed:
+                closed_here.add(cur)
                 cap = capitol_of(cur)
                 np = possible
                 for c in cur:
@@ -196,7 +213,7 @@ class Solver:
                 if cap is not None:
                     np |= 1 << self.idx[cap]
                 if not self._lb_violates(np):
-                    rec(rem & ~self._mask(cur), chosen + [cur], None, None, np)
+                    rec(rem & ~self._mask(cur), chosen + [cur], None, None, np, set())
                     if not self.exhaustive:
                         return
             orb = self._orbits(sym)
@@ -223,11 +240,17 @@ class Solver:
                 if self._lb_violates(np):
                     continue
                 # the new orbit's cells leave the remaining region as well
-                rec(rem & ~self._mask(o), chosen, frozenset(newcur), sym, np)
+                rec(rem & ~self._mask(o), chosen, frozenset(newcur), sym, np, closed_here)
                 if not self.exhaustive:
                     return
 
-        rec(full, [], None, None, full)
+        # a hinted cell with d>0 can never be a capitol (d=0 <=> capitol), so it leaves
+        # the pool of possible capitols right away (a free, sound strengthening)
+        start_possible = full
+        for (r, c), v in self.hints.items():
+            if v > 0:
+                start_possible &= ~(1 << self.idx[(r, c)])
+        rec(full, [], None, None, start_possible, set())
         return {
             "answers": sorted(self.answers),
             "cardinality": len(self.answers),

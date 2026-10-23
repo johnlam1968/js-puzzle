@@ -125,17 +125,30 @@ class Judge:
                 return True
         return False
 
-    def _lb_violates(self, hints: Dict[Cell, int], possible: int) -> bool:
-        """Lower bound: over the cells that are still POSSIBLE capitols, the closest one
-        must be reachable in at least Manh(x, c) steps, each costing >= 1."""
+    def _lb_violates(self, possible: int) -> bool:
+        """The nearest cell that can still be a capitol must be within the published
+        distance of every hinted cell.
+
+        The radius is the TIGHT one from the step-count lemma: a hint of value v has its
+        nearest capitol within Manhattan distance floor((v+1)/2) -- not v.  Using the
+        loose radius made the prune far weaker than the codebase's own proof.
+        """
         if possible == 0:
-            return True                     # no capitol can exist any more
+            return True
         for (r, c), v in hints.items():
+            poss = possible          # reset per hint: the bit scan consumes it
             row = self._manh[r * self.n + c]
-            best = min(row[cc] for cc in range(self.n * self.n) if (possible >> cc) & 1)
-            if best > v:
+            best = 1 << 30
+            while poss:
+                b = poss & -poss
+                poss ^= b
+                cc = b.bit_length() - 1
+                if row[cc] < best:
+                    best = row[cc]
+            if best > (v + 1) // 2:
                 return True
         return False
+
 
     # ------------------------------------------------------------------ #
     def decide(self, hints: Dict[Cell, int], budget: int = 2_000_000) -> Dict[str, object]:
@@ -221,7 +234,13 @@ class Judge:
                 if not exhausted:
                     return
 
-        rec(full, [], all_cells)
+        # a hinted cell with d>0 can never be a capitol (d=0 <=> capitol): drop it from
+        # the pool of possible capitols right away (free, sound strengthening)
+        start_possible = all_cells
+        for (r, c), v in hints.items():
+            if v > 0:
+                start_possible &= ~(1 << (r * n + c))
+        rec(full, [], start_possible)
         return {
             "answers": sorted(answers),
             "cardinality": len(answers),
