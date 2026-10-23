@@ -52,6 +52,11 @@ class Symmetry:
     def apply(self, cell: Cell) -> Cell:
         return self._fn(cell[0], cell[1])
 
+    def fixed_points(self, n: int) -> FrozenSet[Cell]:
+        """The board cells this symmetry fixes (its axis / centre)."""
+        return frozenset((r, c) for r in range(n) for c in range(n)
+                         if self.apply((r, c)) == (r, c))
+
     def orbit(self, cell: Cell) -> FrozenSet[Cell]:
         seen = set()
         cur = cell
@@ -138,7 +143,8 @@ def orbits_of(sym: Symmetry, n: int) -> Dict[Cell, FrozenSet[Cell]]:
 def grow_states(anchor: Cell, sym: Symmetry, n: int,
                 blocked: Iterable[Cell] = (), max_cells: Optional[int] = None,
                 budget: Optional[int] = None,
-                stats: Optional[dict] = None) -> List[State]:
+                stats: Optional[dict] = None,
+                prune: Optional[object] = None) -> List[State]:
     """All orbit-unions containing `anchor` that grow along `sym`.
 
     The returned sets are NOT necessarily connected: connectivity is checked when a state
@@ -146,7 +152,11 @@ def grow_states(anchor: Cell, sym: Symmetry, n: int,
     disconnected (the anti-diagonal L-tromino starts from {(0,0),(1,1)}).
 
     `blocked` = cells that are already taken by other states.
-    Intermediate sets that are not connected are pruned (PLAN D65).
+
+    `prune(partial_set) -> bool` is an optional callback consulted after every orbit
+    addition.  It is how the readings-driven solver keeps the growth finite on a big
+    frame: a partial state that already contradicts the published numbers is abandoned
+    immediately instead of being expanded into a full state.
     """
     orb = orbits_of(sym, n)
     blocked_set = set(blocked)
@@ -182,6 +192,8 @@ def grow_states(anchor: Cell, sym: Symmetry, n: int,
         if max_cells is not None and len(mask) > max_cells:
             return
         results.append(mask)
+        if prune is not None and prune(mask):
+            return                                  # the readings-driven solver's hook
         for x in sorted(frontier):
             o = orb[x]
             if o & blocked_set or (o & mask) or not inside(o):

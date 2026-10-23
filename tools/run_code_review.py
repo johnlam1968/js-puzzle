@@ -80,6 +80,16 @@ Rules added by the scale-out round (the code must respect them too):
  21. The uniqueness judge must be able to run WITHOUT the table (search path) and must
      report honestly when its budget was exhausted (unique = unknown, never silently true).
 
+Rules added by the M4 solver round:
+ 22. The solver GROWS the tiling; it must not enumerate candidate states separately and
+     then place them (that re-generates the same states and does not scale).
+ 23. A d = 0 anchor is a capitol, so the symmetry used to grow its state MUST fix it;
+     most candidate symmetries are therefore impossible from the start.
+ 24. A partial state may only abandon growth when the published numbers already rule it
+     out; the solver's vocabulary must not be shrunk by a size cap.
+ 25. The solver's verdict stays three-valued: exhaustive + one answer = unique; a budget
+     that runs out = unknown, never silently unique.
+
 Known reference numbers the code must reproduce (4x4):
   connected subsets 11,506 | legal states 1,130 | shape types (up to translation) 640
   legal tilings 562,308 | by number of blocks: 1,79,674,4203,18653,55516,108356,139234,
