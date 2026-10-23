@@ -238,7 +238,11 @@ class Generator:
                     nb = (r + dr, c + dc)
                     # a hinted cell with d>0 can never be a capitol; a hinted d=0 cell is
                     # a revealed capitol whose state may or may not be a singleton
-                    if 0 <= nb[0] < self.n and 0 <= nb[1] < self.n and nb not in hinted:
+                    # a cell with d>0 can never be a capitol, so it cannot host the
+                    # forced 1x1 state; a cell with d=0 is a REVEALED capitol whose state
+                    # may well be that singleton (GLM code review M4)
+                    if (0 <= nb[0] < self.n and 0 <= nb[1] < self.n
+                            and hints.get(nb, 0) <= 0):
                         cands.append([nb[0], nb[1]])
                 steps.append({"cell": [r, c], "rule": "SINGLETON_NEIGHBOUR", "value": v,
                               "implies": "a 1x1 state (its own capitol) must be adjacent; "

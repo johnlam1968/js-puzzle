@@ -58,6 +58,14 @@ class Solver:
         self.exhaustive = True
         self._manh = [[abs(a[0] - b[0]) + abs(a[1] - b[1]) for b in self.cells]
                       for a in self.cells]
+        # per-hint cells ordered by Manhattan distance: the lower-bound check stops at the
+        # FIRST still-possible cell instead of scanning the whole bitmask (the scan was
+        # ~33 hints x 90 cells per node and dominated the runtime on the 11x11)
+        self._near: Dict[Cell, List[Tuple[int, int]]] = {}
+        for (r, c), v in self.hints.items():
+            row = self._manh[r * self.n + c]
+            self._near[(r, c)] = sorted(
+                ((row[cc], cc) for cc in range(self.n * self.n)), key=lambda t: t[0])
 
     # ------------------------------------------------------------------ #
     def _orbits(self, sym: Symmetry) -> Dict[Cell, FrozenSet[Cell]]:
@@ -84,16 +92,15 @@ class Solver:
         if possible == 0:
             return True
         for (r, c), v in self.hints.items():
-            poss = possible          # reset per hint: the bit scan consumes it
-            row = self._manh[r * self.n + c]
+            radius = (v + 1) // 2
             best = 1 << 30
-            while poss:
-                b = poss & -poss
-                poss ^= b
-                cc = b.bit_length() - 1
-                if row[cc] < best:
-                    best = row[cc]
-            if best > (v + 1) // 2:
+            for dist, cc in self._near[(r, c)]:
+                if dist > radius:
+                    break              # the list is sorted: nothing closer is left
+                if (possible >> cc) & 1:
+                    best = dist
+                    break              # the first hit is the nearest possible capitol
+            if best > radius:
                 return True
         return False
 

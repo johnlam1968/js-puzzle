@@ -30,7 +30,7 @@ from typing import Dict, List, Optional, Sequence, Set, Tuple
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from cost import Puzzle
-from lazycatalogue import LazyCatalogue
+from lazycatalogue import LazyCatalogue, TruncatedLibrary
 from rules import capitol_of
 from tilings import Catalogue
 from tiletable import answers_for_hints, load_table
@@ -59,6 +59,9 @@ class Judge:
         # manhattan distance table
         self._manh = [[abs(a[0] - b[0]) + abs(a[1] - b[1]) for b in self.cat.cells]
                       for a in self.cat.cells]
+        # per-hint cells ordered by Manhattan distance: the lower-bound check stops at the
+        # FIRST still-possible cell instead of scanning the whole bitmask
+        self._near: Dict[Cell, List[Tuple[int, int]]] = {}
         # the offline table makes every query a scan; the DFS is the fallback
         self._table = load_table(n) if (use_table and not lazy) else None
         self.source = "table" if self._table is not None else "search"
@@ -136,16 +139,15 @@ class Judge:
         if possible == 0:
             return True
         for (r, c), v in hints.items():
-            poss = possible          # reset per hint: the bit scan consumes it
-            row = self._manh[r * self.n + c]
+            radius = (v + 1) // 2
             best = 1 << 30
-            while poss:
-                b = poss & -poss
-                poss ^= b
-                cc = b.bit_length() - 1
-                if row[cc] < best:
-                    best = row[cc]
-            if best > (v + 1) // 2:
+            for dist, cc in self._near[(r, c)]:
+                if dist > radius:
+                    break              # the list is sorted: nothing closer is left
+                if (possible >> cc) & 1:
+                    best = dist
+                    break              # the first hit is the nearest possible capitol
+            if best > radius:
                 return True
         return False
 
@@ -153,6 +155,12 @@ class Judge:
     # ------------------------------------------------------------------ #
     def decide(self, hints: Dict[Cell, int], budget: int = 2_000_000) -> Dict[str, object]:
         n = self.n
+        # the lower-bound check needs, per hint, the cells ordered by Manhattan distance
+        self._near = {}
+        for (r, c), v in hints.items():
+            row = self._manh[r * self.n + c]
+            self._near[(r, c)] = sorted(
+                ((row[cc], cc) for cc in range(n * n)), key=lambda t: t[0])
         if self._table is not None:
             fields, answers, n_kept = self._table
             if len(fields) != n_kept:
@@ -240,7 +248,13 @@ class Judge:
         for (r, c), v in hints.items():
             if v > 0:
                 start_possible &= ~(1 << (r * n + c))
-        rec(full, [], start_possible)
+        try:
+            rec(full, [], start_possible)
+        except TruncatedLibrary as exc:
+            # the state library was incomplete: the verdict must be "unknown", never a
+            # silent success and never a crash (GLM code review M2)
+            print(f"[judge] {exc}")
+            exhausted = False
         return {
             "answers": sorted(answers),
             "cardinality": len(answers),

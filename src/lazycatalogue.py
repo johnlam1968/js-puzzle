@@ -31,6 +31,13 @@ Cell = Tuple[int, int]
 _LAZY_CACHE: Dict[int, "LazyCatalogue"] = {}
 
 
+class TruncatedLibrary(RuntimeError):
+    """Raised when the on-demand state generation hit its node budget.
+
+    The library would be INCOMPLETE, so the caller must not claim exhaustiveness; it has
+    to report "unknown" (GLM code review, M2)."""
+
+
 class LazyCatalogue:
     """Legal states of an n x n frame, generated per cell on demand.
 
@@ -66,8 +73,10 @@ class LazyCatalogue:
             for st in grow_states(anchor, sym, self.n, max_cells=self.max_cells,
                                   budget=self.budget, stats=stats):
                 if stats.get("truncated"):
-                    raise RuntimeError(
-                        f"state generation for {self.n}x{n} anchor {anchor} hit the node "
+                    # The library is INCOMPLETE.  Raise a dedicated, catchable error so the
+                    # judge can report "unknown" instead of crashing (GLM code review M2).
+                    raise TruncatedLibrary(
+                        f"state generation for {self.n}x{self.n} anchor {anchor} hit the node "
                         f"budget ({self.budget}); the state library would be INCOMPLETE. "
                         f"Use a bigger budget, or the hint-driven growth (AODFS).")
                 fs = frozenset(st)
