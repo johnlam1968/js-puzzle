@@ -32,8 +32,14 @@ the 2×2 state has **no** capitol, row sums `[37,29,31,43,55]`, answer **8,045**
 PLAN.md                      the plan: what to build + acceptance criteria (D1–D59, V1–V26)
 docs/DESIGN.md               design archive: routes explored, verdicts, math core, AODFS, trace transfer
 docs/reviews/                all adversarial review rounds (5 independent rounds, 59 defects found)
-src/                         implementation (M1: rules.py, cost.py ...)
-tools/                       engine + verification + analysis scripts
+src/
+  rules.py                   rule kernel: symmetry group, capitol rule (integer only)
+  cost.py                    cost field, metric properties, lemma bank
+  grow.py                    AODFS orbit growth (construction of states)
+  hitting.py                 capitol positions as a hitting set (lower bound)
+  tilings.py                 legal states + exact-cover DP over tilings
+tests/                       48 tests: truth table, official example, lemmas, enumeration
+tools/                       verification + analysis + review harness
 data/puzzles/<id>/puzzle.json  puzzle input  (grid + hints + ingest provenance)
 data/puzzles/<id>/truth.json   ground truth (states, sizes, capitols, d-field, row sums, answer)
 data/schema/                 JSON Schema for both files
@@ -59,7 +65,7 @@ Pixels exist **only** at the ingest boundary. Everything downstream reads JSON.
 | 4×4 search tree | 1,300,765 nodes, root branching 377, avg branching 2.31 |
 | 5×5 legal states / tilings | 22,317 / 2,638,025,192 (×19.7 per size step) |
 | 11×11 legal states | ≈1.3×10¹² (extrapolated) → pre-enumeration infeasible |
-| 11×11 capitol count | **≥ 6** (hitting-set lower bound, exact B&B) |
+| 11×11 capitol count | **≥ 6** (hitting-set lower bound, exact B&B; the dual packing bound agrees) |
 | 11×11 hints | 33 (machine-read from the official PNG, cross-checked 3 ways) |
 
 ### The theorems that matter
@@ -79,7 +85,11 @@ Pixels exist **only** at the ingest boundary. Everything downstream reads JSON.
 
 | script | purpose |
 |---|---|
-| `engine.py` | rule kernel — the **executable specification** (symmetry group, capitol rule, cost field) |
+| `src/rules.py` | rule kernel — the **executable specification** (symmetry group, capitol rule) |
+| `src/cost.py` | cost field, metric properties, the lemma bank |
+| `src/grow.py` | AODFS orbit growth: build states by adding symmetry orbits |
+| `src/hitting.py` | capitol positions as a hitting set (exact minimum + dual packing bound) |
+| `src/tilings.py` | legal states and the exact-cover tiling DP |
 | `check_contract.py` | 63 data-contract assertions; exit code 0 = all green |
 | `validate.py` | validate a candidate state partition against the published numbers |
 | `shapes4x4.py` | 4×4 shape catalogue + tiling counts (three countings) |
@@ -90,7 +100,8 @@ Pixels exist **only** at the ingest boundary. Everything downstream reads JSON.
 | `draw_tree_4x4.py` | renders the "where 562,308 comes from" figures |
 | `render_4x4.py` | pixel-exact 4×4 three-panel figure |
 | `ocr_11x11_v2.py`, `ocr_disambiguate.py` | pixel ingest of the official 11×11 (self-supervised glyph templates) |
-| `run_openrouter_review.py` | multi-model adversarial review harness (OpenRouter) |
+| `run_openrouter_review.py` | multi-model adversarial **design** review harness (OpenRouter) |
+| `run_code_review.py` | multi-model adversarial **code** review harness (OpenRouter) |
 | `verify_reviews.py` | independently re-verifies claims made by reviewers |
 
 Everything is **Python standard library only**.
@@ -100,7 +111,8 @@ Everything is **Python standard library only**.
 ## Reviewing with external models
 
 ```bash
-python3 tools/run_openrouter_review.py "<model-id>" "<output-tag>"
+python3 tools/run_openrouter_review.py "<model-id>" "<output-tag>"   # design review
+python3 tools/run_code_review.py     "<model-id>" "<output-tag>"     # code review
 ```
 
 Add `"reasoning": {"effort": "none"}` to get a **final verdict** instead of a reasoning trace

@@ -32,8 +32,6 @@ def random_partition(n, rng, tries=400):
     cells = [(r, c) for r in range(n) for c in range(n)]
     from rules import connected, symmetry_group
     legal = []
-    for m in range(1, 1 << (n * n)):
-        pass  # placeholder to keep the loop cheap; legal states are generated below
     # enumerate legal states by growing connected sets, then exact-cover at random
     states_by_cell = {c: [] for c in cells}
     for m in range(1, 1 << (n * n)):
@@ -72,6 +70,8 @@ class TestLemmas(unittest.TestCase):
                     continue
                 puz = Puzzle(parts)
                 d = puz.cost_field()
+                if not puz.capitols:
+                    continue          # a capitol-less partition makes every check vacuous
                 self.assertEqual(check_L1(puz, d), [], f"L1 broken on {parts}")
                 self.assertEqual(check_L2(puz, d), [], f"L2 broken on {parts}")
                 self.assertEqual(check_L3(puz, d), [], f"L3 broken on {parts}")

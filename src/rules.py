@@ -119,16 +119,9 @@ def symmetry_group(cells: Iterable[Cell]) -> Dict[str, FrozenSet[Cell]]:
 
     group: Dict[str, FrozenSet[Cell]] = {}
     for name, fn in candidates:
-        image = set()
-        ok = True
-        for (r, c) in S:
-            try:
-                image.add(fn(r, c))
-            except Exception:            # pragma: no cover - defensive
-                ok = False
-                break
-        if not ok or image != S:
-            continue
+        image = {fn(r, c) for (r, c) in S}
+        if image != S:
+            continue                      # the map does not preserve the state
         group[name] = frozenset((r, c) for (r, c) in S if fn(r, c) == (r, c))
     return group
 
@@ -172,7 +165,12 @@ def is_capitol_bearing(cells: Iterable[Cell]) -> bool:
 
 
 def partition_of(labels: Sequence[Sequence[int]]) -> List[State]:
-    """Turn a label matrix into a list of states (index = label)."""
+    """Turn a label matrix into a list of states, indexed by POSITION.
+
+    Labels need not be contiguous: the returned list is ordered by sorted label, so a
+    matrix labelled 0,2 yields states[0] = label 0 and states[1] = label 2.  Downstream
+    code re-indexes by position anyway (Puzzle enumerates the states it is given).
+    """
     buckets: Dict[int, set] = {}
     for r, row in enumerate(labels):
         for c, lab in enumerate(row):

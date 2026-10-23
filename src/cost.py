@@ -13,7 +13,15 @@ Conventions used here (and only here):
   uses the triangle inequality of dist, not of d.
 """
 
+
 from __future__ import annotations
+
+import os as _os
+import sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+
+
+
 
 import heapq
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
@@ -35,6 +43,11 @@ class Puzzle:
         for lab, s in enumerate(self.states):
             for (r, c) in s:
                 self.owner[r][c] = lab
+        holes = [(r, c) for r in range(self.h) for c in range(self.w) if self.owner[r][c] < 0]
+        if holes:
+            raise ValueError(
+                "the states do not partition a full rectangle; "
+                f"{len(holes)} uncovered cell(s), first at {holes[0]}")
         self.capitols: Dict[int, Cell] = {}
         for lab, s in enumerate(self.states):
             cap = capitol_of(s)
@@ -230,7 +243,15 @@ def foreign_capitol_violations(puz: Puzzle, d: List[List[float]]) -> List[Cell]:
 
 
 def is_metric(puz: Puzzle) -> bool:
-    """dist is a genuine metric: symmetric, zero on the diagonal, triangle inequality."""
+    """Checks the METRIC AXIOMS, but only over paths of length <= 2.
+
+    Specifically: symmetry, zero diagonal, and the triangle inequality for paths that use
+    at most two edges.  A full triangle check over all triples is O((hw)^3) per source and
+    is not attempted here.
+
+    NOTE: this is O((h*w)^2) per source and O((h*w)^3) overall -- fine for the 4x4/5x5
+    fixtures, too slow for 11x11 (2e8 operations).  Do not call it on the big instance.
+    """
     for r in range(puz.h):
         for c in range(puz.w):
             src = (r, c)
