@@ -5,8 +5,9 @@
 > argument, complexity). This file is the *layman's version*: what the algorithm does, why it exists,
 > and what it is allowed to claim. Where the two disagree, DESIGN.md wins.
 
-**Status of this document:** 2026-10-23 (18:40 UTC), against `main` = `f4c427d`
-("README: how the gates run"), with the solver work in `53cfda0`. Numbers marked ✅ are measured and
+**Status of this document:** 2026-10-23 (18:50 UTC), against `main` = `fe89aa4`
+("d=1 prune, four never-compiled files fixed, 8 gates").  The exploration that produced the next
+ideas is in [`ALTERNATIVES.md`](ALTERNATIVES.md). Numbers marked ✅ are measured and
 reproducible with the snippets in §7. Numbers marked ⚠️ were measured during work that was still in
 flight and may have moved on — see §6.
 
@@ -169,7 +170,7 @@ the *existence* side is valid: a cell reading `v` has a capitol within Manhattan
 
   | instance | hints | nodes | wall clock | verdict |
   |---|---|---|---|---|
-  | 4×4 `counterexample` (fully revealed) | 16/16 | **206** | 0.03 s | `answers={112, 304}`, `cardinality=2`, `exhaustive` |
+  | 4×4 `counterexample` (fully revealed) | 16/16 | **199** | 0.03 s | `answers={112, 304}`, `cardinality=2`, `exhaustive` |
   | 4×4 official fixture | 16/16 | **951** | 0.3 s | answer **680**, unique |
   | 5×5 **official example** | 10/25 | **129,319** | 2.6–10.6 s | answer **8,045**, `exhaustive`, **unique** |
   | 11×11 official | 33/121 | — | ~17,500 nodes/s | 0 answers at 4.2 M nodes (still running) |
@@ -218,7 +219,7 @@ Every bound is consistent with the known solution, so the prune does not kill th
 opposite of what the node-rate alone suggested: the solver was never too slow, it was **not
 using the numbers**.
 
-### 6.2 The cheapest prune still on the table: a `d = 1` cell forces a 1×1 state
+### 6.2 A `d = 1` cell forces a 1×1 state — implemented, and it shows
 
 **The lemma**: if `d(x) = 1`, the cheapest path from `x` costs 1, so it is a single step of cost 1.
 A step costs 1 only if one of the two states has area 1 — and a 1×1 state is always its own
@@ -237,11 +238,21 @@ For the 11×11 there are three such cells ✅:
 ⇒ **48 combinations** in total — trivially enumerable, and each one pins a capitol and a
 single-cell state.
 
-**The interesting part**: `src/hitting.py` already computes exactly this, as
-`singleton_demands` ✅ — and **the solver does not use it**. (It is also consistent: all 120
-minimum hitting sets already satisfy the three constraints, 120/120.) So this is the cheapest
-remaining prune: it is already computed, it is already cross-checked, and it is simply not wired
-into the search.
+**The interesting part**: `src/hitting.py` already computed exactly this, as
+`singleton_demands` ✅ — while the solver did not use it. The solver now does (`fe89aa4`): when a
+state is closed, the `d = 1` demand is re-checked against the *updated* set of singleton states,
+and a `d = 1` cell is forbidden from being a 1×1 state itself (a 1×1 state is a capitol, so its
+own number must be 0, not 1).
+
+**MEASURED** ✅: the fully revealed 4×4 went from **206 nodes to 199** with the same verdict
+(`answers={112,304}`, `cardinality=2`, `exhaustive=True`); the 4×4 official fixture stays at 951
+and the 5×5 at 129,319 — so the rule prunes without ever changing a verdict.
+
+Two bugs were found while wiring it up, both worth remembering: the first version treated "the
+state currently being closed" as "a demand not yet satisfied", so closing the very 1×1 state that
+satisfied the demand killed the branch; and the second version passed the new singleton set into a
+positional argument slot, so the set was silently always empty. The cure for the second was
+making optional arguments **keyword-only**.
 
 ### 6.3 A counting bug worth knowing about (it inflated a number you may have seen)
 
@@ -335,10 +346,28 @@ sets) ✅. The problem is that the standalone script **duplicates the engine's l
 repository has two sources of truth for the same quantity — and the wrong one is the one that
 cannot run.
 
-⇒ Two cheap additions to `tools/run_all_gates.py` would have caught all of this:
-1. a **`py_compile` sweep** over every `*.py` in the repository (three lines);
-2. a check that the standalone tools **agree with the engine** — the engine is the single source
-   of truth (PLAN: "任何 fixture / 真值表 / 回归常量必须由引擎产出，禁止手写").
+**Status: all of it is fixed** (`fe89aa4`) — the four files compile, `tools/compile_all.py` sweeps
+the tree, and the suite is now **8 gates, all green**:
+
+```
+PASS  every python file compiles (py_compile over the whole tree)
+PASS  data contract (fixtures vs engine, 0-based coordinates)
+PASS  test suite
+PASS  generator self-check (build a puzzle, re-verify it)
+PASS  candidate validator self-test
+PASS  the 11x11's 33 numbers, re-derived from the source image
+PASS  the 11x11 capitol bound: the engine against data/derived/
+PASS  the reviewers' claims, re-verified against the engine
+```
+
+The two structural changes that matter are: `capitol_bound_11x11.py` no longer re-implements the
+hitting-set logic (it is a thin shell over `src/hitting.py`, plus a check that the engine still
+agrees with `data/derived/`), and `verify_reviews.py` no longer trusts the review claims — it
+re-derives them from the engine, including the D53 counter-example witness.
+
+⇒ The lesson stands, and it is now enforced rather than remembered: **the engine is the single
+source of truth** (PLAN: "任何 fixture / 真值表 / 回归常量必须由引擎产出，禁止手写"), and **a gate
+nobody calls is not a gate**.
 
 The CI workflow itself is written but **cannot be pushed from either side**: GitHub rejects
 workflow files for a token without the `workflow` scope, and the API answers `404 Not Found` —
@@ -348,19 +377,24 @@ through the GitHub web UI, or with a token that carries `workflow`, is the way t
 ### 6.6 What the solver still cannot do
 
 The 11×11 remains unsolved: 0 answers after 4.2 M nodes at ~17,500 nodes/s, with a 50 M-node
-budget running. The wall is unchanged — **sparsity**. Three levers, in the order I would pull
-them:
+budget running. The wall is unchanged — **sparsity**. The levers, in the order I would pull them:
 
-1. **Wire `singleton_demands` into the solver** (§6.2) — already computed, already cross-checked,
-   not yet used.
-2. **Tight-edge coupling**: for a hinted cell `x`, the first step of its shortest path is some
-   neighbour `y`, so on a tight edge `min(size_x, size_y) = |D(x) − D(y)|` — two state sizes
-   become coupled, which is what constrains the *filler* states (the ones without capitols, and
-   therefore the real explosion source).
+1. ~~**Wire `singleton_demands` into the solver**~~ — **done** (§6.2). The `d = 1` rule is in, and
+   it cut the 4×4 from 206 to 199 nodes without touching a verdict.
+2. **Tight-edge coupling** — the next knife, and the one that has to work. On the official 5×5,
+   70% of the adjacent edges are *tight* (the drop equals the step cost exactly), **every one of
+   the four states has at least one**, and the set of tight-edge drops is **exactly the state-size
+   multiset**. A tight edge says `min(size_x, size_y) = Δ` — the *smaller* of the two states has
+   area exactly Δ — so the loose bound "both ≥ Δ" splits into an exhaustive dichotomy: *both ≥ Δ+1,
+   or one of them exactly Δ*. The second branch is worth **4–60×** on the state-shape branching
+   (measured on the 4×4 catalogue). The open question is whether it reaches the *filler* states —
+   the ones with no capitol, which are the real explosion source. See
+   [`ALTERNATIVES.md` §4](ALTERNATIVES.md#4-translation-c--rivers-become-a-flow-field-and-the-growth-order-should-be-canonical).
 3. **Seed the search with the capitol set** (DESIGN §7): solve the hitting set first, then grow
-   each state outward from its capitol. On the 11×11 only 4 of 33 cells have a published
-   neighbour, so the per-cell bounds are weak there — but a seeded search is bounded by the
-   capitol structure instead of by the raw grid.
+   each state outward from its capitol. The seed data is now verified and gated, but **no code
+   uses it yet** — and on the 11×11 only 4 of 33 published cells have a published neighbour, so the
+   per-cell bounds are weak there. A seeded search would be bounded by the capitol structure
+   instead of by the raw grid.
 
 ---
 
@@ -446,7 +480,7 @@ hints = {(h['row'] - 1, h['col'] - 1): h['value'] for h in p['hints']}   # 1-bas
 t0 = time.time()
 res = solve_grid(4, hints, budget=400_000)
 print(res['answers'], res['cardinality'], res['partitions'], res['exhaustive'], res['nodes'])
-# [112, 304] 2 2 True 206
+# [112, 304] 2 2 True 199
 ```
 
 The expected answer set is the fixture's own `answers: [304, 112]`, and the expected partition
@@ -555,4 +589,5 @@ for (r, c), v in sorted(H.items()):
 | `src/rules.py` | the rule kernel: symmetry group and capitol rule (integer only) |
 | `src/hitting.py` | capitol positions as a hitting set (a lower bound, and candidate seeds) |
 | `docs/DESIGN.md` §3 | the authoritative AODFS design |
+| `docs/ALTERNATIVES.md` | the discussion log: the analogies, their exact translations, the experiments |
 | `PLAN.md` | the defect register — AODFS entries are D38, D48, D65, D85 |
