@@ -1,0 +1,17 @@
+# Dependencies of the gate suite.
+#
+# The repository's own code is standard-library only.  The two exceptions are the tools
+# the gates run:
+#
+#   numpy   -> src/tiletable.py
+#   Pillow  -> tools/ocr_*.py, which the "the 11x11's 33 numbers" gate runs to
+#              re-derive the published numbers from assets/metric-too.png
+#
+# Deliberately NOT pinned.  The install must never be the reason a gate goes red: a
+# missing exact version would break the job before any gate could speak.  The numbers
+# gate is the canary -- it re-derives the 33 published numbers from the source image,
+# and it was last verified on Python 3.11 with Pillow 12.2.0 and numpy 2.4.6.  If that
+# gate goes red in CI, the fix is to pin these two lines to the versions the numbers
+# were verified with (and update this comment) -- not to suspect the data.
+numpy
+pillow
