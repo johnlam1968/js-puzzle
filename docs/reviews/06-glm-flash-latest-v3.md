@@ -1,0 +1,356 @@
+# REVIEW-glm-flash-latest-v3 — 独立评审（v2 设计文档）
+
+- model: `~z-ai/glm-flash-latest`
+- 命中尝试: no-reasoning
+- finish_reason: stop
+- usage: {"prompt_tokens": 16666, "completion_tokens": 24677, "total_tokens": 41343, "cost": 0.0148384, "is_byok": false, "prompt_tokens_details": {"cached_tokens": 0, "cache_write_tokens": 0, "audio_tokens": 0, "video_tokens": 0}, "cost_details": {"upstream_inference_cost": 0.0148384, "upstream_inference_prompt_cost": 0.0024999, "upstream_inference_completions_cost": 0.0123385}, "completion_tokens_details": {"reasoning_tokens": 22171, "image_tokens": 0, "audio_tokens": 0}}
+- content_chars: 7558  reasoning_chars: 54396
+
+---
+
+## FINAL ANSWER
+
+# 1. SANITY CHECK — 5×5 example
+
+I recomputed the state decomposition from the label grid, then ran Dijkstra by hand. Correct state reading (0-based): state0 = {(0,0),(1,0),(2,0),(2,1),(3,1),(3,2),(3,3)} — size 7, symmetric under anti-diagonal reflection r+c=3, which fixes only (2,1) ⇒ capitol (2,1). State1 = 2×2 at rows 0–1/cols 1–2, size 4: its symmetries (both diagonals? no — vertical/horizontal mid-axis reflections and 180°) fix 0 or 2 cells ⇒ **no capitol**. State2 = {(1,3),(2,2),(2,3)}: L-tromino, main-diagonal reflection r−c=−1 swaps (2,2)↔(1,3), fixes (2,3) ⇒ capitol (2,3). State3 = {(0,3),(0,4),(1,4),(2,4),(3,4),(3,0),(4,0),(4,1),(4,2),(4,3),(4,4)}: size 11, capitol (4,4).
+
+My d-field (matches the printed one exactly):
+```
+12  8 10  6 17
+ 8  4  6  3  6
+ 7  0  3  0  3
+14  7  6  3 10
+25 14 13 10  0
+```
+Spot checks: d(0,0)=12 via (0,1)→(1,1)→(2,1) = 4+4+4; d(4,0)=25 via (4,1)→(3,1)→(2,1) = 11+7+7; d(4,2)=13 via (3,2)→(2,2)→(2,3) = 7+3+3. Row sums 37/29/31/43/55; 37²+29²+31²+43²+55² = 1369+841+961+1849+3025 = **8045**. **PASS.**
+
+(Note: the doc's §5.2 trace example mislabels (2,2) as "state_size 4, has_capitol false" — (2,2) is in the 3-cell state2; cosmetic but wrong.)
+
+# 2. VERDICT: APPROVE_WITH_CHANGES
+
+The mathematical core (integer symmetry tests, capitol theorem, L1–L5, M2-as-lower-bound, D2-only invariance, hitting-set framing) is now sound, and the AODFS + seed pipeline is the right architecture. But the hitting-set data is still wrong in membership, one retracted rule survives in §3.3, and the §1.1 modular tests are stated as if sufficient.
+
+1. **§1.11 demand list — wrong membership.** (5,9)=4 is **already satisfied** by capitol (6,8): Manh = 1+1 = 2 ≤ ⌊5/2⌋=2. Conversely **(7,1)=11 is an unmet demand**: Manh to (6,8) = 1+7 = 8, to (11,6) = 4+5 = 9, both > 6. Correct demand set (9 items, count coincidentally right): (1,2),(1,3),(1,6),(1,10),(3,3),(3,6),(4,7),(5,11),**(7,1)** — swap (5,9)→(7,1). Their example 4-set {(1,1),(1,7),(3,7),(4,11)} still happens to cover the true set ((1,1) covers (7,1) at distance 6), so "min extra = 4, total ≥ 6" survives — but only by luck; the pipeline that produced the list is buggy.
+2. **§1.11/§2.12 candidate pool "64" — unexplained, likely wrong.** Hidden-capitol candidates = all non-hint cells = 121 − 33 = **88** (d>0 hints are excluded, the two d=0 cells are known capitols). Even removing M4-adjacent cells gives 84, not 64. All downstream counts (120 minimal sets) are UNVERIFIED until this is fixed.
+3. **§3.3 pruning table still contains the retracted rule** "Manh 下界: 到最近已知首都的 Manh 距离 > D(x) ⇒ 剪" — this is exactly D53, refuted by the (2,4)=3 case of the official example. Delete it; only the existence direction (ball contains a capitol) and the §6.2b fixed-candidate-set version are valid.
+4. **§1.1 modular tests are necessary, not sufficient.** Counterexample: S = {(0,1),(1,0),(2,3),(3,2)}, n=4: sr=sc=6, so (sr−sc)%4=0 and (sr+sc)%4=0 — passes the "rot90" row of the table, but S has no rot90 (D1∘D2 = rot180, not rot90; D1∧D2 invariance does **not** imply rot90). The engine must, after the modular filter, explicitly verify the candidate map sends S to S. State this explicitly or the kernel silently accepts fake rot90 states.
+5. **§6.2b does not inject forced capitols.** Each d=1 hint *forces* an adjacent 1×1 state, whose cell is itself a capitol (d=0). These forced capitols must be added to the seed before solving the hitting set — they cover other demands (see §4 below) and change the seed enumeration.
+
+# 3. NEW APPROACHES (ranked)
+
+1. **Core–periphery decomposition (new, strongest).** Quantity: the set of achievable per-row size-contribution vectors from cells whose states are unconstrained by hints. Key observation the doc lacks: a state with no hinted cell and no tight-edge contact affects the answer *only* through its size and row profile. So split the board: solve the "hint core" (cells within tight-path/ball reach of the 33 hints) exhaustively by AODFS; tile the periphery by a small DP that enumerates legal symmetric states placed there and their (row-profile, size) signatures. Combine: answer = Σ over core rows + periphery. This attacks the real blow-up (anonymous filler states), which AODFS still explores node-by-node.
+2. **Symmetry-aware plug DP revival.** §2.2's rejection overstates the shape-mask cost: because an open state is σ-symmetric, its unplaced part is determined by σ plus the placed part *near the frontier*. Frontier state = (labels, per open state: σ, axis/center, frontier cells of one orbit half). This is far smaller than full masks; worth re-measuring before declaring DP dead.
+3. **Hitting-set view — accept, but upgrade** (doc has it; fixes in §2 above): add forced singleton capitols, enumerate *all* hitting sets of size 4 and small supersets as seeds, weight demands by 1/radius².
+4. **Tight-edge forest as a joint constraint.** Build the implied shortest-path arborescence: each hint's tight chain to its nearest capitol gives a path whose edge costs are min(s_x,s_y); paths from the same capitol share structure. Propagating "min(s_x,s_y) ≥ |Δd|" along these trees couples state sizes globally — a cheap propagation layer AODFS currently lacks.
+5. **33 hints as a partial metric → LP/SAT certificate.** Already in doc (§12.2 Benders/CP-SAT); keep as verifier, not primary.
+6. **Spectral/topological/Monte Carlo — reject**, agreeing with the doc: d depends on areas, not shape spectra; MC can't certify uniqueness.
+
+# 4. HAND DEDUCTIONS on the 11×11 (no search)
+
+- **Capitols at (6,8) and (11,6)**; both states odd-sized.
+- **(6,6)=10 adjacent to (6,8)=0** ⇒ min(s₆₆, s₆₈) ≥ 10 ⇒ the (6,8) capitol state has size ≥ 10, odd ⇒ **≥ 11**. Strong free bound.
+- **d=1 hints force singleton states (= capitols)**: near (3,6): {(2,6),(4,6),(3,5),(3,7)}; near (4,7): {(3,7),(5,7),(4,6),(4,8)}; intersection **{(3,7),(4,6)}** — one singleton there can serve both. Near (5,11): {(4,11),(6,11),(5,10)}.
+- **M4**: (11,9)=77, (11,10)=61 are adjacent to no capitol; both their states have size ≥ 16 (Δ=16 on the (11,9)–(11,10) edge).
+- **(11,10)=77 with capitol (11,6) four cells away on the same row**: any path costs ≥ 77 over ≥ 4 steps ⇒ at least one adjacent pair among cols 6–10 of row 11 has both states ≥ 20.
+- **Capitol count ≥ 6, and the seed structure is nearly forced**: (1,1)-type cell covers {(1,2),(1,3),(1,6),(3,3),(7,1)}; a second capitol within Manh 3 of (1,10) (cannot merge with the first: 2+3 < 7); the singleton at (3,7)/(4,6) covers (3,6),(4,7); one adjacent capitol for (5,11). So hidden capitols ≥ 4, total ≥ 6 — confirmed by hand, independent of the doc's buggy script.
+- **Dead-state budget**: Σ sizes = 121 odd ⇒ odd number of odd states; every capitol state is odd; dead states have size ≥ 2.
+- (1,2)=8/(1,3)=4 and (7,3)=11/(8,3)=17: both states in each pair have size ≥ 4 and ≥ 6 respectively.
+
+# 5. ONE NEXT EXPERIMENT
+
+**Exact hitting-set re-solve with corrected demands + forced singletons, then seed AODFS.** Enumerate all size-4 hitting sets over the 88-cell pool with the demand set of §2.1 (expected: minutes of branch-and-bound; the (1,1)-type cell covering five demands should collapse the enumeration to a handful of sets). Success: a small (≤ ~10) seed list; then run AODFS from each seed (supersets allowed per fix E3) with all 33 hints as leaf check. Success = a partition reproducing all 33 numbers (candidate answer, then hunt a second); failure = all seeds exhausted with no compatible partition ⇒ the bug class is elsewhere (likely the §1.1 sufficiency gap, item 4).
+
+---
+
+## REASONING TRACE (raw)
+
+<details><summary>show</summary>
+
+Need to verify 5x5 example, review doc, propose new approaches, hand deductions, one experiment. Keep under 1200 words. Let me do the 5x5 check quickly.
+
+States: sizes 7,4,3,11. State0 (7 cells): (0,0),(1,0),(2,0),(2,1),(3,0),(3,1),(4,1). Capitols: state0 at (2,1), state2 at (2,3), state3 at (4,4). State1 = 2x2 at rows0-1, cols1-2, no capitol. State2 = 3 cells: (0,3),(0,4),(1,3)? Check: labels row0: 0 1 1 3 3; row1: 0 1 1 2 3; row2: 0 0 2 2 3; row3: 3 0 0 0 3; row4: 3 3 3 3 3. State2 cells: (1,3),(2,2),(2,3) — L-tromino, capitol (2,3) (corner fixed by diagonal reflection). State3: (0,3),(0,4),(1,4),(2,4),(3,4),(4,0..4) = 11 cells, capitol (4,4).
+
+Cost field: sizes s0=7,s1=4,s2=3,s3=11. Compute d at each cell = min cost to any capitol {(2,1),(2,3),(4,4)}.
+
+Check printed d:
+(0,0)=12: path (0,0)→(1,0)→(2,0)→(2,1): all in state0, cost 7 each, 3 steps =21? That's worse. Better: (0,0)→(0,1) cross into state1 (min(7,4)=4), then within state1 to (1,1)? state1 cells (0,1),(0,2),(1,1),(1,2). (0,1)→(1,1) cost 4, then (1,1)→(1,2) 4, (1,2)→(2,2) cross min(4,3)=3, (2,2)→(2,3) 3 (capitol). Total 4+4+4+3+3=18? Hmm printed 12. Alternative: (0,0)→(1,0) in state0 cost7, (1,0)→(2,0) 7, (2,0)→(2,1) 7 =21. Or (0,0)→(0,1): cost min(7,4)=4; (0,1)→(1,1): 4; (1,1)→(2,1)? (2,1) is capitol of state0; cross min(4,7)=4. Total 4+4+4=12. ✓.
+
+(0,1)=8: (0,1)→(1,1) 4, →(2,1) 4 = 8 ✓. (0,2)=10: (0,2)→(1,2) 4, →(2,2) cross min(4,3)=3, →(2,3) 3 =10 ✓. Or (0,2)→(0,3) cross min(4,3)=3, →(1,3) 3, →(2,3) 3 =9? Wait (0,3) is state3, (1,3) state2. (0,2)→(0,3): min(s1=4,s3=11)=4, not 3. So 4+3+3=10 ✓. (0,3)=6: (0,3)→(1,3) min(11,3)=3, →(2,3) 3 =6 ✓. (0,4)=17: (0,4)→(1,4) 11, →(2,4) 11, →(3,4) 11, →(4,4) 11 = 44? Better: (0,4)→(0,3) 11, →(1,3) 3, →(2,3) 3 =17 ✓. (1,0)=8: (1,0)→(2,0) 7, →(2,1) 7 =14; or (1,0)→(1,1) min(7,4)=4, →(2,1) 4 =8 ✓. (1,1)=4: →(2,1) 4 ✓. (1,2)=6: →(2,2) min(4,3)=3, →(2,3) 3 =6 ✓. (1,3)=3 ✓. (1,4)=6: →(1,3) 3, →(2,3) 3 =6 ✓. (2,0)=7: →(2,1) 7 ✓. (2,2)=3 ✓. (2,4)=3: →(2,3) 3 ✓. (3,0)=14: (3,0)→(3,1) 7, →(2,1) 7 =14 ✓. (3,1)=7 ✓. (3,2)=6: (3,2)→(2,2) min(7,3)=3, →(2,3) 3 =6 ✓. (3,3)=3: →(2,3) 3 ✓. (3,4)=10: →(4,4) 11? or →(3,3) min(11,7)=7, →(2,3) 3 =10 ✓. (4,0)=25: (4,0)→(4,1) 11, →(3,1) 11, →(2,1) 11 =33; or (4,0)→(3,0) 11, →(3,1) 11, →(2,1) 11=33; via state0: (4,1)→(3,1)→(2,1): 11+11+11=33. Hmm printed 25. Alternative: (4,0)→(4,1) 11, (4,1)→(3,1) 11, (3,1)→(2,1) 11 = 33. Or (4,0)→(3,0) 11, (3,0)→(3,1) 7 (same state0), (3,1)→(2,1) 7 = 25 ✓. (4,1)=14: →(3,1) 7, →(2,1) 7 =14 ✓. (4,2)=13: (4,2)→(4,1) 11, →(3,1) 11, →(2,1) 11 = 33; or (4,2)→(3,2) min(11,7)=7, →(2,2) 3, →(2,3) 3 =13 ✓. (4,3)=10: →(3,3) min(11,7)=7, →(2,3) 3 =10 ✓. (4,4)=0 ✓.
+
+Row sums of sizes: row0: 7+4+4+11+11=37 ✓; row1: 7+4+4+3+11=29 ✓; row2: 7+7+3+3+11=31 ✓; row3: 11+7+7+7+11=43 ✓; row4: 11×5=55 ✓. Squares: 1369+841+961+1849+3025=8045 ✓. PASS.
+
+Capitols: state0 (7 cells): shape rows0-2 col0 plus (2,1),(3,0),(3,1),(4,1)? Wait recount state0: cells with label 0: (0,0),(1,0),(2,0),(2,1),(3,0),(3,1),(4,1) = 7. Symmetric under 180° rotation about (2,1)? (0,0)↔(4,... ) hmm (0,0)→(4,2)? not in set. Check reflection across diagonal? Actually capitol (2,1): reflection across vertical axis c=1: (0,0)→(0,2) not in set. Reflection across horizontal r=2: (0,0)→(4,0)? not in set. Hmm. 180° about (2,1): (r,c)→(4−r,2−c): (0,0)→(4,2) no. Diagonal reflection through (2,1) along main-diag direction: (r,c)→(c+1, r−1)? (0,0)→(1,−1) no. Anti-diagonal: (r,c)→(3−c, r+1)? (0,0)→(3,1) ✓; (1,0)→(3,2)? no. Hmm. Let me just trust: maybe shape is symmetric under reflection across anti-diagonal through (2,1): map (r,c)→(1−c+2, r+... let me compute: anti-diagonal line r+c=3? (2,1): 2+1=3. Reflection across r+c=3: (r,c)→(3−c, 3−r). (0,0)→(3,3)? not in set. Hmm. Try main diagonal r−c=1: (2,1): 2−1=1. Reflection: (r,c)→(c+1, r−1). (0,0)→(1,−1) no. Vertical axis c=1: (0,0)→(0,2) no. Horizontal r=2: (0,0)→(4,0) no. rot180 about (2,1): (0,0)→(4,2) no. So state0 as I listed isn't symmetric — maybe I misread labels. Row3: "3 0 0 0 3" → (3,1),(3,2),(3,3) are 0, not (3,1) only. Recount: state0 = (0,0),(1,0),(2,0),(2,1),(3,0),(3,1),(3,2),(3,3),(4,1)? That's 9. Hmm size 7. Row2: "0 0 2 2 3" → (2,0),(2,1) are 0. Row3: (3,1),(3,2),(3,3). Row4: (4,1). So state0 = (0,0),(1,0),(2,0),(2,1),(3,1),(3,2),(3,3),(4,1) = 8? That's 8, but size 7. Hmm. Wait row3 col0 is 3. So state0 cells: (0,0),(1,0),(2,0),(2,1),(3,1),(3,2),(3,3),(4,1) — 8 cells. But stated size 7. Contradiction? Let me recount labels: row2: 0 0 2 2 3 → (2,0)=0,(2,1)=0. row3: 3 0 0 0 3 → (3,1),(3,2),(3,3)=0. row4: 3 3 3 3 3 → (4,1)=0. Total: (0,0),(1,0),(2,0),(2,1),(3,1),(3,2),(3,3),(4,1) = 8 cells. Hmm but sizes say 0→7. Maybe (3,3) belongs elsewhere? d(3,3)=3 = distance to (2,3): (3,3)→(2,3) cross min(s?,3). If (3,3) in state0, cost min(7,3)=3, then 3 → total 3 ✓ also works. If (3,3) in state2? state2 would be (1,3),(2,2),(2,3),(3,3)? not connected properly... Actually (3,3) adjacent (2,3): if in state2, size 4. Hmm.
+
+Check symmetry: state0 = {(0,0),(1,0),(2,0),(2,1),(3,1),(3,2),(3,3),(4,1)}: 8 cells, even, can't have capitol. So something off. Maybe (3,2) is state2? Then state2 = (1,3),(2,2),(2,3),(3,2),(3,3)? size 5, capitol? Hmm d(3,2)=6: if in state2 (size5): (3,2)→(2,2) 5, →(2,3) 5 =10 ≠6. If state0 size7: min(7,3)=3 → 3+3=6 ✓. So (3,2) in state0. d(3,3)=3: state0 gives min(7,3)=3+3=6≠3. So (3,3) must reach (2,3) with cost 3 total: either same state of size 3 (state2) one step, or adjacent state... (3,3)→(2,3): if different states min(s,3)=3 needs s≥3, total 3 ✓ if (3,3) not in state2 but any state size≥3. So (3,3) could be state0 size 7: cost min(7,3)=3, total 3 ✓. Wait I made an error: d(3,3)=3 means one step of cost 3 to capitol (2,3) — cross-state cost min(s_{33}, s_{23}) = min(7,3)=3. Yes! So (3,3) in state0 works, d=3 ✓. I earlier wrongly said 6. OK.
+
+So state0 has 8 cells but claimed size 7? Recount: (0,0),(1,0),(2,0),(2,1),(3,1),(3,2),(3,3),(4,1) = 8. Hmm. Unless (3,1) is... row3: "3 0 0 0 3": positions (3,0)=3,(3,1)=0,(3,2)=0,(3,3)=0,(3,4)=3. Yes. So 8 cells. But sizes 0→7. Contradiction — unless (2,0) is... row2 "0 0 2 2 3": (2,0)=0,(2,1)=0. Hmm.
+
+Wait maybe state0 = 7 cells excluding (3,3), and (3,3) is its own... no, d(3,3)=3 needs state size ≥3 or in state2. Could (3,3) be in state3? Then (3,3)→(2,3): min(11,3)=3, total 3 ✓ too. But then state3 disconnected? state3 cells: (0,3),(0,4),(1,4),(2,4),(3,4),(4,0),(4,2),(4,3),(4,4) plus (3,3)? (3,3) adjacent (3,4) ✓ connected. Then state3 size = 9+1=10? Listed 11. Hmm: state3 cells: row0: (0,3),(0,4); row1: (1,4); row2: (2,4); row3: (3,0)? no that's 3 label — wait row3 col0 = 3! "3 0 0 0 3": (3,0)=3 and (3,4)=3. So state3 includes (3,0). Then state3: (0,3),(0,4),(1,4),(2,4),(3,0)?,(3,4),(4,0),(4,1)? no (4,1)=0. (4,0),(4,2),(4,3),(4,4). (3,0) adjacent (4,0) ✓. Count: (0,3),(0,4),(1,4),(2,4),(3,4),(3,0),(4,0),(4,2),(4,3),(4,4) = 10, plus (3,3)? If (3,3)=3: 11 ✓! And state0 = 7: (0,0),(1,0),(2,0),(2,1),(3,1),(3,2),(4,1) = 7 ✓!!
+
+Check state0 symmetry: cells (0,0),(1,0),(2,0),(2,1),(3,1),(3,2),(4,1). 180° about (2,1): (r,c)→(4−r,2−c): (0,0)→(4,2)? not in set. Hmm. Reflection across anti-diagonal through (2,1): line r+c=3, map (r,c)→(3−c,3−r): (0,0)→(3,3) not in set. Main diagonal r−c=1: (r,c)→(c+1,r−1): (0,0)→(1,−1) no. Vertical c=1: (0,0)→(0,2) no. Horizontal r=2: (0,0)→(4,0) no. Hmm, none? Let me recheck: maybe capitol is (2,1) with symmetry rot180 about center between? For 7 cells with capitol, symmetry fixes exactly (2,1). Try reflection across line r+c=3 again carefully: reflection across anti-diagonal r+c=k maps (r,c)→(k−c, k−r). k=3: (0,0)→(3,3). Not in set. Hmm.
+
+Maybe I mis-assigned: perhaps (3,2) not in state0. Try state0 = (0,0),(1,0),(2,0),(2,1),(3,1),(4,1) = 6, no.
+
+Alternatively capitol of state0 might be at (2,1) with reflection across main diagonal direction through (2,1): line r−c=1, map (r,c)→(c+1, r−1). (2,1)→(2,1) ✓ fixed. (1,0)→(1,0) ✓ fixed! That's 2 fixed cells — not allowed. Hmm (1,0): c+1=1, r−1=0 → (1,0) fixed. So that axis fixes two cells → invalid.
+
+Hmm, maybe the state0 shape: (0,0),(1,0),(2,0),(2,1),(3,1),(3,2),(4,1). Draw:
+```
+X..
+X..
+XX..
+.XX
+.X..
+```
+Rows: r0: c0; r1: c0; r2: c0,c1; r3: c1,c2; r4: c1. This is symmetric under 180° rotation about... center of mass: sr = 0+1+2+2+3+3+4=15, sc=0+0+0+1+1+2+1=5. rot180 center (sr/7, sc/7) not integer — rot180 needs 2sr%n... For rot180 about (a,b) with a=15/7 not integer — impossible. Reflection horizontal: 2sr=30, 30%7≠0. Vertical: 2sc=10 %7≠0. Diagonals: sr−sc=10 %7≠0; sr+sc=20 %7≠0. So NO symmetry?! Something's wrong with my cell set.
+
+Hmm. Maybe (3,2) belongs to state2 after all and state2 is bigger. Let me reconsider: maybe state2 = (1,3),(2,2),(2,3),(3,2),(3,3)? size 5, symmetric? Cells: (1,3),(2,2),(2,3),(3,2),(3,3) — that's a 2x2 block (2-3,2-3) plus (1,3). 180 about (2.5,2.5)? fixes 0. Reflection vertical c=2.5: fixes 0 cells. Hmm no.
+
+Alternatively state2 = (1,3),(2,2),(2,3) L-tromino with capitol (2,3)? L-tromino symmetric under diagonal reflection through corner (2,3)? Cells (2,2),(2,3),(1,3): reflection across anti-diagonal through (2,3): (r,c)→(5−c,5−r)? line r+c=5: (2,2)→(3,3) no. Main diagonal through (2,3): r−c=−1: (r,c)→(c−1,r+1): (2,2)→(1,3) ✓, (1,3)→(2,2) ✓, (2,3) fixed ✓. Yes! L-tromino with capitol at the corner (2,3). Good, matches.
+
+So state0 must be 7 cells symmetric. Given d values: d(3,1)=7, d(3,2)=6, d(4,1)=14. d(4,1)=14: from (4,1), paths: →(3,1) cost min(s41,s31). If both state0: 7 each. (4,1)→(3,1)→(2,1): 14 ✓ if same state size 7. So (4,1),(3,1) in state0. d(3,2)=6: (3,2)→(2,2)? (2,2) in state2 size3: min(s32,3)=3 → 3+3=6 requires s32≥3 ✓ any. Or (3,2)→(3,1) then... 7+7=14. So (3,2) could be state0 or state3 or state2-adjacent. If (3,2) in state0: fine d=6 via (2,2). d(3,3)=3: (3,3)→(2,3) capitol: min(s33,3)=3 → d=3 if s33≥3, any state. So (3,3) flexible.
+
+State0 candidates for symmetry with capitol (2,1): must include (2,1) fixed. 7 cells, symmetric under some σ fixing only (2,1): 3 orbits of size 2 + fixed point. Orbits about (2,1): pairs {(1,1),(3,1)}, {(2,0),(2,2)}, {(1,0),(3,2)}, {(0,0),(4,2)}, {(1,2),(3,0)}, {(0,1),(4,1)}, {(0,2),(4,0)} for rot180. Hmm rot180 about (2,1): (r,c)→(4−r,2−c). Pairs: (1,1)↔(3,1) ✓ both in set; (2,0)↔(2,2): (2,2) is state2. So rot180 fails. Reflection vertical c=1: fixes (2,1),(1,1),(3,1),(0,1),(4,1) — too many fixed. Reflection horizontal r=2: fixes (2,0),(2,1),(2,2)... (2,0) in state0, (2,2) not. Fails. Diagonal r−c=1: fixes (2,1),(1,0),(3,2) — (1,0) in state0, (3,2)? if in state0, 3 fixed → fail; pairs: (0,0)↔(1,−1) out. Fail. Anti-diagonal r+c=3: fixes (2,1),(1,2),(3,0),(0,3)... (1,2) state1, fail.
+
+Hmm. So maybe capitol of state0 isn't (2,1)? d(2,1)=0 given. The example says capitol state0 at (2,1) (0-based). Hmm but my symmetry check fails. Let me recheck the label grid — maybe I misread row3. Given: row3: "3 0 0 0 3". Actually maybe row2 is "0 0 2 2 3" — yes. Hmm.
+
+Wait — maybe state0 includes (3,0) and (3,2) but not (3,1)? No, connectivity.
+
+Let me try: state0 = (0,0),(1,0),(2,0),(2,1),(3,1),(3,0)?,(4,1)... 
+
+Try shape symmetric under 180 about (2,1) requires pairs summing to (4,2). Cells: (0,0)&(4,2); (0,1)&(4,1); (0,2)&(4,0); (1,0)&(3,2); (1,1)&(3,1); (1,2)&(3,0); (2,0)&(2,2); fixed (2,1). Need 3 pairs + fixed from available cells (not state1 cells (0,1),(0,2),(1,1),(1,2), not state2 (1,3),(2,2),(2,3), not state3). Available: (0,0),(1,0),(2,0),(3,0),(3,1),(3,2),(3,3),(4,0),(4,1),(4,2),(4,3),(4,4),(0,3),(0,4),(1,4),(2,4),(3,4). Pairs fully available: (1,0)&(3,2) ✓; (1,2)&(3,0): (1,2) is state1 ✗; (0,1)&(4,1): (0,1) state1 ✗; (2,0)&(2,2) ✗; (0,0)&(4,2) ✓; (0,2)&(4,0) ✗; (1,1)&(3,1) ✗. Only 2 valid pairs → max size 5. Not 7.
+
+So rot180 impossible. Hmm, then maybe my reading of the example grid labels is wrong. The example is given in the problem; maybe I should trust d-field and sizes rather than derive. Actually the given "True solution" is authoritative data; my job is to verify the d-field from states. If states as given don't reproduce... but the doc says three-way verified. Possibly my label reading is off: maybe row3 is "3 0 0 0 3" — the state0 cells (3,1),(3,2),(3,3) — and state0 = (0,0),(1,0),(2,0),(2,1),(3,1),(3,2),(3,3),(4,1) = 8? But size 7 stated. Unless (3,3) is state3 (making state3 = 11: (0,3),(0,4),(1,4),(2,4),(3,3),(3,4),(3,0)? no (3,0)=3 yes,(4,0),(4,2),(4,3),(4,4)) = count: (0,3),(0,4),(1,4),(2,4),(3,4),(4,4),(4,3),(4,2),(4,0),(3,0),(3,3) = 11 ✓. And state0 = 7: (0,0),(1,0),(2,0),(2,1),(3,1),(3,2),(4,1) = 7 ✓. Check state0 symmetry: cells (0,0),(1,0),(2,0),(2,1),(3,1),(3,2),(4,1). Hmm same as before minus nothing — same set as I tested (I had (3,2) in). sr=0+1+2+2+3+3+4=15, sc=0+0+0+1+1+2+1=5. Same — no symmetry. Hmm!
+
+Wait maybe (3,2) not in state0; then state0 = (0,0),(1,0),(2,0),(2,1),(3,1),(4,1) = 6. No.
+
+Hmm, maybe (2,1) capitol but state0 = (0,0),(1,0),(2,0),(2,1),(3,1),(3,2),(3,3),(4,1),(4,...)? 
+
+Let me try reflection across main diagonal r−c=1 for set {(0,0),(1,0),(2,0),(2,1),(3,1),(3,2),(4,1)}: map (r,c)→(c+1,r−1): (0,0)→(1,−1) ✗.
+
+Anti-diagonal r+c=3: (r,c)→(3−c,3−r): (0,0)→(3,3) ✗ (if (3,3) in state3).
+
+Hmm what if (3,3) IS in state0 and state0 = 8 cells... but then size 7 wrong and capitol impossible (even). Something inconsistent. Unless row4 (4,1) is not 0... row4: "3 3 3 3 3" all 3. So (4,1)=3, state3! Then state3 = (0,3),(0,4),(1,4),(2,4),(3,4),(4,0),(4,1),(4,2),(4,3),(4,4),(3,0) = 11 ✓ and state0 = (0,0),(1,0),(2,0),(2,1),(3,1),(3,2),(3,3) = 7 ✓!
+
+Check state0 symmetry: cells (0,0),(1,0),(2,0),(2,1),(3,1),(3,2),(3,3). sr=0+1+2+2+3+3+3=14, sc=0+0+0+1+1+2+3=7. rot180: 2sr=28%7=0 ✓, 2sc=14%7=0 ✓, center (2, 1) = (14/7, 7/7) = (2,1) ✓! rot180 map (r,c)→(4−r,2−c): (0,0)→(4,2)? NOT in set. Hmm fail. Wait rot180 about (2,1): (r,c)→(2·2−r, 2·1−c)=(4−r,2−c). (0,0)→(4,2) ✗.
+
+Reflection horizontal r=2: 2sr=28%7=0, map (r,c)→(4−r,c): (0,0)→(4,0) ✗. Vertical: (r,c)→(r,2−c): (0,0)→(0,2) ✗. Diag D1: sr−sc=7%7=0, k1=1, map (r,c)→(c+1,r−1): (0,0)→(1,−1) ✗. D2: sr+sc=21%7=0, k2=3, map (r,c)→(3−c,3−r): (0,0)→(3,3) ✓! (1,0)→(3,2) ✓! (2,0)→(3,1) ✓! (2,1)→(2,1) ✓ fixed! (3,1)→(2,0) ✓! (3,2)→(1,0) ✓! (3,3)→(0,0) ✓! Symmetric under anti-diagonal reflection r+c=3, only (2,1) fixed ✓. Capitol (2,1) ✓✓.
+
+Great. So correct reading: row4 all state3; (3,3) in state0. Now verify d-field with these states:
+s0=7 (cap (2,1)), s1=4 no cap, s2=3 (cap (2,3)), s3=11 (cap (4,4)).
+
+d(4,1): state3. →(4,0) 11, →(3,0) 11, →(2,... (3,0)→? (3,0) adjacent (2,0) state0: min(11,7)=7, →(2,1) 7: total 11+7+7=25 ✓ matches printed 25! (4,1)→(3,1) min(11,7)=7, →(2,1) 7 = 14 ✓ printed 14. ✓. d(4,0)=25 ✓ (via (4,1)... wait (4,0)→(4,1) 11, →(3,1) 7, →(2,1) 7 = 25 ✓). d(4,2)=13: →(4,3) 11,→(4,4) 11 = 22; →(3,2) min(11,7)=7, →(2,2) 3, →(2,3) 3 = 13 ✓. d(4,3)=10: →(3,3) min(11,7)=7, →(2,3)? (2,3) cap, (3,3)→(2,3) min(7,3)=3: 7+3=10 ✓. d(3,3)=3 ✓. d(3,2)=6: →(2,2) min(7,3)=3, →(2,3) 3 = 6 ✓. d(3,1)=7 ✓. d(3,0)=14: →(2,0) 7, →(2,1) 7 = 14 ✓. d(3,4)=10: →(2,4) 11... →(3,3) min(11,7)=7, →(2,3) 3 = 10 ✓. All match. Row sums: row3: 11+7+7+7+11=43 ✓; row4: 55 ✓. PASS confirmed.
+
+Now doc review. Things still wrong — need to find genuine errors:
+
+1. §1.11 hitting set: "9 demands" list includes (3,6)=1 r1, (4,7)=1 r1, (5,11)=1 r1 — d=1 demands radius ⌊2/2⌋=1, fine. But check claim "22 satisfied by (6,8),(11,6)": e.g. (1,2)=8 radius 4: Manh((1,2),(6,8))=12 >4; (11,6): 10+4=14>4. So (1,2) is a demand! But doc lists it as demand ✓. (1,3)=4 r2: dist to (6,8)=10, no → demand ✓. (1,6)=11 r6: Manh to (6,8)=5+2=7 ≤6? 5+2=7 >6. To (11,6): 10+0=10. So demand ✓. (1,10)=5 r3: to (6,8): 5+2=7>3 demand ✓. (3,3)=7 r4: to (6,8): 3+5=8>4 demand ✓. (3,11)=14 r7: to (6,8): 3+3=6≤7 satisfied ✓. (4,1)=28 r14: to (6,8): 2+7=9≤14 ✓. (4,4)=51 r26 ✓. (4,9)=6 r3: to (6,8): 2+1=3 ≤3 ✓ satisfied. (5,2)=22 r11: 1+6=7≤11 ✓. (5,9)=4 r2: to (6,8): 1+1=2 ✓ satisfied! But doc lists (5,9)=4 as a demand! Check: Manh((5,9),(6,8)) = |5−6|+|9−8| = 2 ≤ ⌊5/2⌋=2. Satisfied! So doc's demand list is wrong: (5,9) should be satisfied, making demands 8, not 9. Hmm wait — but the ball condition is necessary (capitol within radius), so (5,9) is satisfied by (6,8). Doc error #1. Unless... the doc's v3 numbers claim 9 demands including (5,9). That's a genuine error (assuming their satisfaction check otherwise correct — I can't verify all 22 without computing all; but this one is clearly satisfied). Actually let me double check (6,8) is a hint: (6,8,0) yes. So demand count ≥... at most 8. Also (7,10)=9 r5: to (6,8): 1+2=3≤5 ✓. (8,9)=10 r5: 2+1=3 ✓. So doc's list has an error. Also possibly others misclassified; mark UNVERIFIED for full recount, but (5,9) is a definite error.
+
+2. M4: "d(x) > ⌊N²/2⌋ ⇒ not adjacent to capitol". Derivation: min(s_x,s_c) ≥ d(x) and s_x+s_c ≤ N² gives 2d(x) ≤ s_x+s_c ≤ 121, so d(x) ≤ 60.5, i.e. d(x) ≥ 61 impossible. ⌊121/2⌋=60; d>60 ⇒ impossible. (11,9)=77, (11,10)=61: 61>60 ✓. OK correct. But wait — s_x+s_c ≤ N² assumes only two states? No: s_x + s_c ≤ total 121 ✓ fine. OK M4 valid.
+
+3. §2.8 lower bound: Σ_r (Σ_c L)² ≤ Answer — actually answer = Σ (row sum of sizes)², and row sum ≥ Σ_c L_c? Row sum of state sizes = Σ_c s(cell) ≥ Σ_c L_c ✓. OK.
+
+4. §1.6 "answer invariant only under D2": answer = Σ (row sums)². Under transpose, row sums become column sums — not equal generally. Under 180°/refH/refV row sums preserved as multiset in order? refH reverses row order — sum of squares invariant ✓. Transpose changes row sums → answer changes ✓. But also: the puzzle hints move with the grid, fine. Claim OK.
+
+5. §1.2 theorem "all nontrivial elements fix same cell" — fine.
+
+6. §3.2 growth: orbit under σ must keep S σ-closed, but a state's symmetry group may contain multiple elements; growing under one σ and closing under full group at seal time (D55 fix) — but completeness: growing only under σ while final state's group generated by τ≠σ: the state is τ-invariant; is it reachable by σ-orbit growth? If they pick σ = some nontrivial element of the state's group, fine — completeness argument says "take one nontrivial symmetry σ" ✓ OK.
+
+7. §1.11: "hidden capitol candidate pool = 64 empty cells (d>0 hint cells excluded)". Correct since d>0 ⇒ not capitol. But non-hint cells: 121−33=88 cells, minus... hint cells with d>0 = 31, so non-hint cells = 121−33 = 88, and d>0 hint cells excluded from capitol pool but non-hint cells all allowed: pool = 88? Doc says 64. Hmm: pool should be cells that could be capitols = all cells except the 31 d>0 hints = 121−31 = 90. Doc says 64 — where from? Maybe they exclude neighbors of M4 cells or something. 121−33=88 (excluding all hints including the two d=0 capitols — but those ARE capitols, known). Hidden capitols: exclude 31 d>0 hints and 2 known = 88. Doc says 64. Discrepancy — unless they also exclude cells adjacent to (11,9),(11,10) per M4? That removes ≤8 cells → 80. Not 64. So "64" looks wrong; likely 88. But wait maybe they exclude cells whose Manh to some demand... no. Flag as suspect/UNVERIFIED: candidate pool should be 88 (121 − 31 d>0 hints − ... actually known capitols (6,8),(11,6) are already capitols, not "hidden candidates", so 121−33=88). Doc's 64 unexplained → error #2 (or at least unexplained; flag).
+
+Hmm, but maybe they exclude cells that already satisfy... no, candidates are just possible hidden capitol locations = 88. Flag.
+
+8. §1.10/§9 constants: can't verify.
+
+9. §1.7: fine now.
+
+10. §5.5 M2 11×11 items: "(1,2)=8 & (1,3)=4 adjacent, Δ=4 ⇒ both states ≥4" — L2 gives s ≥ |Δd| = 4 ✓. "(11,9)=77,(11,10)=61 Δ=16 ⇒ ≥16" ✓. "(3,6)=1 ⇒ 1×1 neighbor in {(2,6),(4,6),(3,5),(3,7)}" ✓. "(4,7)=1 ⇒ {(3,7),(5,7),(4,6),(4,8)}" ✓ intersection {(3,7),(4,6)} ✓. "(5,11)=1 ⇒ (4,11)/(6,11)/(5,10)" ✓.
+
+11. §1.9 T-B: "k=N²−1 never legal; k=N² only all-singleton" — fine-ish.
+
+12. §2.2 answer bitmap: answer ≤ N⁷? Row sums each ≤ N·N²=N³, sum of squares ≤ N·N⁶=N⁷ ✓. 11⁷=19,487,171 ✓.
+
+13. Hitting-set "minimum extra capitols = 4" — with 8 or 9 demands; can't verify min without solving; UNVERIFIED. And "120 minimal sets" UNVERIFIED.
+
+14. §6.2b: "valid upper bound 119" — capitols ≤ 121 trivially; with 31 nonzero d... fine.
+
+15. Potential issue: §1.11 step lemma "every step ≥2 except last" — a path could step within a large state costing ≥2, or cross states with min ≥2 — cost-1 step only via 1×1 state which is its own capitol — but wait, could path pass THROUGH a 1×1 state without stopping? A 1×1 state is a capitol, so d would be 0 there; passing through it means reaching a capitol, path would end. Actually passing through: you reach the 1×1 cell, which is a capitol, so the trip ends there with lower cost. So indeed intermediate steps ≥2 ✓. But Manhattan distance ≤ number of steps ≤ ... k steps with costs ≥2 except last ≥1: v ≥ 2(k−1)+1 ✓, and Manh ≤ k ✓. OK.
+
+16. §1.4 L1 proof fine.
+
+17. One more: §1.11 says "the other 22 are already satisfied" — with (5,9) actually satisfied, it's ≥23 satisfied, ≤8 demands. Also check (1,6)=11 r6: needs capitol within Manh 6. (6,8): 7 — not satisfied. Correct as demand. (1,10)=5 r3: (6,8) dist 7, demand ✓. (3,3)=7 r4: dist to (6,8)=8, demand ✓. (1,2)=8 r4: dist 12, demand ✓. (1,3)=4 r2: dist 10, demand ✓. (3,6)=1 r1: dist to (6,8)=3+2=5>1 demand ✓. (4,7)=1 r1: dist 2+1=3>1 demand ✓. (5,11)=1 r1: dist 1+3=4>1 demand ✓. So true demands = 8 (with (5,9) satisfied). Doc error confirmed: demands 8 not 9. This may change min hitting set numbers (≥4 hidden could become ≥3?). UNVERIFIED but the "9" is definitely wrong.
+
+Also check (5,9)=4: ⌊(4+1)/2⌋=2, Manh to (6,8)=2 ✓ satisfied. Yes.
+
+Also (8,11)=13 r7: to (11,6): 3+5=8>7! Demand? |8−11|+|11−6|=3+5=8 >7. To (6,8): 2+3=5 ≤7 ✓ satisfied. OK. (9,10)=45 r23 ✓. (9,6)=6 r3: to (11,6): 2 ≤3 ✓. (9,1)=30 r15: to (11,6): 2+5=7 ✓. (7,1)=11 r6: to (11,6): 4+5=9>6; to (6,8): 1+7=8>6 → DEMAND! Doc doesn't list (7,1)=11 as demand! Check: ⌊12/2⌋=6. Manh((7,1),(6,8))=1+7=8. Manh((7,1),(11,6))=4+5=9. Neither ≤6 → (7,1) is an unmet demand. Doc error #3: demand list misses (7,1)=11. So demands: the 9 listed minus (5,9) plus (7,1) = 9 total but different composition! Interesting — count stays 9? Let me recount all 33:
+
+Hints and radii r=⌊(v+1)/2⌋:
+(1,2)=8 r4; (1,3)=4 r2; (1,6)=11 r6; (1,10)=5 r3
+(2,8)=11 r6: to (6,8): 4 ≤6 ✓
+(3,3)=7 r4: demand
+(3,6)=1 r1: demand
+(3,11)=14 r7: to (6,8): 3+3=6 ✓
+(4,1)=28 r14: to (6,8): 2+7=9 ✓
+(4,4)=51 r26 ✓
+(4,7)=1 r1: demand
+(4,9)=6 r3: to (6,8): 2+1=3 ✓
+(5,2)=22 r11: 1+6=7 ✓
+(5,9)=4 r2: 1+1=2 ✓ SATISFIED (doc wrongly lists as demand)
+(5,11)=1 r1: demand
+(6,4)=15 r8: to (6,8): 4 ✓
+(6,6)=10 r5: to (6,8): 2 ✓
+(6,8)=0 cap
+(7,1)=11 r6: 8,9 → DEMAND (doc missed)
+(7,3)=11 r6: to (6,8): 1+5=6 ✓
+(7,10)=9 r5: 1+2=3 ✓
+(8,3)=17 r9: to (6,8): 2+5=7 ✓
+(8,5)=14 r7: to (6,8): 2+3=5 ✓
+(8,9)=10 r5: 3 ✓
+(8,11)=13 r7: to (6,8): 5 ✓
+(9,1)=30 r15: to (11,6): 7 ✓
+(9,6)=6 r3: to (11,6): 2 ✓
+(9,10)=45 r23 ✓
+(10,4)=10 r5: to (11,6): 1+2=3 ✓
+(11,2)=26 r13: to (11,6): 4 ✓
+(11,6)=0 cap
+(11,10)=77 r39 ✓
+(11,11)=61 r31 ✓
+
+So demands: (1,2),(1,3),(1,6),(1,10),(3,3),(3,6),(4,7),(5,11),(7,1) = 9 demands. Count still 9, but composition differs: (5,9) out, (7,1) in. Doc's specific list is wrong (two errors netting zero). Good catch — concrete.
+
+Also "22 satisfied" ✓ (33−2−9=22 coincidentally).
+
+Candidate pool: hidden capitol can't be a d>0 hint (31 cells); can it be a non-hint cell — yes (88 cells); can it be (6,8)/(11,6)? Already known. So pool = 88. Doc's 64: maybe they also excluded cells adjacent to (11,9),(11,10) via M4: neighbors of (11,9): (10,9),(11,8),(11,10); of (11,10): (10,10),(11,9),(11,11). Excluding (10,9),(11,8),(10,10),(11,11) (and hint cells already gone): 88−4=84. Not 64. UNVERIFIED/wrong → flag: pool should be 88, doc's 64 unexplained; downstream numbers (min extra=4, 120 sets) consequently UNVERIFIED.
+
+Also note: min extra capitols: with 9 demands, could be less than 4? e.g. (3,6) r1 and (4,7) r1 share candidates {(3,7),(4,6)}; (5,11) r1 candidates {(4,11),(6,11),(5,10)}; (1,10) r3 candidates within Manh3 of (1,10); (1,6) r6; (1,3) r2; (1,2) r4; (3,3) r4; (7,1) r6. One capitol could cover several: e.g. (1,6) covers (1,3)? dist 3 >2 no. A capitol at (2,5)? covers (1,6) r6 ✓, (3,6) r1? dist 1 ✓, (4,7)? dist 2+1... |2−4|+|5−7|=4 no. Hmm min could be 3 or 4 — UNVERIFIED. Doc's "4" plausible but unverified.
+
+Also potential issue: hitting-set model assumes each demand needs a capitol within Manhattan radius — valid necessary condition ✓.
+
+Another possible doc error: §1.5 counterexample "A: row0 = 1×4 area 4 no capitol + 12 singletons → row sum 16" — 4+12=16 ✓ answer 16²+3·16=256+48=304 ✓. B: 8+48... 2+2+12=16? Row sum = 2+2+12·1=16? Wait B: two 1×2 (area 2 each) + 12 singletons: row0 sum = 2+2+4·1? Row0 has 4 cells: two dominoes = 4 cells contributing 2+2=4... row sum = 2+2+1+1? No — row0 cells: 4 cells in two dominoes, each cell value 2 → sum 8 ✓. A: 4 cells value 4 → 16 ✓. Rows 1-3: 4 singletons each = 4 ✓. Answers 304, 112 ✓. But wait: are these d-fields equal? d field [[1,1,1,1],[0,...]] — row0 all d=1 means each row0 cell adjacent to a capitol (singleton). Row0 cell in 1×4 state: d=1 via adjacent singleton below ✓ same for dominoes ✓. OK valid. But hold on: is a 1×4 bar a valid "state"? Needs nontrivial symmetry: 1×4 has reflection along its axis fixing 2 cells → not a state (fixes ≥2)! Actually rule: state must be symmetric in some way; 1×4 horizontal bar has horizontal-axis reflection fixing all 4 cells and vertical-axis reflection fixing 0... vertical reflection fixes 0 cells (4 even) — hmm reflection across vertical line between cells 2,3 fixes 0 cells. The horizontal axis fixes 4 cells. For it to be a state it just needs SOME nontrivial symmetry ✓ (it has one). Capitol requires ALL nontrivial elements fix exactly 1 — horizontal reflection fixes 4 → no capitol ✓ consistent with doc. OK fine.
+
+Also §1.6: "official example rotated 90° gives 8029" — plausible, UNVERIFIED (I won't compute).
+
+Now new approaches (§3): 
+- Hitting-set view: already in doc (accept, but fix numbers; also suggest weighted/enumerate-all hitting sets up to size bound, integrate as capitol-domain constraint).
+- New ideas:
+  a) **Dijkstra-on-partial-assignment / reverse feasibility**: treat d as shortest-path with unknown weights; use "tight-edge forest" structure: the d-field induces a shortest-path tree to capitols; each hint's tight edge chain constrains state sizes along a path — model as constraint on spanning structure. Doc mentions tight-edge forest in §12.2 briefly; expand: build "capitol tree" per component.
+  b) **CP-SAT/Benders**: doc mentions in §12.2 as adopted — so not new. Need genuinely new ones:
+  c) **Divide by rows / transfer with symmetry classes only for state shapes up to orbit**: represent open states by their intersection with frontier + symmetry signature; since states are symmetric, an open state's eventual shape is determined by half — the frontier profile of a symmetric polyomino has ≤ small count. Key insight doc missed: **a σ-symmetric state crossing the frontier is determined by its orbit structure; enumerate "half-states"** — halves the branching.
+  d) **Modular/arithmetic constraints on row sums**: answer mod small numbers; row sums parity: each odd state contributes odd to exactly the rows... Actually each state of size s contributes s to each row it occupies weighted by cell count: row sum R_r = Σ_states s·(cells in row r). Parity: s·k_r mod 2 = k_r mod 2 if s odd. So R_r mod 2 = number of odd-state cells in row r mod 2. Combined with hint parities? d values don't directly give row sums. Weak.
+  e) **Answer arithmetic**: answer = Σ R_r². Given candidate answer A, Σ R_r = Σ s² ≤ 121·121... Each R_r between... Could enumerate candidate answers and back-propagate? R_r ≤ 11·121=1331; A ≤ 11·1331² ≈ 19.5M ✓ matches. Could do meet-in-middle on rows: DP over rows with (partial R vector, set of achievable answers)? Answer is sum of squares — only need Σ R_r² and final feasibility; DP over rows storing achievable (R_r so far...) — but state space is the issue.
+  f) **SAT encoding** (not ILP): cells→state-id with symmetry as clauses; use a SAT solver — doc rejected ILP for solver availability, but SAT via hand-written DPLL is same as AODFS. Mention CP-SAT already there.
+  g) **Bidirectional search from capitols**: grow states outward from the 2 known capitols + hitting-set candidates simultaneously with constraint propagation on d — essentially AODFS seeded.
+  h) **Topological: perimeter/area relations for symmetric polyominoes** — doc rejected; agree mostly.
+  i) **Exact cover with dancing links over "orbit-completed states on the fly"** — DLX with row generation: generate candidate states lazily only those consistent with local hints (d-bounds). This is basically AODFS+exact cover; propose as "lazy DLX" — the state library needed is only states touching hint cells with tight constraints; estimate count manageable.
+  j) **Polyomino enumeration theory (Redelmeier)**: count symmetric polyominoes by size — for pruning size distributions; the total area 121 with states odd sizes... weak.
+  k) **The d=1 cells force singleton states**: (3,6),(4,7),(5,11) each adjacent to a singleton; singletons are capitols themselves → these are additional capitols! A 1×1 state's capitol is itself, and d of that cell = 0 — but the hint at (3,6)=1 is not 0, so the singleton is a neighbor, and that neighbor cell has d=0 — but it's not a hinted cell... it's a non-hint cell with d=0. Important: every capitol has d=0, and non-hint cells' d unknown — fine. But: capitols at those singletons then satisfy nearby demands! E.g. singleton near (3,6) covers demand (3,6) and maybe (3,3)? dist from (3,7) to (3,3)=4 ≤4 ✓ covers (3,3) too! And (1,6)? dist (3,7)→(1,6)=2+1=3 ≤6 ✓! So hitting set should include forced singleton-capitols — the doc's hitting set ignores that d=1 hints FORCE a neighboring capitol (the singleton). That's a big deduction: the hitting set should condition on forced capitols near the three d=1 hints. This strengthens the lower bound and shrinks candidates. This is a hand-deduction for §4 and a doc criticism: §6.2b pipeline doesn't inject forced singleton capitols into the seed. Actually doc's demand list includes the d=1 hints as demands with radius 1 — correct, and their covering capitol is the forced singleton — but the doc doesn't propagate that these forced capitols also cover OTHER demands (e.g., (3,3) and possibly (1,6)). That could reduce min extra capitols below 4. Concrete: singleton at (3,7) or (4,6) covers (3,6),(4,7) both (dist 1 each: (3,7)-(4,7)=1 ✓, (4,6)-(3,6)=1 ✓ — one singleton at (3,7) covers (3,6) d1 and (4,7) d1 both!). Wait (3,7) adjacent to (3,6) ✓ and (4,7) ✓ — one singleton covers both d=1 demands. Then remaining demands: (1,2),(1,3),(1,6),(1,10),(3,3),(5,11),(7,1) = 7. (3,3) r4: covered by singleton at (3,7)? dist 4 ✓! So one singleton covers (3,6),(4,7),(3,3). Remaining: (1,2) r4,(1,3) r2,(1,6) r6,(1,10) r3,(5,11) r1,(7,1) r6. (1,6) r6 & (1,10) r3 & (1,3) r2: capitol at (1,7)? covers (1,6) d1... (1,7) to (1,6)=1≤6 ✓, (1,10)=3 ✓, (1,3)=4>2 ✗. (1,3) r2 & (1,2) r4: capitol at (1,4)? to (1,3)=1 ✓, (1,2)=2 ✓, (1,6)=2 ≤6 ✓, (1,10)=6>3 ✗. So capitols (1,4)-ish and (1,8)-ish and singleton (3,7/4,6) and something for (5,11) r1 [(4,11),(6,11),(5,10)] and (7,1) r6: capitol at e.g. (6,2)? dist (7,1)=1+1=2 ✓; could (6,2) also cover... (5,2) is satisfied already. So min extra ≈ 4 still? (1,4),(1,8),(3,7),(4,11 or so),(near 7,1) = 5? Hmm: can (7,1)'s capitol coincide with others? No, too far. Can (1,2)/(1,3) capitol also cover (1,6)? (1,4): to (1,6)=2 ≤6 ✓ yes! So (1,4) covers (1,2),(1,3),(1,6). (1,8) covers (1,10) (dist 2 ✓). So extra capitols: (1,4),(1,8),(3,7 or 4,6),(5,11-neighbor),(7,1-neighbor) = 5? That's ≥5, more than doc's 4! But wait — maybe (1,10)'s capitol also covers (5,11)? (1,8) to (5,11): 4+3=7 >1 no. (5,11) needs capitol at (4,11),(6,11),(5,10). Could that capitol cover (7,1)? No. So min extra ≥ 5? Unless (1,10) covered by (1,8) and (5,11)-capitol... count: {(1,2),(1,3),(1,6)} need one within r2 of (1,3) → cell in Manh≤2 of (1,3) that is ≤4 of (1,2) and ≤6 of (1,6): e.g. (1,4) or (2,3) etc. {(1,10)}: within 3 of (1,10). Could one cell cover (1,6) r6, (1,10) r3, (1,3) r2? Need Manh≤2 of (1,3) and ≤3 of (1,10): cells near row1: (1,5)? dist to (1,3)=2 ✓, to (1,10)=5 ✗. (2,8)? to (1,3)=6 ✗. No cell within 2 of (1,3) and 3 of (1,10) (they're 7 apart, 2+3=5<7). So ≥2 capitols for top demands. {(3,6),(4,7),(3,3)}: ≥1 (shown achievable if singleton at (3,7) — but must be a singleton state's cell = capitol ✓ any cell can be a singleton). Actually also (1,6) r6 could be covered by the (3,7) singleton? dist (3,7)-(1,6)=3 ≤6 ✓! So maybe (1,6) covered free. Then top: (1,2),(1,3) one capitol; (1,10) one; (3,6),(4,7),(3,3) one; (5,11) one; (7,1) one → ≥5 extra, total ≥7 capitols. Unless (1,10) capitol = (1,8) also... could (1,8) be within 4 of... no others. Could (7,1)'s capitol be a singleton forced elsewhere? No d=1 near. So my bound: extra ≥ 5, total ≥ 7 — contradicting doc's "≥6, min extra 4"! But careful: demands are "capitol within Manhattan r" — the covering capitol need not be a singleton. For the three d=1 hints, the covering capitol IS a singleton (cost-1 edge ⇒ adjacent 1×1 state ⇒ that state's capitol = itself at distance 1). For (3,3) r4 the coverer can be any capitol. So grouping: singleton near (3,6)&(4,7) at (3,7) or (4,6) — must simultaneously be within 1 of both → (3,7) or (4,6) ✓. Then (3,3) within 4 of that: (3,7)→(3,3) dist 4 ✓, (4,6)→(3,3) dist 1+3=4 ✓. Good. So extra ≥5 unless some demand's coverer coincides: (1,2)&(1,3): one capitol (e.g. (1,4)? must be within 4 of (1,2) and 2 of (1,3): (1,4): 2 ✓,1 ✓; also must be within 6 of (1,6): 2 ✓). (1,10): separate (min dist from (1,4)-region: (1,7) to (1,10)=3, to (1,3)=4>2 — so separate) ✓. (5,11): separate. (7,1): separate. Total ≥ 2? No: groups: G1={(1,2),(1,3),(1,6)} ≥1; G2={(1,10)} ≥1 (can't merge with G1 since 2+3<7); G3={(3,3),(3,6),(4,7)} ≥1; G4={(5,11)} ≥1; G5={(7,1)} ≥1. Can G2 merge with G3? dist (1,10)-(3,7)=2+3=5; need cell within 3 of (1,10) and 1 of (3,6): (2,9)? to (3,6)=1+3=4 ✗. Within 3 of (1,10) and within 1 of (4,7): (2,9)? no wait (4,7)±1: rows3-5, cols6-8; within 3 of (1,10): rows≤4, cols≥7: intersection {(4,7),(4,8),(3,7),(3,8),(2,7),(2,8)... } cell (3,8): dist to (1,10)=2+2=4 ✗. (4,8): to (1,10)=3+2=5 ✗. Hmm need Manh≤3 of (1,10) AND Manh≤1 of (4,7): cells adjacent (4,7): (3,7),(5,7),(4,6),(4,8). dist to (1,10): (3,7):2+3=5; (4,8):3+2=5. None ≤3. G2∪G3 impossible ✓. G4 merge with G3? (5,11) needs adjacent capitol; (4,11)? dist to (3,6)... irrelevant—G4's capitol must cover only (5,11) among demands? Could (4,11) cover (1,10)? dist 3+1=4 >3 ✗. So ≥5 extra capitols, total ≥7. This contradicts doc's "min extra 4, total ≥6" — a NEW stronger bound and shows doc's hitting-set computation is wrong (consistent with the (5,9)/(7,1) list errors). Great concrete finding. But caution: my grouping argument: G1 lower bound 1 — could G1's capitol also be within 3 of (1,10)? shown no. Could G1 capitol cover (3,3)? (1,4) to (3,3)=2+1=3 ≤4 ✓!! Oh! Then G1's capitol could cover (3,3). But (3,6),(4,7) need adjacent singleton — could G1's capitol at (1,4)... no, dist to (3,6)=3. Hmm but does (3,3) need to be covered by same as (3,6),(4,7)? No — regroup: G3' = {(3,6),(4,7)} singleton ≥1; (3,3) can be covered by G1's capitol. So groups: G1={(1,2),(1,3),(1,6),(3,3)} ≥1 (check feasibility: cell within 2 of (1,3), 4 of (1,2), 6 of (1,6), 4 of (3,3): (1,4): to (3,3)=3 ✓ all ✓). G2={(1,10)} ≥1; G3={(3,6),(4,7)} ≥1; G4={(5,11)}; G5={(7,1)}. Can G2 merge G3? shown no. G2 merge G1? no. G3 merge G1? (3,7) to (1,3)=2+4=6 >2 ✗; (4,6) to (1,3)=3+3=6 ✗. no. G4 merge anything? no. G5? no. So extra ≥5, total capitols ≥7. Stronger than doc. But wait — also G1's capitol could be a singleton forced by... no d=1 up there. Also should double check (1,6) r6 could alternatively be covered by G3's singleton (3,7): dist 3 ✓ — doesn't reduce count. So min extra ≥ 5 (achievability UNVERIFIED). Total ≥ 7. This is a solid hand result for §4, and shows doc §1.11 numbers wrong.
+
+Hmm wait, one more check on G5=(7,1) r6: could its capitol be the same as G3's singleton? (3,7) to (7,1)=4+6=10 ✗. Fine.
+
+Also could (7,1) merge with (5,2)? (5,2) already satisfied. OK.
+
+Also note: capitols at (1,4) etc. must be cells of odd symmetric states — additional constraints, but for lower bound fine.
+
+Also §4 deductions: 
+- (6,8),(11,6) capitols: their states odd, symmetric, contain them.
+- d=1 hints ⇒ singleton neighbors: (3,6): {(2,6),(4,6),(3,5),(3,7)}; (4,7): {(3,7),(5,7),(4,6),(4,8)}; (5,11): {(4,11),(6,11),(5,10)}.
+- M4: (11,9),(11,10) not adjacent to any capitol; also their states ≥16.
+- (11,10)=61: its state has size ≥ ... d=61 means nearest capitol path cost ≥61; state size s: leaving costs min(s,·) ≥... each step ≥ min(s_x,...) hmm: d(x)=61 ⇒ first step cost ≥? min over neighbors of w ≥ ... w = min(s_x, s_y) ≥ ? Not directly. But s_x ≥ max neighbor |Δd|; neighbors unknown. Also d(x)=61 ≤ ... any path from x: costs... x's state size s_x: d(x) ≥ min over first steps... Actually d(x) ≥ min_y min(s_x,s_y) ≥ min(s_x, min neighbor sizes). Weak. Better: d(x)=61 ⇒ s_x ≥ 61? No: d(x) ≤ w(x,y) for the tight first step = min(s_x,s_y) ⇒ min(s_x,s_y) ≥ ... no, tight edge: d(y)=d(x)−w; w ≤ d(x). Hmm. Actually d(x) ≥ min_y w(x,y) = min_y min(s_x,s_y) ≥ min(s_x, min_y s_y). Not strong. Skip.
+- Capitols count ≥7 (my bound).
+- (11,11)=61 and (11,10)=77: adjacent, Δ=16.
+- (9,10)=45: capitol within Manh 23 — weak. 
+- (4,4)=51: r=26 — covers over half the board; its state ≥ |Δd| with neighbors.
+- (9,1)=30, (11,2)=26: 
+- Row 11: (11,2)=26,(11,6)=0,(11,10)=77,(11,11)=61. (11,6) capitol; (11,10)=77 huge: nearest capitol cost 77; since (11,6) is a capitol at distance 4 in cells, path cost from (11,10) to (11,6) ≥ 77 ⇒ each step ≥ ~19 avg: steps ≥ ⌈77/max step⌉; max step = min of two state sizes ≤ 121... but along row 11: (11,10)→(11,9)→...→(11,6): 4 steps, cost ≥77 ⇒ some step ≥20 ⇒ some adjacent pair both states ≥20 — actually sum of 4 step costs ≥77 with each ≤ min(sizes) ≤ 121. Also (11,10) not adjacent capitol (M4) ✓ consistent. Also (11,11)=61: path (11,11)→(11,10) costs min(s111,s1110) ≥? d(11,11)=61 and d(11,10)=77: |Δ|=16 ≤ min sizes ✓. Also d(11,11)=61: could go (11,11)→(11,10) then follow its path: cost ≥ min(s) + 77 ≥ ... that's ≥77+ >61, so (11,11)'s path doesn't go through (11,10)'s optimum... fine.
+- (11,9) is not a hint; d(11,9) ≥? It's between two huge values; d(11,9) ≥ 77 − min(s_119,s_1110)... L1: some neighbor y of... (11,9) not a hint, no constraint. But d(11,10)=77 tight edge to some neighbor with d=77−w.
+
+Enough. §5 experiment: run corrected hitting-set with forced singleton capitols + verify my ≥7 bound by exact branch-and-bound; cheap (hand/CPU minutes), success = confirmed min extra ≥5 or found 4-set (which would refute my grouping — check my grouping proof... G1 feasibility needs a real cell: (1,4) — but is (1,4) allowed as capitol? It's a non-hint cell ✓. Also capitol at (1,4): its state must be odd & symmetric containing (1,4) — existence not guaranteed but for lower bound we only need necessity of ≥5; the grouping lower bound is airtight given demand balls are necessary conditions. Actually wait — necessity: each demand needs SOME capitol within its ball. Groups partition demands; one capitol can cover demands only if within all their balls. I showed the groupings can't merge. So ≥5 extra is rigorous. But one subtlety: the d=1 covering capitol must be adjacent — I used ball radius 1 = adjacency ✓ consistent.
+
+Hmm, but also: could a single capitol cover (1,10) and (5,11)? (5,11) needs adjacency: neighbors (4,11),(6,11),(5,10); dist to (1,10): (4,11):3+1=4>3 ✗. No ✓.
+
+So doc's "min extra 4 / total ≥6" is refuted; correct bound ≥5 extra / ≥7 total (assuming my Manh arithmetic right). Double-check (1,2) r4 & (1,3) r2 & (1,6) r6 & (3,3) r4 all coverable by one cell: need cell within 2 of (1,3): rows −1..3, cols 1..5. Within 4 of (1,2): rows −3..5, cols −2..6. Within 6 of (1,6): rows −5..7, cols 0..12. Within 4 of (3,3): rows −1..7, cols −1..7. Intersection rows 1..3, cols 1..5: e.g. (2,3): to (1,2)=1+1=2 ✓, (1,3)=1 ✓, (1,6)=1+3=4 ✓, (3,3)=1 ✓. Yes feasible. Good.
+
+Also G2∪G1 check again: cell within 2 of (1,3) and 3 of (1,10): cols ≤5 and ≥7 impossible ✓.
+
+Now also flag: doc §1.11 example minimal set {(1,1),(1,7),(3,7),(4,11)} — check covers: (1,1): to (1,2)=1 ✓,(1,3)=2 ✓,(1,6)=5 ✓,(3,3)=2+2=4 ✓ — covers G1+! (1,7): to (1,10)=3 ✓. (3,7): covers (3,6),(4,7) ✓. (4,11): (5,11) ✓. But (7,1)?? Not covered — dist (1,1)→(7,1)=6 ✓!! Oh (7,1) r6: (1,1) to (7,1)=6 ≤6 ✓. So their 4-set covers all 9 of THEIR demands — but their demand list omitted (7,1)... and included (5,9). With correct demands, does {(1,1),(1,7),(3,7),(4,11)} work? (7,1) covered by (1,1) ✓. (5,9) not a demand. So the 4-set actually covers the TRUE demand set! So min extra could be 4 after all! Let me recheck my grouping: G5=(7,1) covered by (1,1) which also covers G1! (1,1): to (1,2)=1 ✓,(1,3)=2 ✓,(1,6)=5 ✓,(3,3)=4 ✓,(7,1)=6 ✓. Wow. So G1∪G5 mergeable. Then groups: {(1,2),(1,3),(1,6),(3,3),(7,1)} ≥1; {(1,10)}; {(3,6),(4,7)}; {(5,11)} → ≥4 extra, total ≥6. Doc's ≥6 stands; my "≥7" retracted. Good thing I checked. And (1,10): could it merge with {(3,6),(4,7)}? shown no. With {(5,11)}? no. So min extra = 4 (achieved). Doc's numbers may be right after all except the demand list composition. OK so doc error is just the demand list membership ((5,9) wrongly in, (7,1) wrongly out), count 9 coincidentally right, min extra 4 fine, 120 sets UNVERIFIED.
+
+Good — this is a nice concrete finding: the demand list is wrong even though counts coincide.
+
+Other doc issues to list:
+- §2.12 still says "需求 = 31 个提示 / 元素 = 88 个候选格" — stale v2 numbers contradicting §1.11's corrected 9/64. Internal inconsistency. And 64 vs my 88: pool of possible hidden-capitol cells = 88 non-hint cells... doc says 64. Since (6,8),(11,6) are hints (d=0), non-hint cells = 88. Where does 64 come from? Maybe excluding M4 neighbors and... 88−4=84. UNVERIFIED/likely wrong; flag: pool should be 88 (or justify 64).
+- §1.11 "9 个提示的需求尚未被它们满足（其余 22 个已满足）" — 33−2=31 hints, 22 satisfied + 9 demands = 31 ✓ consistent count, but membership wrong as shown.
+- §3.3 pruning table "Manh 下界: 到最近已知首都的 Manh 距离 > D(x) ⇒ 剪" — this is D53's retracted rule, still present in §3.3! Internal contradiction with §1.7 v3. Definite error.
+- §5.5 M4 statement "d(x) > ⌊N²/2⌋" with N²=121, ⌊121/2⌋=60; 61 > 60 ✓ ok.
+- §1.9 T-B "k=N² only all-singleton" fine.
+- §6.2b "有效上界 119" — capitols ≤ 121; why 119? D57 argument: k=121 ⇒ all singletons ⇒ d≡0 contradiction; k=120 ⇒ one non-singleton state of 2 cells — but 2-cell state has no capitol and... hmm k=120 means 120 singleton capitols + one domino (no capitol) — d≡0 still since all capitols singletons everywhere: every cell adjacent... d(x)=0 iff x is a capitol; domino cells not capitols, d= min over... domino cell adjacent to singletons: d=1 ≠0. So k=120 possible? d-field would have two cells with d=1 — but hints say d=0 only at (6,8),(11,6) — hints don't forbid other cells having d=0 or d=1 (non-hint cells unconstrained). But wait hints (3,6)=1 etc. — compatible? Possibly. So "119" unjustified? D57 argued k=121 impossible; 120: 119 cells... k=120: 120 capitols, 1 state of size... 121−120=1 cell left — must be a state itself ⇒ 121 singletons. So k=120 impossible too (leftover 1 cell must be its own state ⇒ singleton ⇒ k=121). Actually states partition; if 120 states are singletons, remaining 1 cell is a 1×1 state ⇒ 121 capitols. So k=120 impossible ✓, k=119: 119 singletons + one 2-cell domino (no capitol) — legal? Domino has reflection symmetry ✓ state ✓ no capitol ✓. d: domino cells have d=1 (adjacent singletons). Hints: all d=1 hints fine; d=0 hints (6,8),(11,6) must be singletons ✓. Non-hint d values unconstrained. So k=119 seems possible → "有效上界 119" ✓ correct. OK.
+- §2.3: 5×5 partitions 2.6e9 — UNVERIFIED.
+- §1.3 completeness argument: fine.
+- §1.1 table: refD1 condition "(sr−sc)%n==0" — for reflection across main diagonal: map (r,c)→(c+t, r+t)? Reflection across line r−c=k: (r,c)→(c+k, r−k). Need sr−sc invariant: under this map Σr'−Σc' = Σ(c+k)−Σ(r−k) = (sc−sr)+2kn... set equal sr−sc: −(sr−sc)+2nk = sr−sc ⇒ (sr−sc) = nk ⇒ (sr−sc)%n==0 ✓. OK.
+- rot90 condition "refD1 且 refD2" — a set invariant under both diagonal reflections is invariant under their product = rot180? product of two diagonal reflections = rotation by 180 about intersection... Hmm, composition of reflections across two perpendicular diagonals = rot180 about center, not rot90. For rot90 need invariance under rot90 itself; invariance under both diagonal reflections through the center gives the group {id, D1, D2, rot180} — that's not rot90! Wait: reflections across lines at 45° to each other compose to rotation by twice the angle = 90°. Main diagonal and anti-diagonal are perpendicular (90° apart) → composition = 180° rotation. Hmm: reflection across line at angle θ then at angle φ gives rotation 2(φ−θ). Diagonals at −45° and +45°: difference 90° → rotation 180°. So D1∧D2 invariance ⇒ rot180, NOT rot90! But doc's §1.1 table says rot90/270 = refD1 且 refD2. Is that right? For a polyomino invariant under both diagonal reflections: e.g. X pentomino: invariant under both diagonals and both axis reflections and rot180 and rot90. Hmm X pentomino IS rot90. Does X satisfy both diagonal reflections? Yes. But D1∧D2 ⇒ rot180 only, plus... does D1∧D2 imply rot90? D1∘D2 = rot180. Group {id,D1,D2,rot180} doesn't contain rot90. But X has rot90 too — that's extra. A set with exactly D1,D2,rot180 (e.g. S = {(0,1),(1,0),(1,2),(2,1),(1,1)}? that's X again). Counterexample: S={(0,0),(1,1)}? D1 fixes both... Take S invariant under D1 and D2 but not rot90: e.g. cells (0,1),(1,0),(2,3),(3,2) about center (1.5,1.5): D1 (r−c=0): (0,1)→(1,0) ✓; (2,3)→(3,2) ✓. D2 (r+c=3): (0,1)→(2,3) ✓. rot90 about (1.5,1.5): (0,1)→(1,2)? not in S. So D1∧D2 without rot90 exists! So the doc's rot90 test "refD1 且 refD2" is WRONG — it would falsely certify rot90 symmetry. Wait but their table is about the conditions for the map to be a candidate symmetry with integer parameters, then presumably they check the map actually preserves S. Re-reading: "6 个'保持格点阵'条件全用整数取模" — these are conditions for the transformation to map the grid lattice to itself and fix centroid; then presumably they still verify S→S. If they only use the modular condition as the test (table reads like the test), rot90 would be misdetected. Actually for rot90 about centroid: need 2sr%n==0 and 2sc%n==0 (center half-integer allowed) AND the rotation maps S to S — the modular conditions are necessary not sufficient. The doc presents them as the conditions — if engine only checks these, false positives. But likely engine checks image cells. Ambiguous — flag as a risk: modular conditions are necessary, not sufficient; must verify actual cell mapping (e.g., set {(0,1),(1,0),(2,3),(3,2)} passes sr−sc≡0, sr+sc≡0 mod 4? sr=6,sc=6,n=4: sr−sc=0 ✓, sr+sc=12%4=0 ✓ — would pass "rot90" test but has no rot90). Definite flag.
+
+Hmm wait, for rot90 the correct necessary+sufficient integer test on a specific set is just apply the map. The table conflates "lattice-preserving" with "symmetry". Flag as error #3 (or risk).
+
+Also §1.1: refH condition (2sr)%n==0 — necessary for horizontal reflection axis at half-integer row ✓, again not sufficient.
+
+Also §1.2 theorem fine.
+
+Also §3.4 completeness: fine given fixes.
+
+Also §7.1 monotonicity: "删掉 h 后不唯一 ⇒ h 永远不可删" ✓.
+
+Also §1.5 consequence "全揭示都不唯一时任何提示子集都不唯一" ✓.
+
+Word budget tight. Structure answer.
+
+New approaches ranking:
+1. Corrected hitting set with forced singleton capitols + demand-ball propagation (fix + extend; cheap, prunes AODFS seeds).
+2. Lazy exact cover / DLX with on-the-fly symmetric state generation restricted to hint-constrained regions — states not touching any hint constraint only matter via their size (row sums); so abstract "anonymous filler states": huge reduction — key new idea: cells far from hints can be tiled by any valid states; only the induced row-sum vector matters → decompose: solve "hint core" exactly, tile remainder with DP counting achievable row-sum contributions. This is a genuine structural decomposition the doc lacks: **core–periphery decomposition**: hints constrain d locally (within tight-path reach); periphery states only contribute sizes to row sums. Compute set of achievable (per-row contribution) vectors for periphery via DP, combine with core solutions. 
+3. SAT/CP-SAT with Benders (doc has it — skip or note already present).
+4. Meet-in-the-middle row DP on row-sum squares: answer separable by rows given partition; DP over rows where state = frontier labels + open-state partial info; doc rejected but with symmetry, open state's remainder is determined by symmetry — frontier state can store just the open state's symmetry σ and already-placed cells near frontier (small). This revives plug DP: the shape-mask objection is overstated because symmetry means the unplaced part is the mirror of placed part — you only need the placed half near the frontier plus σ. Worth proposing.
+5. Modular answer arithmetic / invariant checks — weak.
+6. Spectral/topological — reject (agree with doc).
+
+Hand deductions (§4): list: 2 known capitols odd states; three d=1 ⇒ singleton neighbors sets; intersection {(3,7),(4,6)}; (5,11) singleton in {(4,11),(6,11),(5,10)}; M4 (11,9),(11,10); demand balls; ≥6 capitols; (11,10)=77 with (11,6) capitol 4 cells away ⇒ path cost 77 over ≥4 steps... more: d(11,10)=77 and capitol (11,6) at Manhattan 4: any path ≥77 ⇒ since 4 steps min... the direct row path has 4 steps each ≤ min(sizes) ≤ 121 — no contradiction. But each step cost = min of two state sizes; to sum ≥77 over 4 steps, average ≥19.25 ⇒ at least one adjacent pair on row 11 between cols 6–10 both size ≥20. Also (11,7),(11,8),(11,9) non-hints. Also (11,11)=61: 1 step to (11,10): min(s) ≥? d(11,11)=61: if its cheapest first step is to (11,10) with cost w, then 77 ≤ w + d(11,10)?? No: d(11,11) ≤ w(11,11→11,10) + 77 ⇒ w ≥ ... that gives w ≥ 61−77 <0, useless. Tight edge from (11,11) goes to some neighbor with d = 61 − w.
+- (4,4)=51: r=26 covers most of board — combined with (6,8) capitol dist 2+4=6 ≤26 ✓.
+- (9,1)=30 & (11,2)=26: Δ... not adjacent.
+- (4,1)=28 & (5,2)=22 not adjacent (diagonal). (4,1)-(5,1)? (5,1) not hint.
+- (1,2)=8,(1,3)=4 adjacent Δ=4.
+- (7,3)=11,(8,3)=17 Δ=6.
+- (8,5)=14,(9,6)=6? not adjacent (diagonal). (8,5)-(9,5)? 
+- (9,6)=6 & (8,5)=14 no. (9,6)-(9,... (9,10)=45 no.
+- (10,4)=10 & (9,4)? (11,4)? not hints.
+- (2,8)=11 & (1,8)? (3,8)? not hints. (2,8)-(1,8)... 
+- (3,11)=14 & (4,11)? not hint; (5,11)=1: (3,11)-(4,11) no.
+- (6,4)=15 & (6,6)=10 not adjacent (gap at (6,5)). (6,6)=10 & (6,8)=0 adjacent! Δ=10 ⇒ min(s_66,s_68) ≥ 10 ⇒ capitol state (6,8) has size ≥10, odd ⇒ ≥11. Also ≤... its state contains (6,8), size odd ≥11. Also (6,8)-(7,8)? (7,10)=9 not adjacent. (6,8) & (5,9)=4? diagonal no. (6,8)&(5,8)? not hint. So capitol state at (6,8): size ≥ 11 (odd, ≥10). Strong! Also (11,6)=0 & (11,2)=26? not adjacent; (10,6)? not hint; (11,6)&(11,... neighbors (10,6),(11,5),(11,7) non-hints. So no Δ for (11,6). 
+- Also (4,9)=6 & (5,9)=4 adjacent Δ=2 ⇒ both states ≥2; and (5,9) r2 satisfied by (6,8): dist 2 — path (5,9)→(6,9)? or (5,9)→(5,8)→(6,8): cost ≥... d=4 with capitol 2 steps away ⇒ steps cost ≥2 each except... 2 steps: v ≥ 2(2−1)+1=3 ≤4 ✓ consistent; actually 2 steps summing 4: e.g. 2+2 ⇒ both intermediate states size ≥2 — (5,9)'s state ≥2 and (6,9) or (5,8) state ≥2. Fine.
+- (4,9)=6 & (4,7)=1? gap (4,8). 
+- (7,10)=9 & (8,9)=10? diagonal. (7,10)&(8,10)? not hint.
+- (8,9)=10 & (9,10)=45? diagonal. (8,9)&(9,9)? no.
+- (8,11)=13 & (9,11)? (8,11)-(9,11) not hint; (8,11)&(8,9)? gap.
+- (9,10)=45 & (8,11)=13? diagonal. (9,10)-(10,10)? no hint.
+- (1,10)=5 & (2,8)=11? no.
+- (1,6)=11 & (2,8)=11? no.
+- (3,3)=7 & (4,4)=51? diagonal. (3,3)&(4,3)? no.
+- (3,6)=1 & (3,3)=7? gap.
+- (1,2)=8 & (1,3)=4 done. (1,3)&(1,6)? gap.
+- (2,8)=11 & (3,11)=14? no. (2,8)&(1,10)? no. (2,8)&(3,8)? no hint.
+- (4,4)=51 & (4,... (4,1)=28? gap. (4,4)&(3,4)/(5,4)? no hints. (4,4)&(4,7)=1? gap (4,5),(4,6). Hmm (4,7)=1 means (4,7) adjacent singleton; (4,4)=51 huge — (4,4) far from capitols: r=26.
+- (5,2)=22 & (5,... (4,1) diagonal. (5,2)&(6,2)? no.
+- (7,1)=11 & (7,3)=11? gap (7,2). (7,3)&(8,3)=17 ✓ done. (7,3)&(6,3)? no.
+- (9,1)=30 & (9,... (9,1)&(8,1)/(10,1)? no hints. (9,1)&(11,2)? no.
+- (10,4)=10 & (11,4)? (11,2)=26 no. (10,4)&(9,4)? no. (10,4)&(10,... 
+- (11,2)=26 & (10,2)? no.
+
+Also parity: all capitols in odd states; known 2 capitols + ≥4 hidden... 
+
+Also: (6,6)=10 & (6,8)=0: also (6,7) between them non-hint. d(6,6)=10: tight edge to some neighbor.
+
+Also dead-state budget: states without capitols have even size ≥2 (even because... a state with no capitol: either no nontrivial symmetry (impossible—must be symmetric) or some symmetry fixes ≠1 cells; size can be odd (1×3 bar: fixes 3). Hmm doc T-B says dead states ≥2 ✓. "dead-state budget": total area 121 odd; number of odd states odd... Σ sizes =121 odd ⇒ odd number of odd-sized states. Capitol states are odd. Fine.
+
+Experiment (§5): run exact branch-and-bound hitting set with the CORRECTED demand set (swap (5,9)→(7,1)) and forced-singleton structure; verify min extra =4 and enumerate all minimal sets; cost: minutes by hand/CPU; success: confirms ≥6 capitols + seed list for AODFS; failure: if min extra ≥5 or a 4-set covering true demands doesn't exist... Actually I found {(1,1),(1,7),(3,7),(4,11)} covers true demands — so min extra ≤4 and ≥4 by grouping ⇒ =4. So experiment: enumerate all size-4 hitting sets (likely few), use as AODFS seeds. Success criterion: AODFS with these seeds + all 33 hints either finds a partition reproducing all hints (→ candidate answer) or exhausts.
+
+Wait — but seeds: true capitol set must contain a hitting set? True hidden capitols cover all demands ⇒ form a hitting set (possibly larger than min). So enumerate hitting sets of size 4 AND allow supersets (doc E3 fix). With min=4 and structure, supersets bounded.
+
+Also note: capitol at (1,1)? Corner cell as capitol: state containing (1,1) symmetric fixing (1,1) — possible (e.g., L shapes reflect across diagonal through corner). OK.
+
+Now write. Keep <1200 words. Sections 1-5.
+
+</details>

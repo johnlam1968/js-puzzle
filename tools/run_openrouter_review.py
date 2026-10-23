@@ -14,7 +14,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, ".."))
 DATA = os.path.join(ROOT, "data")
 URL = "https://openrouter.ai/api/v1/chat/completions"
-DESIGN = open(f"{HERE}/DESIGN-approaches-and-trace-transfer.md", encoding="utf-8").read()
+DESIGN = open(os.path.join(ROOT, "docs", "DESIGN.md"), encoding="utf-8").read()
 
 PROBLEM = """# THE ORIGINAL PROBLEM (Jane Street, October 2026, "It's a Metric, Too")
 
@@ -37,17 +37,18 @@ Official statement (verbatim):
 
 ## The 11x11 grid to solve (rows top->bottom, '.' = no number)
 
-   .  8  4  .  . 11  .  .  .  5  .
-   .  .  .  .  .  .  . 11  .  .  .
-   .  .  7  .  .  1  .  .  .  . 14
-  28  .  . 51  .  .  1  .  6  .  .
-   . 22  .  .  .  .  .  .  4  .  1
-   .  .  . 15  . 10  .  0  .  .  .
-  11  . 11  .  .  .  .  .  .  9  .
-   .  . 17  . 14  .  .  . 10  . 13
-  30  .  .  .  .  6  .  .  . 45  .
-   .  .  . 10  .  .  .  .  .  .  .
-   . 26  .  .  .  0  .  .  . 77 61
+(row, col, value) triples, 1-based:
+(1,2,8) (1,3,4) (1,6,11) (1,10,5)
+(2,8,11)
+(3,3,7) (3,6,1) (3,11,14)
+(4,1,28) (4,4,51) (4,7,1) (4,9,6)
+(5,2,22) (5,9,4) (5,11,1)
+(6,4,15) (6,6,10) (6,8,0)
+(7,1,11) (7,3,11) (7,10,9)
+(8,3,17) (8,5,14) (8,9,10) (8,11,13)
+(9,1,30) (9,6,6) (9,10,45)
+(10,4,10)
+(11,2,26) (11,6,0) (11,10,77) (11,11,61)
 
 (33 numbers; 0-valued cells are capitols; the grid does NOT draw the state boundaries.)
 

@@ -25,7 +25,7 @@ known_cap = set(x for x, v in hints.items() if v == 0)
 
 
 def ball(x, r):
-    return [(rr, cc) for rr in range(1, N11 + 1) for cc in range(1, N11 + 1)
+    return [(rr, cc) for rr in range(N11) for cc in range(N11)
             if abs(rr - x[0]) + abs(cc - x[1]) <= r and (rr, cc) != x]
 
 

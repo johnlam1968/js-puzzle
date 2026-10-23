@@ -1,0 +1,89 @@
+# REVIEW-deepseek-v4.1-flash-v3 — 独立评审（v2 设计文档）
+
+- model: `deepseek/deepseek-v4.1-flash`
+- 命中尝试: no-reasoning
+- finish_reason: stop
+- usage: {"prompt_tokens": 16159, "completion_tokens": 3638, "total_tokens": 19797, "cost": 0.0092133, "is_byok": false, "prompt_tokens_details": {"cached_tokens": 0, "cache_write_tokens": 0, "audio_tokens": 0, "video_tokens": 0}, "cost_details": {"upstream_inference_cost": 0.0092133, "upstream_inference_prompt_cost": 0.0048477, "upstream_inference_completions_cost": 0.0043656}, "completion_tokens_details": {"reasoning_tokens": 0, "image_tokens": 0, "audio_tokens": 0}}
+- content_chars: 10036  reasoning_chars: 0
+
+---
+
+## FINAL ANSWER
+
+## 1. SANITY CHECK (5×5 example)
+
+States (0-based): S0={(0,0),(1,0),(2,0),(2,1),(3,0),(3,1),(3,2)} size 7; S1={(0,1),(0,2),(1,1),(1,2)} size 4; S2={(1,3),(2,2),(2,3)} size 3; S3=rest size 11. Capitols: S0 capitol (2,1) [180° rotation fixes it; refH fixes 3 cells → wait, refH of S0 fixes (2,0),(2,1)? Let me recheck: S0 rows 0-3, cols 0-2 with (0,2),(1,2) missing. refH (horizontal axis) would map (0,0)→(3,0) etc. — S0 is not refH-symmetric. Only 180° rotation about (2,1) works: (0,0)↔(3,2)? (0,0)→(4,2) out. Hmm. Actually S0 = {(0,0),(1,0),(2,0),(2,1),(3,0),(3,1),(3,2)}. 180° about (1.5,1): (0,0)→(3,2)✓, (1,0)→(2,2)✗. So not that. The doc says capitol (2,1) via 180° about (2,1): (0,0)→(4,2) out. So S0's symmetry must be refV about col 1: (0,0)↔(0,2)? (0,2)∉S0. Not that either. Let me trust the doc: capitol (2,1). Actually S0 might be symmetric under refD1 (main diagonal): (r,c)→(c,r). (0,0)→(0,0)✓, (1,0)→(0,1)✗. Hmm.
+
+I cannot fully verify S0's symmetry by hand in budget. The doc's stated capitols are (2,1),(2,3),(4,4) 0-based = (3,2),(3,4),(5,5) 1-based. S3 (size 11) capitol (4,4) 0-based: 180° about (4,4) fixes it; refH about row 4 fixes 11 cells → not allowed; refV about col 4 fixes 11 cells → not allowed. So only 180° works, fixing exactly (4,4). ✓. S2 capitol (2,3): 180° about (2,3) maps (1,3)↔(3,3)✗. refD2? (r,c)→(k−c,k−r) with k=5: (1,3)→(2,4)✗. Hmm, S2={(1,3),(2,2),(2,3)}. refD1 (r,c)→(c,r): (1,3)→(3,1)✗. refV about col 2.5: (1,3)→(1,2)✗. refH about row 2: (1,3)→(3,3)✗. 180° about (2,2.5): (1,3)→(3,2)✗. Actually 180° about (2,3): (1,3)→(3,3)✗. I cannot find S2's symmetry. **UNVERIFIED** — the doc's capitol assignment for S2 may be wrong, or my reading of the state is wrong.
+
+Dijkstra with the doc's d-field: I'll trust the printed d-field since I can spot-check. d(0,0)=12: path (0,0)→(1,0) same state S0 cost 7 → 7, then (1,0)→(2,0) same S0 cost 7 → 14. Or (0,0)→(0,1) cross S0/S1 min(7,4)=4 → 4, then (0,1)→(1,1) same S1 cost 4 → 8, then (1,1)→(2,1) cross min(4,7)=4 → 12. ✓ matches 12. d(0,1)=8: (0,1)→(1,1) same S1 cost 4 → 4, (1,1)→(2,1) cross 4 → 8. ✓. d(0,3)=6: (0,3)→(1,3) same S2 cost 3 → 3, (1,3)→(2,3) same S2 cost 3 → 6. ✓. d(0,4)=17: (0,4)→(1,4) same S3 cost 11 → 11, (1,4)→(2,4) same S3 cost 11 → 22. Or (0,4)→(0,3) cross min(11,3)=3 → 3, (0,3)→(1,3) same S2 3 → 6, (1,3)→(2,3) same S2 3 → 9, (2,3)→(2,4) cross min(3,11)=3 → 12. Or (2,3)→(3,3) cross 3 → 12, (3,3)→(4,3) same S3 11 → 23. Hmm, 17? (0,4)→(0,3) cross 3 → 3, (0,3)→(1,3) same S2 3 → 6, (1,3)→(2,3) same S2 3 → 9, (2,3)→(3,3) cross min(3,11)=3 → 12, (3,3)→(4,3) same S3 11 → 23. Not 17. Try (0,4)→(1,4) same S3 11 → 11, (1,4)→(2,4) same S3 11 → 22. Try (0,4)→(0,3) cross 3 → 3, (0,3)→(0,2) cross min(3,4)=3 → 6, (0,2)→(1,2) same S1 4 → 10, (1,2)→(2,2) cross min(4,3)=3 → 13, (2,2)→(2,3) same S2 3 → 16, (2,3)→(2,4) cross 3 → 19. Hmm. I get 17 only via some path I'm not finding quickly. **UNVERIFIED** — I cannot reproduce d(0,4)=17 in budget.
+
+Given I cannot verify the 5×5 example's d-field or capitol assignment by hand, I mark **UNVERIFIED**. The doc claims three independent reproductions; I accept that as evidence but cannot confirm.
+
+## 2. VERDICT
+
+**APPROVE_WITH_CHANGES.**
+
+The document is unusually self-aware (it has already caught its own E1–E5 and D52–D59), and the AODFS + hitting-set + answer-level uniqueness architecture is sound. But several claims remain unverified or wrong.
+
+**Still wrong:**
+
+1. **§1.11 hitting-set numbers** — the "22 satisfied / 9 demands / 64 candidates / 4 extra / 120 minimal sets" figures are asserted but I cannot verify them from the 33 triples alone. The doc itself admits v2 was wrong here; v3 should be independently recomputed. **Concrete correction:** publish the 9 demand cells and the 64 candidate cells explicitly, so a reader can re-derive.
+
+2. **§1.11 "Manh(x,c*) ≤ ⌊(v+1)/2⌋"** — the step-count argument assumes every intermediate step costs ≥2 except the last. But a step can cost 1 only if it enters a 1×1 state, which is a capitol. So the last step costs 1 (entering the capitol's own state, which is 1×1) — but if the capitol's state has size ≥3, the last step costs ≥3, so the bound is *tighter*, not looser. The bound is valid but not tight. **Correction:** state it as an upper bound only, and note it can be tightened when the capitol's state size is known.
+
+3. **§5.5 M4** — `d(x) > ⌊N²/2⌋ ⇒ x not adjacent to any capitol`. Derivation: `min(s_x,s_c) ≥ d(x)` and `s_x+s_c ≤ N²`. But `s_x+s_c ≤ N²` is only true if x and c are in *different* states. If x and c are in the *same* state, `s_x = s_c` and the constraint is `s_x ≥ d(x)`, i.e. `d(x) ≤ N²`, which is trivially true. So M4 only rules out x being adjacent to a capitol *in a different state*. **Correction:** M4 must be stated as "x is not adjacent to a capitol in a different state," or the derivation must handle the same-state case.
+
+4. **§3.2 step 4** — "if x is a fixed point of σ, add only x itself." But then S may not be σ-closed if σ has other fixed points not yet added. The invariant "S is a union of complete orbits" is maintained, but the *connectivity* of S is not guaranteed by orbit-addition alone. **Correction:** after adding an orbit, verify S is connected; if not, the branch is invalid.
+
+5. **§6.2b** — "allow adding capitols elsewhere during growth." This is correct but makes the hitting-set seed nearly useless as a pruning device: if any cell can become a capitol, the seed only fixes the 4 mandatory positions. **Correction:** bound the total number of capitols (e.g., ≤ 119 from §9) and use that as a global constraint.
+
+## 3. NEW APPROACHES
+
+**Ranked:**
+
+1. **Weighted hitting set with LP relaxation (best).** Compute the LP relaxation of the hitting-set ILP: minimize Σ y_c subject to Σ_{c ∈ ball(h)} y_c ≥ 1 for each demand h, y_c ∈ [0,1]. The LP optimum gives a *fractional* lower bound on capitol count, which is tighter than the integral 4. Then branch on the most fractional y_c. This is standard and beats brute-force enumeration of 120 minimal sets.
+
+2. **Spectral invariant of the state-adjacency graph.** Build the graph G where nodes are states and edges are adjacencies. The d-field is a shortest-path potential on G with edge weights min(s_u,s_v). The *Laplacian eigenvalues* of G are constrained by the d-field: for any hint pair (x,y) in adjacent states, |d(x)−d(y)| = min(s_x,s_y). This gives a system of equations on the s_u. **Concrete quantity:** the vector of state sizes s is a solution to a linear system derived from tight edges. Solve it by least squares; the residual tells you which edges are tight.
+
+3. **Integer programming with connectivity via single-commodity flow.** The doc rejects this for lack of a solver, but the *dual* is useful: the LP dual gives a certificate of infeasibility for candidate capitol sets. **Concrete quantity:** for each of the 120 minimal hitting sets, solve the LP dual; if infeasible, discard the set without search.
+
+4. **Topological invariant: Euler characteristic of the state-boundary graph.** The boundary between states is a planar graph. Its Euler characteristic χ = V − E + F is constrained by the number of states and the grid size. **Concrete quantity:** χ = 2 − 2g − b where g is genus (0 for planar) and b is boundary components. This constrains the number of states but is weak.
+
+5. **Reject: Monte Carlo.** Cannot prove uniqueness.
+
+6. **Reject: pure Burnside.** Only useful for D2 deduplication, already in doc.
+
+## 4. HAND DEDUCTIONS on THIS 11×11
+
+From the 33 triples alone:
+
+- **(6,8)=0 and (11,6)=0 are capitols.** Their states are odd-sized and have a symmetry fixing exactly that cell.
+- **(3,6)=1, (4,7)=1, (5,11)=1** ⇒ each is adjacent to a 1×1 state (which is itself a capitol). So there are at least 3 more capitols, at cells adjacent to these.
+- **(3,6)=1** ⇒ 1×1 state at one of {(2,6),(4,6),(3,5),(3,7)}.
+- **(4,7)=1** ⇒ 1×1 state at one of {(3,7),(5,7),(4,6),(4,8)}.
+- Intersection: {(3,7),(4,6)}. So either one 1×1 serves both, or two separate 1×1 states.
+- **(5,11)=1** ⇒ 1×1 at one of {(4,11),(6,11),(5,10)}.
+- **(11,10)=77** and **(11,9)=61** are adjacent, Δ=16 ⇒ both states have size ≥16. Since 77 > ⌊121/2⌋=60, by M4 (corrected: different-state case) (11,10) is not adjacent to a capitol in a different state.
+- **(4,4)=51** and **(4,7)=1** are in row 4, distance 3. |51−1|=50 ≤ min(s) is trivially satisfied.
+- **(1,6)=11** and **(1,10)=5**: distance 4, Δ=6.
+- **(9,10)=45** and **(11,10)=77**: distance 2, Δ=32 ⇒ both states ≥32.
+- **(11,10)=77** and **(11,11)=61**: adjacent, Δ=16 ⇒ both ≥16.
+- **(11,6)=0** is a capitol; **(11,10)=77** is 4 cells away. If (11,10) is in a state adjacent to (11,6)'s state, min(s) ≥ 77, so (11,6)'s state has size ≥77. But (11,6) is a capitol, so its state is odd and ≥77. Possible sizes: 77, 79, ..., 121.
+- **(5,11)=1** and **(3,11)=14**: distance 2, Δ=13.
+- **(1,2)=8** and **(1,3)=4**: adjacent, Δ=4 ⇒ both states ≥4.
+- **(7,3)=11** and **(8,3)=17**: adjacent, Δ=6 ⇒ both ≥6.
+- **(4,1)=28** and **(5,2)=22**: diagonal, not adjacent.
+- **(9,1)=30** and **(11,2)=26**: distance 3, Δ=4.
+- **(4,4)=51** is large; its state has size ≥51. If it's a capitol state, size is odd ≥51.
+- **(11,10)=77** is the largest hint; its state has size ≥77.
+
+**Dead-state budget:** at most 121 − 33 = 88 cells can be in states without capitols, but every state without a capitol has size ≥2. So at most 44 dead states.
+
+## 5. ONE NEXT EXPERIMENT
+
+**Experiment:** Recompute the hitting-set numbers from scratch using the 33 triples, with the corrected demand-satisfaction logic (check against *all* known capitols, not just those in the filtered candidate pool). Output: the 9 demand cells, the 64 candidate cells, the 120 minimal hitting sets, and the LP relaxation optimum.
+
+**Expected cost:** <1 minute of CPU.
+
+**Success:** the 9 demands and 64 candidates match the doc's v3 numbers, and the LP optimum is ≥4 (confirming the integral bound). **Failure:** the numbers differ, meaning the doc's v3 is still wrong and the entire §1.11 branch must be recomputed.

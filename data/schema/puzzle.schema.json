@@ -46,7 +46,8 @@
      ],
      "minimum": 0
     }
-   }
+   },
+   "description": "row-major, 0-based; null = blank cell"
   },
   "hints": {
    "type": "array",
@@ -60,18 +61,19 @@
     "properties": {
      "row": {
       "type": "integer",
-      "minimum": 1
+      "minimum": 0
      },
      "col": {
       "type": "integer",
-      "minimum": 1
+      "minimum": 0
      },
      "value": {
       "type": "integer",
       "minimum": 0
      }
     }
-   }
+   },
+   "description": "hint cells, 0-based (row, col), consistent with grid[r][c]"
   },
   "hint_count": {
    "type": "integer"
