@@ -51,6 +51,16 @@ class LazyCatalogue:
         return super().__new__(cls)
 
     def __init__(self, n: int, max_cells: Optional[int] = None, budget: int = 2_000_000):
+        if getattr(self, "_initialized", False):
+            # The instance is shared (module level cache), and __new__ already returned the
+            # built catalogue.  __init__ must NOT wipe the per-anchor cache: doing so made
+            # "building a second Generator for the same size costs nothing" false -- every
+            # new instance re-grew every anchor from scratch (GLM code review, MAJOR 1).
+            if max_cells is not None:
+                self.max_cells = max_cells
+            self.budget = budget
+            return
+        self._initialized = True
         self.n = n
         self.cells: List[Cell] = [(r, c) for r in range(n) for c in range(n)]
         self._cell_cache: Dict[Cell, List[FrozenSet[Cell]]] = {}

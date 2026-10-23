@@ -59,6 +59,17 @@ def split_demands(n: int, hints: Dict[Cell, int]):
             continue
         radius = (v + 1) // 2
         raw = ball(x, radius, n)
+        if v == 1:
+            # A cost-1 step means one of the two states is a 1x1 state, and a 1x1 state
+            # IS a capitol.  So the capitol serving a d=1 hint must be a SINGLETON state
+            # adjacent to the hint -- a revealed capitol sitting in the ball does NOT
+            # settle it, because that capitol's state may well be bigger than one cell
+            # (GLM code review, BLOCKER 2).  The demand therefore stays, and its
+            # candidates are the adjacent cells that could still be that singleton.
+            cands = [c for c in singleton_candidates(n, hints).get(x, [])
+                     if c not in known]
+            uncovered.append((x, v, radius, cands))
+            continue
         if any(c in known for c in raw):
             satisfied.append((x, v, radius, []))
             continue

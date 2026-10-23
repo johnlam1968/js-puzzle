@@ -158,7 +158,8 @@ class Solver:
 
         def rec(rem: int, chosen: List[FrozenSet[Cell]],
                 cur: Optional[FrozenSet[Cell]], sym: Optional[Symmetry],
-                possible: int, closed_here: Set[FrozenSet[Cell]]):
+                possible: int, closed_here: Set[FrozenSet[Cell]],
+                grown_here: Set[int]):
             """Grow one state at a time; when it is closed, start the next one."""
             if not self.exhaustive:
                 return
@@ -203,12 +204,21 @@ class Solver:
                             np |= 1 << self.idx[c]
                     if self._lb_violates(np):
                         continue
-                    rec(rem & ~self._mask(start), chosen, frozenset(start), s, np, closed_here)
+                    rec(rem & ~self._mask(start), chosen, frozenset(start), s, np,
+                        closed_here, set())
                     if not self.exhaustive:
                         return
                 return
 
             # a state is being grown: close it, or extend it by one orbit
+            # The same partial state can be reached by adding the same orbits in different
+            # orders; the subtree below it is IDENTICAL (it depends only on the state, the
+            # symmetry and the remaining cells), so the second visit is dead work
+            # (GLM code review, MAJOR 2).
+            cur_mask = self._mask(cur)
+            if cur_mask in grown_here:
+                return
+            grown_here.add(cur_mask)
             already_closed = cur in closed_here
             if self._can_close(cur) and not already_closed:
                 closed_here.add(cur)
@@ -220,7 +230,7 @@ class Solver:
                 if cap is not None:
                     np |= 1 << self.idx[cap]
                 if not self._lb_violates(np):
-                    rec(rem & ~self._mask(cur), chosen + [cur], None, None, np, set())
+                    rec(rem & ~self._mask(cur), chosen + [cur], None, None, np, set(), set())
                     if not self.exhaustive:
                         return
             orb = self._orbits(sym)
@@ -247,7 +257,8 @@ class Solver:
                 if self._lb_violates(np):
                     continue
                 # the new orbit's cells leave the remaining region as well
-                rec(rem & ~self._mask(o), chosen, frozenset(newcur), sym, np, closed_here)
+                rec(rem & ~self._mask(o), chosen, frozenset(newcur), sym, np,
+                    closed_here, grown_here)
                 if not self.exhaustive:
                     return
 
@@ -257,7 +268,7 @@ class Solver:
         for (r, c), v in self.hints.items():
             if v > 0:
                 start_possible &= ~(1 << self.idx[(r, c)])
-        rec(full, [], None, None, start_possible, set())
+        rec(full, [], None, None, start_possible, set(), set())
         return {
             "answers": sorted(self.answers),
             "cardinality": len(self.answers),

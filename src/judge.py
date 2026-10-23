@@ -138,7 +138,7 @@ class Judge:
         """
         if possible == 0:
             return True
-        for (r, c), v in hints.items():
+        for (r, c), v in self._hints_now.items():
             radius = (v + 1) // 2
             best = 1 << 30
             for dist, cc in self._near[(r, c)]:
@@ -156,8 +156,9 @@ class Judge:
     def decide(self, hints: Dict[Cell, int], budget: int = 2_000_000) -> Dict[str, object]:
         n = self.n
         # the lower-bound check needs, per hint, the cells ordered by Manhattan distance
+        self._hints_now = {k: int(v) for k, v in hints.items()}
         self._near = {}
-        for (r, c), v in hints.items():
+        for (r, c), v in self._hints_now.items():
             row = self._manh[r * self.n + c]
             self._near[(r, c)] = sorted(
                 ((row[cc], cc) for cc in range(n * n)), key=lambda t: t[0])
@@ -179,18 +180,8 @@ class Judge:
                     "unique": (len(ans) == 1),
                     "source": "table",
                 }
-        if self._table is not None:
-            fields, answers = self._table[0], self._table[1]
-            ans, count = answers_for_hints(fields, answers, n, hints)
-            return {
-                "answers": ans,
-                "cardinality": len(ans),
-                "partitions": count,
-                "exhaustive": True,          # the table holds EVERY legal tiling
-                "nodes": 0,
-                "unique": (len(ans) == 1),
-                "source": "table",
-            }
+        # (the second table block was dead: the first one either returned or cleared
+        # self._table.  Only the RETURN was dead -- the initialisation below it is live.)
         full = (1 << (n * n)) - 1
         all_cells = full
         answers: Set[int] = set()
@@ -236,7 +227,7 @@ class Judge:
                         keep |= 1 << i
                     # a state without a capitol contributes nothing
                 new_possible = possible & ~mask_m | keep
-                if self._lb_violates(hints, new_possible):
+                if self._lb_violates(new_possible):
                     continue
                 rec(rem ^ mask_m, chosen + [mask_m], new_possible)
                 if not exhausted:
