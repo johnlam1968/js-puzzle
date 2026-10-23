@@ -486,6 +486,111 @@ solution does not certify the answer. The simulation must therefore collect an *
 over many restarts (task B of §1.1), and the report should say `answers_found = {304, 112}`
 rather than "the answer is 304".
 
+### 4.4b Gate 0 — the landscape is benign, and that settles the route
+
+**MEASURED** (peer session, `tools/energy_landscape_4x4.py`, all 559,585 legal 4×4 tilings,
+energy = Σ|d_T(x) − D(x)| over the published cells):
+
+| energy | tilings |
+|---|---|
+| **E = 0** | **2** ← the two solutions (answers 112 and 304) |
+| E = 1 | 2 |
+| E = 2 | 59 |
+| E = 3 | 74 |
+| E = 4 | 727 |
+| E = 5 | 714 |
+| E = 6 | 5,431 |
+| max | 508 |
+
+⇒ **The gap between the best solution and the best non-solution is 1** ⇒ the true solutions are
+**not isolated points** ⇒ a gradient exists to walk ⇒ **the simulation route is GO.**
+
+**And the sharper reading** (the number that matters most):
+
+| neighbourhood | tilings | distinct answers | tilings whose answer is **not** 112/304 |
+|---|---|---|---|
+| 0 < E ≤ 1 | 2 | 3 | 2 |
+| 0 < E ≤ 2 | 61 | 13 | 61 |
+| 0 < E ≤ 5 | 1,576 | 84 | 1,576 |
+| 0 < E ≤ 10 | 55,333 | 420 | **55,327 (99.99%)** |
+
+⇒ **The energy is a weak signal for *which answer* and a strong signal for *how close to a
+solution*.** Among the 55,333 tilings within E ≤ 10, essentially every one leads to the **wrong**
+answer. ⇒ The "E = 0 is not a certificate" caution of §4.4 is now a number.
+
+⇒ **The order-of-magnitude argument that makes this route the right tool**: the target set has
+**2 members in 559,585** — **0.0004%**. Exhaustive search cannot find a set that small inside a
+space that large; a local search that can walk a one-step gradient can. That is the difference
+between "the exact route is exhausted" and "the exact route is not the right tool", and it is a
+quantitative statement, not a hope.
+
+### 4.4c What the *right* move graph looks like
+
+The peer's first implementation failed the 5×5 gate, and the diagnosis is worth recording because
+it is the same shape as several earlier lessons.
+
+**Symptom.** On the 4×4 — where the landscape is *known* to be benign (§4.4b) — 150,000 moves
+across four tolerances and five seeds never got below **E = 60**. So the failure was not the
+instance; it was the **move graph**.
+
+**Why a coarse move cannot walk a fine gradient.** Replacing a region of `k` states at once
+changes their areas by O(a) each, and every path that crosses those states changes cost by the
+same amount ⇒ **the d-field of a whole region shifts** ⇒ the energy jumps. The E = 1 neighbours
+are reachable only by changes that alter **one** state's area by **one**.
+
+**But a single cell cannot be moved.** A state's shape is fixed by its symmetry, so moving one
+cell out of it breaks the symmetry ⇒ the state is no longer legal. ⇒ **the natural atomic move is
+not "move a cell" but "replace one state with another legal state"** — and the one that keeps the
+energy on the scale the gradient lives on is a replacement whose area differs by **one**.
+
+```
+def neighbours_of(T):
+    """One legal state replaced by another legal state of area +/- 1, anchored nearby."""
+    for S in T.states:
+        for S2 in legal_states_of_area(len(S) + 1, near=S.anchor):   # and len(S) - 1
+            if S2 is not None:
+                yield T.replace(S, S2)
+```
+
+⇒ **the move graph**: single-state replacements with |Δarea| = 1, chosen by **greedy
+best-improvement** (the replacement that minimises the energy delta), with **record-to-record**
+acceptance to escape local minima. Larger re-partitions remain available as occasional "big"
+moves, but they are not the *unit* of progress.
+
+### 4.4d The relaxed d-field: removing the wall
+
+The true d-field is **undefined** when a partition has no capitol — and that is a **wall** local
+moves cannot cross (the peer's `BIG = 1000` penalty was the same wall, built differently).
+
+> **Relaxed definition.** The candidate capitol set of a partition = every cell that is the unique
+> fixed point of some symmetry of its own state (a *capitol candidate*). Define
+> `d_relaxed(x) = min over candidates c of the cost of the cheapest path from x to c`.
+> The true d-field is the special case where the candidate set happens to be exactly the real
+> capitols, and `d_relaxed ≤ d_true` always.
+
+⇒ **two-phase design**: *optimise* the relaxed energy (smooth, wall-free, defined everywhere),
+then *verify* every candidate with the strict engine. A relaxed-E = 0 partition is a **candidate**,
+not a solution — and the strict check is what turns it into one.
+
+### 4.4e Two rules about penalties and stalls, from the same failure
+
+1. **A penalty must be on the scale of the objective, and a penalised configuration must have a
+   path back.** `BIG = 1000` against an energy whose scale is 10–500 is not a penalty, it is a
+   **wall**: the search cannot climb out of a single violation. The test: *can the search return
+   from every configuration it can reach?* If not, the penalty is a wall.
+2. **When a search stalls, measure the landscape before tuning parameters.** Gate 0 (§4.4b) cost
+   three minutes on the 4×4 oracle and answered the question that a week of parameter fiddling
+   would not have: *is there still a gradient?* Use the small exhaustive oracle, not the big
+   instance.
+
+### 4.4f The energy evaluation is the bottleneck on the 11×11
+
+One evaluation = one shortest-path computation over 121 cells with integer edge weights (the
+state sizes). A heap-based Dijkstra is ~0.5 ms in Python ⇒ 10⁴ moves/s would cost 5 s of CPU per
+second of annealing. ⇒ Use a **bucket queue (Dial's algorithm)** — the weights are small integers,
+so the bucket queue is O(E + max weight) and several times faster — and cache the d-field per
+candidate state set.
+
 ### 4.5 A caution about the probabilities in §2
 
 The decision model returns `probabilities`. **Those numbers are not calibrated** — a score of
