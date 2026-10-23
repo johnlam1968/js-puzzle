@@ -1,0 +1,119 @@
+{
+ "id": "counterexample-4x4-two-answers",
+ "size": 4,
+ "kind": "counterexample",
+ "purpose": "Same FULL hint set (all 16 d values) is compatible with TWO different answers. Proves: the cost field does NOT determine the answer. Answer-level uniqueness must be checked by enumerating answers, NOT by counting partitions (plan D20).",
+ "ingest": {
+  "method": "hand-constructed + verified with the exact-integer rule engine",
+  "verified_date": "2026-10-23"
+ },
+ "grid": [
+  [
+   1,
+   1,
+   1,
+   1
+  ],
+  [
+   0,
+   0,
+   0,
+   0
+  ],
+  [
+   0,
+   0,
+   0,
+   0
+  ],
+  [
+   0,
+   0,
+   0,
+   0
+  ]
+ ],
+ "hints": [
+  {
+   "row": 1,
+   "col": 1,
+   "value": 1
+  },
+  {
+   "row": 1,
+   "col": 2,
+   "value": 1
+  },
+  {
+   "row": 1,
+   "col": 3,
+   "value": 1
+  },
+  {
+   "row": 1,
+   "col": 4,
+   "value": 1
+  },
+  {
+   "row": 2,
+   "col": 1,
+   "value": 0
+  },
+  {
+   "row": 2,
+   "col": 2,
+   "value": 0
+  },
+  {
+   "row": 2,
+   "col": 3,
+   "value": 0
+  },
+  {
+   "row": 2,
+   "col": 4,
+   "value": 0
+  },
+  {
+   "row": 3,
+   "col": 1,
+   "value": 0
+  },
+  {
+   "row": 3,
+   "col": 2,
+   "value": 0
+  },
+  {
+   "row": 3,
+   "col": 3,
+   "value": 0
+  },
+  {
+   "row": 3,
+   "col": 4,
+   "value": 0
+  },
+  {
+   "row": 4,
+   "col": 1,
+   "value": 0
+  },
+  {
+   "row": 4,
+   "col": 2,
+   "value": 0
+  },
+  {
+   "row": 4,
+   "col": 3,
+   "value": 0
+  },
+  {
+   "row": 4,
+   "col": 4,
+   "value": 0
+  }
+ ],
+ "hint_count": 16
+}

@@ -1,0 +1,104 @@
+{
+ "id": "official-example-5x5",
+ "size": 5,
+ "kind": "example",
+ "source": "https://www.janestreet.com/puzzles/current-puzzle/ (bottom band, left panel)",
+ "ingest": {
+  "method": "pixel grid-line detection + human/verifier/deepseek read",
+  "verified_by": [
+   "author(human)",
+   "Verifier(pixel+ASCII OCR)",
+   "DeepSeek-V4.1-Flash(vision)"
+  ],
+  "verified_date": "2026-10-23"
+ },
+ "grid": [
+  [
+   12,
+   null,
+   null,
+   null,
+   17
+  ],
+  [
+   8,
+   null,
+   6,
+   3,
+   null
+  ],
+  [
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  [
+   null,
+   7,
+   6,
+   null,
+   10
+  ],
+  [
+   25,
+   null,
+   null,
+   null,
+   0
+  ]
+ ],
+ "hints": [
+  {
+   "row": 1,
+   "col": 1,
+   "value": 12
+  },
+  {
+   "row": 1,
+   "col": 5,
+   "value": 17
+  },
+  {
+   "row": 2,
+   "col": 1,
+   "value": 8
+  },
+  {
+   "row": 2,
+   "col": 3,
+   "value": 6
+  },
+  {
+   "row": 2,
+   "col": 4,
+   "value": 3
+  },
+  {
+   "row": 4,
+   "col": 2,
+   "value": 7
+  },
+  {
+   "row": 4,
+   "col": 3,
+   "value": 6
+  },
+  {
+   "row": 4,
+   "col": 5,
+   "value": 10
+  },
+  {
+   "row": 5,
+   "col": 1,
+   "value": 25
+  },
+  {
+   "row": 5,
+   "col": 5,
+   "value": 0
+  }
+ ]
+}

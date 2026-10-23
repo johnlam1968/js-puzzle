@@ -1,0 +1,203 @@
+# REVIEW-deepseek-v4.1-flash-v2 — 独立评审（v2 设计文档）
+
+- model: `deepseek/deepseek-v4.1-flash`
+- 命中尝试: no-reasoning
+- finish_reason: stop
+- usage: {"prompt_tokens": 14116, "completion_tokens": 6871, "total_tokens": 20987, "cost": 0.01248, "is_byok": false, "prompt_tokens_details": {"cached_tokens": 0, "cache_write_tokens": 0, "audio_tokens": 0, "video_tokens": 0}, "cost_details": {"upstream_inference_cost": 0.01248, "upstream_inference_prompt_cost": 0.0042348, "upstream_inference_completions_cost": 0.0082452}, "completion_tokens_details": {"reasoning_tokens": 0, "image_tokens": 0, "audio_tokens": 0}}
+- content_chars: 16006  reasoning_chars: 0
+
+---
+
+## FINAL ANSWER
+
+# 1. SANITY CHECK (5×5 example)
+
+States (0-based): state0 = 7 cells, state1 = 2×2 (4 cells, no capitol), state2 = 3 cells, state3 = 11 cells. Capitols: state0 at (2,1), state2 at (2,3), state3 at (4,4).
+
+Dijkstra from capitols, step cost = state size (same state) or min(sizes) (cross state):
+
+- d(2,1)=0, d(2,3)=0, d(4,4)=0.
+- (2,0): in state0, adjacent to capitol (2,1) → 7. Printed 7 ✓
+- (2,2): in state0, adjacent to (2,1) [7] and (2,3) [3] → min(7,3)=3. Printed 3 ✓
+- (2,4): in state3, adjacent to (2,3) [3] → 3. Printed 3 ✓
+- (1,1): state1, adjacent to (2,1) [7] and (1,2) [4] → 4. Printed 4 ✓
+- (1,2): state1, adjacent to (1,1) [4] and (2,2) [3] → 3. Printed 3 ✓
+- (1,4): state3, adjacent to (2,4) [3] → 3. Printed 3 ✓
+- (0,0): state0, adjacent to (1,0) [8] and (0,1) [8] → 8. Printed 8 ✓
+- (0,1): state1, adjacent to (0,0) [8] and (1,1) [4] → 4. Printed 4 ✓
+- (0,2): state1, adjacent to (0,1) [4] and (1,2) [3] → 3. Printed 3 ✓
+- (0,3): state3, adjacent to (0,2) [3] → 3. Printed 3 ✓
+- (0,4): state3, adjacent to (0,3) [3] → 3. Printed 3 ✓
+- (1,0): state0, adjacent to (0,0) [8] and (2,0) [7] → 7. Printed 8? 
+
+Wait — printed (1,0)=8. Let me recheck. (1,0) is in state0. Adjacent to (0,0) [state0, d=8] and (2,0) [state0, d=7]. Same-state step = 7. So d(1,0) = 7+7 = 14? No — d(1,0) = d(2,0) + 7 = 7+7 = 14. Printed 8. Hmm.
+
+Actually (1,0) is in state0. From capitol (2,1): path (2,1)→(2,0)→(1,0), cost 7+7=14. But printed is 8. Let me recheck the printed field:
+
+```
+12  8 10  6 17
+ 8  4  6  3  6
+ 7  0  3  0  3
+14  7  6  3 10
+25 14 13 10  0
+```
+
+(1,0)=8. Hmm, that's odd. Let me reconsider: maybe (1,0) is in state3? No, state3 is the big region. Actually looking at the state map:
+
+```
+0 1 1 3 3
+0 1 1 2 3
+0 0 2 2 3
+3 0 0 0 3
+3 3 3 3 3
+```
+
+(1,0)=0 (state0). (0,0)=0. (2,0)=0. So (1,0) in state0. From (2,1) capitol: (2,1)→(2,0) cost 7, (2,0)→(1,0) cost 7 → 14. But printed 8.
+
+Hmm, wait — maybe I misread. Let me recheck (0,0)=12. From (2,1): (2,1)→(2,0)→(1,0)→(0,0): 7+7+7=21. Or (2,1)→(1,1)→(0,1)→(0,0): 4+4+4=12. Yes! (0,0)=12 ✓.
+
+(1,0): (2,1)→(1,1)→(1,0): 4+4=8. Yes! (1,1) is state1, (1,0) is state0, cross-state step = min(4,7)=4. So d(1,0)=4+4=8 ✓.
+
+(2,0): (2,1)→(2,0): 7. ✓
+(3,0): state3, (3,0)→(3,1) [state0, d=7] cross min(11,7)=7 → 14. Or (3,0)→(4,0) [state3, d=25]... no. (3,0)→(3,1): 7+7=14 ✓.
+(4,0): state3, (4,0)→(3,0): 11+14=25 ✓.
+(3,1): state0, (3,1)→(2,1): 7 → 7 ✓.
+(3,2): state0, (3,2)→(3,1): 7+7=14? Printed 6. Hmm. (3,2)→(2,2) [state0, d=3]: 7+3=10. (3,2)→(3,3) [state0, d=3]: 7+3=10. Printed 6. 
+
+Hmm, (3,2) is state0. Adjacent: (2,2) state0 d=3, (3,1) state0 d=7, (3,3) state0 d=3, (4,2) state3 d=13. Min: 3+7=10. Printed 6. That doesn't match!
+
+Wait, let me recheck the printed field. Row 3 (0-based): `14  7  6  3 10`. So (3,0)=14, (3,1)=7, (3,2)=6, (3,3)=3, (3,4)=10.
+
+Hmm (3,2)=6. Let me reconsider. Is (3,2) really state0? State map row 3: `3 0 0 0 3`. So (3,1),(3,2),(3,3) are state0. (3,3) is adjacent to (2,3) capitol: cross min(7,3)=3 → d=3 ✓. (3,2) adjacent to (3,3): same state 7 → 3+7=10. But printed 6.
+
+Hmm, maybe I have the state map wrong. Let me re-read: "0 1 1 3 3 / 0 1 1 2 3 / 0 0 2 2 3 / 3 0 0 0 3 / 3 3 3 3 3". Row 3 = `3 0 0 0 3`. So (3,0)=3, (3,1)=0, (3,2)=0, (3,3)=0, (3,4)=3.
+
+(3,2) in state0. d(3,2) = min over neighbors. (2,2) state0 d=3 → 3+7=10. (3,3) state0 d=3 → 10. (4,2) state3 d=13 → 13+7=20. (3,1) state0 d=7 → 14. So 10. Printed 6.
+
+Hmm, discrepancy. Let me recheck (2,2). Row 2: `7 0 3 0 3`. (2,2)=3. (2,2) is state0. Adjacent to (2,1) capitol: 7. Adjacent to (2,3) capitol: cross min(7,3)=3 → 3. So d(2,2)=3 ✓.
+
+(3,2): hmm. Actually wait — maybe (3,2) is adjacent to (2,2) with same-state cost 7, giving 10. But printed 6. Unless... (3,2) is in state2? No, state2 is at (1,3),(1,4),(2,3),(2,4)? Let me re-read: row 1 `0 1 1 2 3`, row 2 `0 0 2 2 3`. So state2 = (1,3),(2,2),(2,3). Hmm, (2,2) is state2? Row 2: `0 0 2 2 3` → (2,0)=0,(2,1)=0,(2,2)=2,(2,3)=2,(2,4)=3. So (2,2) is state2, not state0!
+
+Let me redo. State map:
+```
+row0: 0 1 1 3 3
+row1: 0 1 1 2 3
+row2: 0 0 2 2 3
+row3: 3 0 0 0 3
+row4: 3 3 3 3 3
+```
+State0: (0,0),(1,0),(2,0),(2,1),(3,1),(3,2),(3,3) = 7 cells ✓
+State1: (0,1),(0,2),(1,1),(1,2) = 4 cells ✓
+State2: (1,3),(2,2),(2,3) = 3 cells ✓
+State3: (0,3),(0,4),(1,4),(2,4),(3,0),(3,4),(4,0),(4,1),(4,2),(4,3),(4,4) = 11 cells ✓
+
+Capitol of state2: (2,3)? State2 = {(1,3),(2,2),(2,3)}. Symmetry: reflection? (1,3),(2,2),(2,3) — this is an L-tromino. Its symmetry: reflection across the diagonal through (2,2) and... actually L-tromino has one reflection symmetry. The fixed cell is the corner (2,2). So capitol = (2,2), not (2,3)!
+
+The document says "state2 (2,3)" but the true capitol should be (2,2). Let me verify: L-tromino {(1,3),(2,2),(2,3)}. Reflection across the anti-diagonal line through (2,2): maps (1,3)↔(2,2)? No. Let me think. The L-tromino has cells at (2,2) corner, (1,3) and (2,3). Reflection across the line y=x+... Actually the symmetry axis passes through (2,2) and the midpoint of (1,3)-(2,3) which is (1.5,3). Line through (2,2) and (1.5,3): slope = (3-2)/(1.5-2) = 1/(-0.5) = -2. Hmm, that's not a valid reflection axis for a polyomino (must be horizontal/vertical/diagonal).
+
+Let me reconsider. L-tromino cells: (1,3),(2,2),(2,3). This is a 2×2 square minus (1,2). The symmetry of an L-tromino: reflection across the diagonal from the missing corner. Missing corner is (1,2). Diagonal through (1,2) and (2,3): slope 1. Reflection across this line: (1,3)↔(2,2). Yes! So the symmetry maps (1,3)↔(2,2), fixes (2,3). So capitol = (2,3) ✓.
+
+OK so the document is right. Let me redo d(3,2). (3,2) is state0. Neighbors: (2,2) state2 d=0 (capitol!), (3,1) state0 d=7, (3,3) state0 d=3, (4,2) state3 d=13. From (2,2) capitol: cross min(7,3)=3 → 0+3=3. So d(3,2)=3? Printed 6. Hmm.
+
+Wait, (2,2) is capitol of state2, so d(2,2)=0. Then (3,2) adjacent to (2,2): cross-state step = min(7,3)=3 → d(3,2)=3. But printed 6.
+
+Hmm. Let me recheck (2,2). Row 2: `7 0 3 0 3`. (2,2)=3, not 0! So (2,2) is NOT the capitol. The capitols are at (2,1)=0, (2,3)=0, (4,4)=0.
+
+So state2 capitol is (2,3), and (2,2) has d=3. Let me redo: (2,2) in state2, adjacent to (2,3) capitol: same state 3 → d=3 ✓.
+
+(3,2) in state0. Neighbors: (2,2) state2 d=3 → cross min(7,3)=3 → 3+3=6 ✓! (3,3) state0 d=3 → 3+7=10. So d(3,2)=6 ✓.
+
+Great, I had the state map wrong. Let me redo all:
+
+d-field:
+- (0,0): state0. Path via (1,1) state1: (2,1)→(1,1) 4, (1,1)→(0,1) 4, (0,1)→(0,0) 4 → 12. Or (2,1)→(2,0) 7, (2,0)→(1,0) 7, (1,0)→(0,0) 7 → 21. So 12 ✓
+- (0,1): state1. (2,1)→(1,1) 4, (1,1)→(0,1) 4 → 8 ✓
+- (0,2): state1. (2,1)→(1,1) 4, (1,1)→(1,2) 4, (1,2)→(0,2) 4 → 12? Or (2,1)→(1,1) 4, (1,1)→(0,1) 4, (0,1)→(0,2) 4 → 12. Printed 10. Hmm. (0,2)→(0,3) state3 d=6: cross min(4,11)=4 → 6+4=10 ✓
+- (0,3): state3. (2,3)→(1,3) 3, (1,3)→(0,3) 3 → 6 ✓
+- (0,4): state3. (0,3)→(0,4) 11 → 6+11=17 ✓
+- (1,0): state0. (2,1)→(1,1) 4, (1,1)→(1,0) 4 → 8 ✓
+- (1,1): state1. (2,1)→(1,1) 4 → 4 ✓
+- (1,2): state1. (2,1)→(1,1) 4, (1,1)→(1,2) 4 → 8? Or (2,2) state2 d=3: (1,2)→(2,2) cross min(4,3)=3 → 3+3=6 ✓
+- (1,3): state2. (2,3)→(1,3) 3 → 3 ✓
+- (1,4): state3. (2,3)→(1,3) 3, (1,3)→(1,4) cross min(3,11)=3 → 6 ✓
+- (2,0): state0. (2,1)→(2,0) 7 → 7 ✓
+- (2,1): 0 ✓
+- (2,2): state2. (2,3)→(2,2) 3 → 3 ✓
+- (2,3): 0 ✓
+- (2,4): state3. (2,3)→(2,4) cross min(3,11)=3 → 3 ✓
+- (3,0): state3. (3,1) state0 d=7: (3,0)→(3,1) cross min(11,7)=7 → 14 ✓
+- (3,1): state0. (2,1)→(3,1) 7 → 7 ✓
+- (3,2): state0. (2,2) state2 d=3: cross min(7,3)=3 → 6 ✓
+- (3,3): state0. (2,3) capitol: cross min(7,3)=3 → 3 ✓
+- (3,4): state3. (2,4) state3 d=3: same state 11 → 14? Or (3,3) state0 d=3: cross min(11,7)=7 → 10 ✓
+- (4,0): state3. (3,0) state3 d=14: 11 → 25 ✓
+- (4,1): state3. (4,0) state3 d=25: 11 → 36? Or (3,1) state0 d=7: cross min(11,7)=7 → 14 ✓
+- (4,2): state3. (3,2) state0 d=6: cross 7 → 13 ✓
+- (4,3): state3. (3,3) state0 d=3: cross 7 → 10 ✓
+- (4,4): 0 ✓
+
+My d-field:
+```
+12  8 10  6 17
+ 8  4  6  3  6
+ 7  0  3  0  3
+14  7  6  3 10
+25 14 13 10  0
+```
+Matches printed exactly. Row sums of state sizes: row0 = 7+4+4+11+11 = 37 ✓; row1 = 7+4+4+3+11 = 29 ✓; row2 = 7+7+3+3+11 = 31 ✓; row3 = 11+7+7+7+11 = 43 ✓; row4 = 11×5 = 55 ✓. Answer = 37²+29²+31²+43²+55² = 1369+841+961+1849+3025 = 8045 ✓.
+
+Capitols: state0 (7 cells) — has a capitol at (2,1). State1 (2×2) — no capitol (every nontrivial symmetry fixes 0 or 2 cells). State2 (L-tromino) — capitol at (2,3). State3 (11 cells) — capitol at (4,4).
+
+**PASS.**
+
+# 2. VERDICT
+
+**APPROVE_WITH_CHANGES.** The document is mathematically careful and the four adopted routes (AODFS, hitting-set seeding, answer-level uniqueness, hint minimization) are sound. But several concrete claims are still wrong or unverified, and the hitting-set branch is over-sold.
+
+**Still wrong:**
+
+1. **§1.11 / §9 — the "≥7 capitols" lower bound is not rigorous.** The step-count lemma `k ≤ ⌊(v+1)/2⌋` assumes every intermediate step costs ≥2. But a step of cost 1 means traversing a 1×1 state, which *is* a capitol — so the path would have ended. That part is fine. However, the hitting-set is over *candidate cells for capitols*, and the 88-cell pool is derived from "hint cells cannot be capitols (except d=0)". This is correct only if no hint cell with d>0 is itself a capitol — true, since d=0 ⟺ capitol. But the pool size 88 = 121 − 33 is asserted, not derived; the 2 revealed capitols are *inside* the 33, so the pool should be 121 − 33 = 88 only if all 33 hints are non-capitol, which fails for the two d=0 cells. **Correction: pool = 121 − 31 = 90, not 88.** The 5-extra-capitol result may shift.
+
+2. **§5.5 M2 is still stated as an equality in the macro-move list** ("`w(x,c)=d(x)`; `d(x)` 偶 ⇒ x 所在州面积 = d(x)"). §1.8 correctly demoted this to a lower bound, but §5.5 was not updated. **Correction: delete the equality and the "d even ⇒ area = d" clause from M2; keep only `min(s_x, s_y) ≥ d(x)`.**
+
+3. **§1.11 example minimum set `{(1,1),(3,7),(3,9),(4,11),(7,5)}` is UNVERIFIED and likely wrong.** (4,11) is a hint cell (row 4, col 11 = 1 in 1-based? row 4 is `28 . . 51 . . 1 . 6 . .` — col 7 = 1, col 9 = 6, col 11 = empty). So (4,11) is not a hint, fine. But (3,7) and (3,9): row 3 = `28 . . 51 . . 1 . 6 . .` → (3,4)=51, (3,7)=1, (3,9)=6. (3,7) is a hint cell (d=1), so it *cannot* be a capitol. **Correction: remove (3,7) from the example; the claimed minimum set is invalid.**
+
+4. **§2.2 — the "shape mask" argument for DP infeasibility is asserted, not quantified.** The claim "shape mask values far exceed Bell(11)" is plausible but the document gives no number. **Correction: either give a concrete lower bound on the number of distinct open-state shapes at the frontier, or downgrade to "plausible but unquantified."**
+
+5. **§6.2b step 0′ is still incomplete.** "Allow adding capitols elsewhere" is necessary but the document does not bound *how many* extra. Without an upper bound on total capitols, the enumeration is unbounded. **Correction: add an explicit cap (e.g., ≤ 121, or better ≤ 121/1 since each capitol needs ≥1 cell) and note that the hitting-set seeds only fix a *subset*.**
+
+6. **§1.10 table: "0 readings → 79 answers" for 3×3.** This is stated as measured but the 3×3 has 974 partitions; 79 distinct answers from 974 partitions is plausible but the document elsewhere says 3×3 has 943 *live* partitions. **Correction: clarify whether 79 is over all 974 or only the 943 live ones.**
+
+# 3. NEW APPROACHES
+
+Ranked by expected value:
+
+**A. Capitol-count parity / Burnside on the capitol set (NEW).** Each capitol is a fixed point of a nontrivial symmetry of its state. Sum over states of (number of capitols) = number of states with capitols. By Burnside on the *whole tiling* under D2, the number of D2-orbits of capitols is constrained. This gives a *global* parity/counting constraint the document lacks. **Concrete quantity:** for each D2 element g, the number of capitols fixed by g. Plugs into AODFS as a global pruning counter.
+
+**B. Exact hitting-set with *weighted* demands (NEW).** The document treats all 31 demands equally. But a hint with v=77 demands a capitol within ⌊78/2⌋=39 Manhattan steps — nearly the whole board, so it's nearly vacuous. A hint with v=1 demands a capitol within 1 step — very tight. **Concrete quantity:** weight each demand by 1/⌊(v+1)/2⌋² (area of ball). This prunes the 1,592 minimum sets to a much smaller *weighted* set. Plugs in as a pre-filter before AODFS.
+
+**C. Integer programming with a *fixed* capitol set (NEW).** Once a candidate capitol set is fixed, the min(s_u,s_v) nonlinearity disappears for edges incident to capitols (the capitol's state size is bounded by the demand). The document rejected ILP because of min-linearization, but *conditional on a capitol set* the problem is much smaller. **Concrete quantity:** LP relaxation bound on the answer for each capitol seed. Plugs in as a bound to prune AODFS branches.
+
+**D. Spectral invariant of the state-adjacency graph (REJECT).** The document correctly rejects this: d depends on state sizes, not graph structure. No new information.
+
+**E. Topological / Euler characteristic (REJECT).** Only constrains perimeter and holes; d depends only on area. Correctly rejected.
+
+**F. Monte Carlo / simulated annealing (REJECT for proof, ACCEPT for seeding).** Cannot prove uniqueness, but can generate good initial capitol sets for AODFS. Marginal.
+
+# 4. HAND DEDUCTIONS on THIS 11×11
+
+Using the 33 hints (1-based):
+
+- **d=0 cells:** (6,8) and (11,6) are capitols. Their states are odd-sized.
+- **d=1 cells:** (3,6), (4,7), (5,11). Each must be adjacent to a 1×1 state (which is itself a capitol). So there exist 1×1 capitols adjacent to these. (3,6) and (4,7) share neighbors (3,7) and (4,6) — at most one of these is the 1×1 capitol, or they have separate 1×1 neighbors.
+- **Step-count bound:** (11,9)=77 → capitol within ⌊78/2⌋=39 Manhattan steps (vacuous). (11,10)=61 → within 31 (vacuous). (4,4)=51 → within 26 (vacuous). (1,1)=8 → within 4. (1,2)=4 → within 2. (1,3)=11 → within 6. (1,6)=11 → within 6. (1,10)=5 → within 3. (2,8)=11 → within 6. (3,3)=7 → within 4. (3,6)=1 → within 1. (3,7)=1 → within 1. (3,9)=6 → within 3. (4,1)=28 → within 14. (4,4)=51 → within 26. (4,7)=1 → within 1. (4,9)=6 → within 3. (5,2)=22 → within 11. (5,9)=4 → within 2. (5,11)=1 → within 1. (6,4)=15 → within 8. (6,6)=10 → within 5. (6,8)=0 → capitol. (7,1)=11 → within 6. (7,3)=11 → within 6. (7,10)=9 → within 5. (8,3)=17 → within 9. (8,5)=14 → within 7. (8,9)=10 → within 5. (8,11)=13 → within 7. (9,1)=30 → within 15. (9,6)=6 → within 3. (9,10)=45 → within 23. (10,4)=10 → within 5. (11,2)=26 → within 13. (11,6)=0 → capitol. (11,9)=77 → within 39. (11,10)=61 → within 31.
+
+- **Adjacent hint pairs with large |Δd|:** (11,9)=77 and (11,10)=61, Δ=16 → both states have size ≥16. (7,3)=11 and (8,3)=17, Δ=6 → both ≥6. (1,2)=8 and (1,3)=4, Δ=4 → both ≥4. (9,1)=30 and (10,1)? No hint. (9,1)=30 and (9,2)? No hint.
+
+- **Dead-state budget:** k=120 impossible (T-B). So at least 2 cells are in non-1×1 states. Actually every state with a capitol has odd size ≥1; states without capitols have size ≥2. With ≥7 capitols (if the hitting-set bound holds), at least 7 odd states.
+
+- **Parity:** (11,9)=77 is odd. If (11,9) is adjacent to a capitol, its state size ≥77. But 77 > 121/2, so (11,9) cannot be adjacent to a capitol (a state of size ≥77 would leave <45 cells for everything else, but we need ≥7 capitols). So (11,9) is NOT adjacent to a capitol. Similarly (11,10)=61: state size ≥61, not adjacent to capitol.
+
+# 5. ONE NEXT EXPERIMENT
+
+**Recompute the hitting-set with the corrected pool (90 cells, not 88) and weighted demands.** Expected cost: minutes of exact branch-and-bound. **Success:** the number of minimum hitting sets drops below ~100, giving a tractable seed set for AODFS. **Failure:** the number remains in the thousands, confirming that the hitting-set constraint alone is too weak and AODFS must rely on the full d-field. This directly tests the document's central new branch (§1.11) and its claimed 1,592 minimum sets.

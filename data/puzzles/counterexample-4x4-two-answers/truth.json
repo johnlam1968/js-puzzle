@@ -1,0 +1,169 @@
+{
+ "id": "counterexample-4x4-two-answers",
+ "size": 4,
+ "status": "solved+verified",
+ "alternative_partitions": [
+  {
+   "name": "A: row0 = one 1x4 bar (no capitol)",
+   "states": [
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     1,
+     2,
+     3,
+     4
+    ],
+    [
+     5,
+     6,
+     7,
+     8
+    ],
+    [
+     9,
+     10,
+     11,
+     12
+    ]
+   ],
+   "state_sizes": [
+    4,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "d_field": [
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0
+    ]
+   ],
+   "row_sums": [
+    16,
+    4,
+    4,
+    4
+   ],
+   "answer": 304
+  },
+  {
+   "name": "B: row0 = two 1x2 dominoes (no capitol)",
+   "states": [
+    [
+     0,
+     0,
+     5,
+     5
+    ],
+    [
+     1,
+     2,
+     3,
+     4
+    ],
+    [
+     6,
+     7,
+     8,
+     9
+    ],
+    [
+     10,
+     11,
+     12,
+     13
+    ]
+   ],
+   "state_sizes": [
+    2,
+    1,
+    1,
+    1,
+    1,
+    2,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "d_field": [
+    [
+     1,
+     1,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0
+    ]
+   ],
+   "row_sums": [
+    8,
+    4,
+    4,
+    4
+   ],
+   "answer": 112
+  }
+ ],
+ "same_d_field": true,
+ "different_answers": true,
+ "answers": [
+  304,
+  112
+ ],
+ "note": "Both partitions are legal (every state connected and symmetric; the 12 single cells are capitols). They produce the IDENTICAL 16-value cost field but answers 304 and 112. => A fully-revealed puzzle is NOT necessarily answer-unique. Found by DeepSeek-V4.1-Flash, independently re-verified by the author with the exact-integer rule engine."
+}

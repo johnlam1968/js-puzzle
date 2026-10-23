@@ -1,0 +1,7 @@
+{
+ "id": "official-11x11",
+ "size": 11,
+ "status": "unsolved",
+ "answer": null,
+ "note": "The official grid draws NO state boundaries; the partition must be inferred from the 33 numbers. Answer uniqueness is NOT guaranteed (see plan R9). Populate 'states', 'state_sizes', 'state_capitol', 'd_field', 'row_sums', 'answer' once the solver converges; record whether the search was exhaustive."
+}

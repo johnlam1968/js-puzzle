@@ -1,0 +1,119 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://local/jspuzzle/truth.schema.json",
+ "title": "Puzzle ground truth",
+ "type": "object",
+ "required": [
+  "id",
+  "size",
+  "states",
+  "state_sizes",
+  "row_sums",
+  "answer"
+ ],
+ "properties": {
+  "id": {
+   "type": "string"
+  },
+  "size": {
+   "type": "integer",
+   "minimum": 2
+  },
+  "status": {
+   "enum": [
+    "solved+verified",
+    "solved",
+    "unsolved"
+   ]
+  },
+  "states": {
+   "type": "array",
+   "items": {
+    "type": "array",
+    "items": {
+     "type": "integer",
+     "minimum": 0
+    }
+   },
+   "description": "states[r][c] = state label, row-major, 0-based"
+  },
+  "state_sizes": {
+   "type": "array",
+   "items": {
+    "type": "integer",
+    "minimum": 1
+   },
+   "description": "state_sizes[k] = cell count of label k; MUST equal the occurrence count of k in states"
+  },
+  "state_symmetry": {
+   "type": "array",
+   "items": {
+    "type": "array",
+    "items": {
+     "type": "string"
+    }
+   }
+  },
+  "state_fix_counts": {
+   "type": "array",
+   "items": {
+    "type": "array",
+    "items": {
+     "type": "integer"
+    }
+   }
+  },
+  "state_capitol": {
+   "type": "array",
+   "items": {
+    "type": [
+     "array",
+     "null"
+    ],
+    "minItems": 2,
+    "maxItems": 2
+   }
+  },
+  "capitols": {
+   "type": "array",
+   "items": {
+    "type": "array",
+    "minItems": 2,
+    "maxItems": 2
+   }
+  },
+  "capitol_less_states": {
+   "type": "array",
+   "items": {
+    "type": "integer"
+   }
+  },
+  "d_field": {
+   "type": "array",
+   "items": {
+    "type": "array",
+    "items": {
+     "type": "integer"
+    }
+   }
+  },
+  "row_sums": {
+   "type": "array",
+   "items": {
+    "type": "integer"
+   }
+  },
+  "answer": {
+   "type": [
+    "integer",
+    "null"
+   ]
+  },
+  "checksum": {
+   "type": "object"
+  },
+  "note": {
+   "type": "string"
+  }
+ }
+}

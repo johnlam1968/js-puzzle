@@ -1,0 +1,343 @@
+{
+ "id": "official-11x11",
+ "size": 11,
+ "kind": "official",
+ "title": "It's a Metric, Too (Jane Street, October 2026)",
+ "source": "https://www.janestreet.com/puzzles/current-puzzle/",
+ "ingest": {
+  "method": "pixel grid-line detection (12 v-lines + 12 h-lines, 70.5px pitch) -> per-cell ink -> self-supervised glyph classifier (templates learned from the 5x5 example panel, leave-one-out validation 10/10) + font-independent enclosed-hole-count feature",
+  "verified_by": [
+   "author(human read; 3 cells later found WRONG and corrected)",
+   "Verifier(pixel count of ink cells = 33, per-value NOT verified)",
+   "DeepSeek-V4.1-Flash(vision read; several column indices WRONG)"
+  ],
+  "cross_check": "all three channels agree on the COUNT (33) and on 30/33 positions; pixel method adopted as authoritative; 2 disagreements resolved by ASCII-art inspection",
+  "verified_date": "2026-10-23"
+ },
+ "grid": [
+  [
+   null,
+   8,
+   4,
+   null,
+   null,
+   11,
+   null,
+   null,
+   null,
+   5,
+   null
+  ],
+  [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   11,
+   null,
+   null,
+   null
+  ],
+  [
+   null,
+   null,
+   7,
+   null,
+   null,
+   1,
+   null,
+   null,
+   null,
+   null,
+   14
+  ],
+  [
+   28,
+   null,
+   null,
+   51,
+   null,
+   null,
+   1,
+   null,
+   6,
+   null,
+   null
+  ],
+  [
+   null,
+   22,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   4,
+   null,
+   1
+  ],
+  [
+   null,
+   null,
+   null,
+   15,
+   null,
+   10,
+   null,
+   0,
+   null,
+   null,
+   null
+  ],
+  [
+   11,
+   null,
+   11,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   9,
+   null
+  ],
+  [
+   null,
+   null,
+   17,
+   null,
+   14,
+   null,
+   null,
+   10,
+   null,
+   null,
+   13
+  ],
+  [
+   30,
+   null,
+   null,
+   null,
+   null,
+   6,
+   null,
+   null,
+   45,
+   null,
+   null
+  ],
+  [
+   null,
+   null,
+   null,
+   10,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  [
+   null,
+   26,
+   null,
+   null,
+   null,
+   0,
+   null,
+   null,
+   77,
+   61,
+   null
+  ]
+ ],
+ "hints": [
+  {
+   "row": 1,
+   "col": 2,
+   "value": 8
+  },
+  {
+   "row": 1,
+   "col": 3,
+   "value": 4
+  },
+  {
+   "row": 1,
+   "col": 6,
+   "value": 11
+  },
+  {
+   "row": 1,
+   "col": 10,
+   "value": 5
+  },
+  {
+   "row": 2,
+   "col": 8,
+   "value": 11
+  },
+  {
+   "row": 3,
+   "col": 3,
+   "value": 7
+  },
+  {
+   "row": 3,
+   "col": 6,
+   "value": 1
+  },
+  {
+   "row": 3,
+   "col": 11,
+   "value": 14
+  },
+  {
+   "row": 4,
+   "col": 1,
+   "value": 28
+  },
+  {
+   "row": 4,
+   "col": 4,
+   "value": 51
+  },
+  {
+   "row": 4,
+   "col": 7,
+   "value": 1
+  },
+  {
+   "row": 4,
+   "col": 9,
+   "value": 6
+  },
+  {
+   "row": 5,
+   "col": 2,
+   "value": 22
+  },
+  {
+   "row": 5,
+   "col": 9,
+   "value": 4
+  },
+  {
+   "row": 5,
+   "col": 11,
+   "value": 1
+  },
+  {
+   "row": 6,
+   "col": 4,
+   "value": 15
+  },
+  {
+   "row": 6,
+   "col": 6,
+   "value": 10
+  },
+  {
+   "row": 6,
+   "col": 8,
+   "value": 0
+  },
+  {
+   "row": 7,
+   "col": 1,
+   "value": 11
+  },
+  {
+   "row": 7,
+   "col": 3,
+   "value": 11
+  },
+  {
+   "row": 7,
+   "col": 10,
+   "value": 9
+  },
+  {
+   "row": 8,
+   "col": 3,
+   "value": 17
+  },
+  {
+   "row": 8,
+   "col": 5,
+   "value": 14
+  },
+  {
+   "row": 8,
+   "col": 8,
+   "value": 10
+  },
+  {
+   "row": 8,
+   "col": 11,
+   "value": 13
+  },
+  {
+   "row": 9,
+   "col": 1,
+   "value": 30
+  },
+  {
+   "row": 9,
+   "col": 6,
+   "value": 6
+  },
+  {
+   "row": 9,
+   "col": 9,
+   "value": 45
+  },
+  {
+   "row": 10,
+   "col": 4,
+   "value": 10
+  },
+  {
+   "row": 11,
+   "col": 2,
+   "value": 26
+  },
+  {
+   "row": 11,
+   "col": 6,
+   "value": 0
+  },
+  {
+   "row": 11,
+   "col": 9,
+   "value": 77
+  },
+  {
+   "row": 11,
+   "col": 10,
+   "value": 61
+  }
+ ],
+ "hint_count": 33,
+ "row_hint_counts": [
+  4,
+  1,
+  3,
+  4,
+  3,
+  3,
+  3,
+  4,
+  3,
+  1,
+  4
+ ]
+}
