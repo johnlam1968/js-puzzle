@@ -110,4 +110,4 @@ that runs out of budget (this is what makes DeepSeek/GLM actually answer).
 
 ## License
 
-MIT (add a LICENSE file if you want to publish under one).
+MIT.
