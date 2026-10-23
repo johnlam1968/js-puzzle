@@ -163,21 +163,48 @@ If a state's shape is a river delta — narrow at the root, fanning out downstre
 water running downstream. Today the solver picks any cell of the frontier (`sorted(frontier)`),
 which is water flowing in four directions at once.
 
-**MEASURED** — how much work that costs, counting growth paths against distinct shapes reached
-(the state-growth phase alone, over all anchors and symmetries):
+**MEASURED** — how much work that costs, counting growth paths against distinct shapes reached.
+Two independent measurements, and **they do not agree on the multiplier** — because they use
+different denominators:
 
-| frame | growth paths explored | distinct shapes | redundancy | shapes reachable by >1 path |
+| measurement | frame | paths | shapes | redundancy |
 |---|---|---|---|---|
-| 4×4 | 7,278 | 1,878 | **3.9×** | 100% |
-| 5×5 | 501,780 | 74,014 | **6.8×** | 100% |
+| this note (leaf paths, single anchor) | 4×4 | 7,278 | 1,878 | 3.9× |
+| this note (leaf paths, single anchor) | 5×5 | 501,780 | 74,014 | 6.8× |
+| peer session (`tools/measure_path_redundancy.py`, all intermediate states × all corner anchors) | 4×4 | 2,309,436 | 2,420 | **954.31×** |
+| peer session, canonical (Redelmeier) order | 4×4 | 2,420 | 2,420 | **1.00×** |
 
-⇒ **Not a single shape is reached by only one path**, and the redundancy *grows with the frame*
-(3.9× → 6.8×). The solver's "deduplicate the intermediate sets with the same (anchor, symmetry)"
-is a patch applied *after* the duplicate work has already been done; a canonical order
-(Redelmeier-style: when an orbit is added, permanently disable every frontier orbit with a
-smaller sort key) removes the duplication at the root.
+⇒ The **phenomenon** is the same and the canonical order fixes it (1.00×: every shape reached by
+exactly one path). The **multiplier depends on the denominator**, so any quoted factor must state
+its definition. The peer's tool computes both and is the reference.
 
-⇒ This is the strongest remaining lead, and it is the one being implemented next.
+### ⚠️ But the canonical order's *net* benefit in the solver is **negative**
+
+This is the part that matters, and it was measured on the solver, not on the enumeration:
+
+| | nodes | time |
+|---|---|---|
+| 4×4 fixture, before | 951 | 0.3 s |
+| 4×4 fixture, with the canonical order | **559 (−41%)** | 0.1 s |
+| 5×5 official, before | 129,319 | 7.1 s |
+| 5×5 official, with the canonical order | **109,848 (−15%)** | **13.7 s (twice as slow)** |
+
+⇒ **With pruning on, most of the path duplication is already cut by the lower/upper bounds before
+the duplicate state is ever reached.** So the redundancy measured on the *unpruned* enumeration does
+not transfer to the *pruned* search, and the per-node cost of building the candidate table plus
+sorting exceeds the saving. The 11×11 rate fell from 16,600 to 6,667 nodes/s.
+
+⇒ **The lesson (and the second time this file has been wrong in the same way):** a factor measured
+in one context does **not** transfer to another. Here the contexts are "enumerate the state
+library" and "search a pruned tree" — different enough that the conclusion flips. The repair the
+peer found is to make the *pruning* cheap instead: a single integer AND test ("is there still a
+cell that could be a capitol within the radius?") before the expensive early-exit scan, which
+restores 16,000 nodes/s on the 11×11 and makes the 5×5 **2.2× faster than before the change**.
+
+⇒ So the canonical order is *not* the lever it looked like. What it did deliver is a **cleaner
+measurement instrument** (954× → 1.00×) and a **diagnosis**: the duplication is real in the
+enumeration, and invisible in the pruned search. Which means the explosion on the 11×11 is **not**
+an ordering artefact — it is a genuine combinatorial problem.
 
 ### The "delta" reading, and what it says about growth order
 

@@ -239,6 +239,116 @@ total, and the areas sum to it). Every state *with* a capitol has odd area. So t
 odd-area *filler* states has the same parity as `k + 1`. Filler states are exactly the ones the
 search cannot pin down, so this is a free constraint on the part of the solution that is hardest.
 
+### 3A. The filler states — the one real problem, and a trap in its first formulation
+
+**The diagnosis** (measured by the peer session on the 4×4): of the 135 filler states closed, only
+**16% have their area pinned** by the area lower bound; **84% are completely free**. The filler
+states are where the explosion lives, and the tight-edge route (withdrawn, §4 of
+`ALTERNATIVES.md`) cannot touch them because it pins the *smaller* of two states.
+
+**The first formulation of the fix is vacuous, and the trap is worth writing down.**
+
+The natural idea: *if a hinted cell `z`'s optimal path to its capitol passes through a filler state
+`F`, then each step inside `F` costs `|F|`, so*
+
+> |F| ≤ D(z) − (the cheapest cost of a path that avoids F)
+
+**That bound is empty.** The paths that avoid `F` are a *subset* of all paths, so the cheapest
+avoiding path is **never cheaper** than the true minimum:
+
+```
+d_avoid(z, F) >= D(z)        for every z and every F
+```
+
+⇒ the right-hand side `D(z) − d_avoid(z, F)` is **≤ 0**, and the bound says `|F| ≤ 0`. ❌
+**MEASURED** on the official 5×5, for the 4-cell filler state and every published cell: the
+avoiding cost is 21 vs D=12, 14 vs D=8, and equal to D everywhere else — **never below**. The
+sign is the wrong way round.
+
+### 3A.1 What survives: the crossing is *detectable*, and it is worth something
+
+The same computation gives a **usable** statement. Define
+
+> `d_avoid(z, F)` = the cheapest cost from `z` to any capitol **with F's cells removed**
+> (the other states' sizes are known, so this is one Dijkstra).
+
+Then
+
+> **If `d_avoid(z, F) > D(z)`, the optimal path from `z` must pass through `F`.**
+
+**MEASURED** on the official 5×5: for the 4-cell filler state, exactly two published cells have
+`d_avoid > D` — (0,0) with 21 vs 12, and (1,0) with 14 vs 8. Those are precisely the cells whose
+optimal path crosses the filler state; all the others have `d_avoid = D` (their path avoids it).
+
+⇒ So the **detection** of "this cell's path goes through this filler state" is exact and cheap
+(one Dijkstra per (cell, state) pair, cacheable). What is *not* yet obtained is a clean bound.
+
+### 3A.2 The surviving form: an equation in the area, not a bound
+
+Write the optimal path of `z` as: reach an outside cell `u` (cost `c_prefix`), cross into `F` at
+`p` (cost `min(|A|, a)`, where `A` is `u`'s state and `a = |F|`), take `k` **internal** steps
+inside `F` (cost `k·a` each), cross out at `q` (cost `min(|B|, a)`), and continue to a capitol
+(cost `c_suffix`):
+
+> **D(z) = c_prefix(u) + min(|A|, a) + k·a + min(|B|, a) + c_suffix(v)**
+
+Everything except `a` and `k` is computable **without knowing `a`** (the prefix and suffix paths
+avoid `F`), and `k` is bounded by the *geometry of the candidate*: the path inside `F` visits at
+most `a` cells, so `k ∈ {1, …, a−1}` and the possibilities are enumerable per candidate.
+
+**MEASURED** — for the 4-cell filler state of the official 5×5, the optimal path of (0,0) is
+`(0,0) → (0,1) → (1,1) → (2,1)` with costs `4 + 4 + 4`: crossing into the filler state costs
+`min(7, a)`, one internal step costs `a`, crossing out costs `min(a, 7)`. Substituting gives
+`12 = min(7,a) + a + min(a,7)`, which has **exactly one solution: a = 4** ✓ — the true area.
+
+⇒ So the surviving form is a **test on a candidate state**, not a bound: *a candidate filler state
+is inconsistent if no (u, p, q, v, k) makes the equation hold with a = |F|.* Whether that test
+ever bites is an **empirical** question — see §3A.3.
+
+### 3A.3 The measurement protocol (and the baseline discipline)
+
+**Do not run this on the shared machine; it is specified here so that whoever has the CPU can run
+it.** The protocol has one hard rule:
+
+> **Measure every candidate constraint ON TOP OF the current solver** (area lower bound L3/L2 +
+> the `d = 1` rule + the canonical growth order + the hybrid lower-bound check). Otherwise the
+> constraint gets credited with the 15% that the ordering change already delivered.
+
+```
+def measure_filler_bound(N=4, hints=..., budget=...):
+    # 0. baseline: the current solver's node count on the 4x4 fixture
+    # 1. enumerate all 562,308 tilings of the 4x4 (the oracle)
+    # 2. for every tiling T:
+    #       for every filler state F in T:
+    #           for every published neighbour z of F:
+    #               if d_avoid(z, F) > D(z):          # the path crosses F
+    #                   if not equation_solvable(F, z, T):   # §3A.2
+    #                       record "the test would have pruned T"
+    # 3. report: how many tilings survive the test, and how many nodes the
+    #    corresponding prune would save
+```
+
+**What "success" looks like**: the test prunes a *substantial* fraction of tilings **without
+pruning the true one** (the 4×4 fixture must still yield `{112, 304}`; the 5×5 must still yield
+8,045). **What "failure" looks like**: the test prunes almost nothing, or it prunes the true
+tiling — in which case this whole branch is dead and the honest conclusion is the one in §3A.4.
+
+### 3A.4 The conclusion this branch may be heading towards — and why Route A then becomes the answer
+
+There is a real possibility that **no local constraint pins the filler areas**, because the
+published numbers simply do not say enough about the states that carry no flow. If the §3A.3
+measurement comes back empty, then the exact search has **no more constraints to find**, and the
+remaining gap is not a missing lemma — it is the price of exactness.
+
+⇒ **That is the strongest argument for Route A**, and it is worth stating plainly:
+
+> The official puzzle asks for **one number**. If the exact route has run out of *provable*
+> constraints, the simulation route is not a consolation prize — it is the appropriate tool, and
+> the three-valued "exhaustive" verdict is a property of our *generator*, not of the puzzle.
+
+⇒ So §3A.3 is worth running **even if the test fails**, because a negative result is itself the
+decision: it says "stop looking for constraints, switch tools".
+
 ---
 
 ## 4. Route A — a touch of simulation (idea 1)
@@ -362,6 +472,13 @@ cheaply** on the 5×5 and the 4×4 before the 11×11 is touched.
   which would simplify the pipeline a lot.
 * **How the vision variant (§2.5) would ever be fast enough** to sit inside the search, rather
   than only at its top.
+* **Is there any constraint that pins a filler state's area?** (§3A) The naive version of the
+  "path crosses the filler state" bound is *vacuous* — the avoiding paths are a subset of all
+  paths, so `d_avoid ≥ D` and the right-hand side is ≤ 0. The surviving form is an equation in
+  the area, which pins it *exactly* on the 5×5's one filler state — but whether it bites in
+  general is empirical (§3A.3). **A negative result would be the most valuable outcome of the
+  whole project**: it would say the exact route has run out of constraints, and that the
+  simulation route (§4) is the right tool rather than a consolation prize.
 
 ---
 
