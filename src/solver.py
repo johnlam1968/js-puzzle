@@ -62,10 +62,21 @@ class Solver:
         self._state_cache: Dict[int, Tuple[bool, Optional[Cell]]] = {}
         # per anchor: the symmetries that can grow a state containing it
         self._anchor_cache: Dict[Cell, list] = {}
+        # per (anchor, symmetry): the canonical order of the orbits
+        self._order_cache: Dict[Tuple[Cell, int], dict] = {}
+        # per anchor: the rank of every cell in the canonical order
+        self._cell_rank: Dict[Cell, Dict[Cell, int]] = {}
         self.answers: Set[int] = set()
         self.solutions: List[List[FrozenSet[Cell]]] = []
         self.nodes = 0
         self.exhaustive = True
+        # diagnostics: what do the "filler" states (states with no capitol) look like?
+        # Their area is only bounded from BELOW by the L3/L2 rule, so this says how much
+        # freedom they actually have.
+        self.filler_sizes: Dict[int, int] = {}
+        self.filler_pinned = 0
+        self.filler_unpinned = 0
+        self.states_closed = 0
         self._manh = [[abs(a[0] - b[0]) + abs(a[1] - b[1]) for b in self.cells]
                       for a in self.cells]
         # per-hint cells ordered by Manhattan distance: the lower-bound check stops at the
@@ -102,9 +113,28 @@ class Solver:
                 if nb in self.hints:
                     best = max(best, abs(v - self.hints[nb]))
             self._need[(r, c)] = best
+        # Per hint: the CUMULATIVE masks of the distance balls, i.e. balls[x][k] is the
+        # set of cells within distance d_k, and the masks are nested.  The lower bound then
+        # asks "is there still a possible capitol within the radius?" -- one integer AND
+        # for the common case -- and only binary-searches for the nearest one when the
+        # answer is yes.  The old cell-by-cell scan cost 46% of the 11x11 runtime.
         self._near: Dict[Cell, List[Tuple[int, int]]] = {}
+        self._balls: Dict[Cell, List[Tuple[int, int]]] = {}
         for (r, c), v in self.hints.items():
             row = self._manh[r * self.n + c]
+            radius = (v + 1) // 2
+            by_dist: Dict[int, int] = {}
+            for cc in range(self.n * self.n):
+                d = row[cc]
+                if d > radius:
+                    continue
+                by_dist[d] = by_dist.get(d, 0) | (1 << cc)
+            balls: List[Tuple[int, int]] = []
+            acc = 0
+            for d in sorted(by_dist):
+                acc |= by_dist[d]
+                balls.append((d, acc))
+            self._balls[(r, c)] = balls
             self._near[(r, c)] = sorted(
                 ((row[cc], cc) for cc in range(self.n * self.n)), key=lambda t: t[0])
 
@@ -165,6 +195,39 @@ class Solver:
             self._anchor_cache[anchor] = hit
         return hit
 
+    def _orbit_order(self, anchor: Cell, sym: Symmetry):
+        """The canonical order of the orbits, for one (anchor, symmetry).
+
+        Cells are ordered by (Manhattan distance from the anchor, row, column); an orbit
+        is keyed by its FIRST cell in that order.  Growing the state by always taking the
+        smallest available orbit -- and permanently excluding the smaller ones once a
+        larger one has been taken -- makes every shape come out exactly ONCE
+        (the Redelmeier rule), instead of once per order in which the same orbits could
+        have been added.
+        """
+        key = (anchor, id(sym))
+        hit = self._order_cache.get(key)
+        if hit is None:
+            # the CELL order depends only on the anchor: sorting the board once per
+            # anchor (not once per anchor x symmetry) was costing real time
+            rank = self._cell_rank.get(anchor)
+            if rank is None:
+                cells = sorted(self.cells,
+                               key=lambda c: (abs(c[0] - anchor[0]) + abs(c[1] - anchor[1]),
+                                              c[0], c[1]))
+                rank = {c: i for i, c in enumerate(cells)}
+                self._cell_rank[anchor] = rank
+            orb, omask, _ = self._orbitdata(sym)
+            okey = {}
+            for cell, o in orb.items():
+                if cell not in rank:
+                    continue
+                k = min(rank[x] for x in o if x in rank)
+                okey[cell] = (k, o)
+            hit = okey
+            self._order_cache[key] = hit
+        return hit
+
     def _state_info(self, cur_mask: int, cur: FrozenSet[Cell]) -> Tuple[bool, Optional[Cell]]:
         """(has a non-trivial symmetry, capitol) for a state -- ONE group computation.
 
@@ -203,14 +266,23 @@ class Solver:
         if possible == 0:
             return True
         for (r, c), v in self.hints.items():
+            balls = self._balls.get((r, c))
+            if not balls:
+                continue
+            # Fast path: if NO possible cell is within the radius at all, the hint can
+            # never be served -> prune.  One integer AND.
+            if not (possible & balls[-1][1]):
+                return True
+            # Otherwise the nearest possible capitol is usually close, so walk the
+            # distance-sorted cells and stop at the first hit.
             radius = (v + 1) // 2
             best = 1 << 30
             for dist, cc in self._near[(r, c)]:
                 if dist > radius:
-                    break              # the list is sorted: nothing closer is left
+                    break
                 if (possible >> cc) & 1:
                     best = dist
-                    break              # the first hit is the nearest possible capitol
+                    break
             if best > radius:
                 return True
         return False
@@ -292,7 +364,8 @@ class Solver:
                 *, orb: Optional[Dict[Cell, FrozenSet[Cell]]] = None,
                 omask: Optional[Dict[Cell, int]] = None,
                 fixed: Optional[FrozenSet[Cell]] = None,
-                singletons: int = 0):
+                singletons: int = 0, forbidden: int = 0,
+                anchor: Optional[Cell] = None):
             """Grow one state at a time; when it is closed, start the next one."""
             if not self.exhaustive:
                 return
@@ -335,7 +408,7 @@ class Solver:
                         continue
                     rec(rem & ~start_mask, chosen, frozenset(start), s, np,
                         closed_here, set(), orb=orb, omask=omask, fixed=fixed,
-                        singletons=singletons)
+                        singletons=singletons, forbidden=0, anchor=anchor)
                     if not self.exhaustive:
                         return
                 return
@@ -346,9 +419,6 @@ class Solver:
             # symmetry and the remaining cells), so the second visit is dead work
             # (GLM code review, MAJOR 2).
             cur_mask = self._mask(cur)
-            if cur_mask in grown_here:
-                return
-            grown_here.add(cur_mask)
             already_closed = cur in closed_here
             # the d=1 demands: a forced 1x1 state must still be placeable next to the cell
             if len(cur) == 1:
@@ -366,6 +436,22 @@ class Solver:
                     return                        # no forced 1x1 state can be placed any more
             if self._can_close(cur, cur_mask) and not already_closed:
                 closed_here.add(cur)
+                self.states_closed += 1
+                _cap = self._state_info(cur_mask, cur)[1]
+                if _cap is None:
+                    # a filler state: count its area, and whether the L3/L2 lower bound
+                    # already pins that area exactly
+                    sz = len(cur)
+                    self.filler_sizes[sz] = self.filler_sizes.get(sz, 0) + 1
+                    _need = 0
+                    for _c in cur:
+                        _nb = self._need.get(_c)
+                        if _nb is not None and _nb > _need:
+                            _need = _nb
+                    if _need == sz:
+                        self.filler_pinned += 1
+                    else:
+                        self.filler_unpinned += 1
                 cap = self._state_info(cur_mask, cur)[1]
                 np = possible
                 for c in cur:
@@ -375,13 +461,19 @@ class Solver:
                     np |= 1 << self.idx[cap]
                 if not self._lb_violates(np):
                     rec(rem & ~cur_mask, chosen + [cur], None, None, np, set(), set(),
-                        singletons=new_singletons)
+                        singletons=new_singletons, forbidden=0, anchor=anchor)
                     if not self.exhaustive:
                         return
             frontier = {nb for x in cur for nb in ((x[0] + 1, x[1]), (x[0] - 1, x[1]),
                                                   (x[0], x[1] + 1), (x[0], x[1] - 1))
                         if 0 <= nb[0] < self.n and 0 <= nb[1] < self.n and nb not in cur}
-            for x in sorted(frontier):
+            # the candidate orbits, in the canonical order
+            okey = self._orbit_order(anchor, sym)
+            # An orbit can touch the state at SEVERAL cells, so the same orbit would
+            # otherwise appear as several candidates and be branched on more than once.
+            # Key the candidates by the orbit itself.
+            by_orbit: Dict[int, Tuple[int, Cell]] = {}
+            for x in frontier:
                 o_mask = omask.get(x)
                 if o_mask is None:
                     continue                         # the orbit leaves the board
@@ -389,7 +481,22 @@ class Solver:
                     continue                         # overlaps the state already grown
                 if o_mask & ~rem:
                     continue                         # the orbit hits cells already taken
+                if o_mask & forbidden:
+                    continue                         # excluded by an earlier choice
+                k = okey.get(x)
+                if k is None:
+                    continue
+                prev = by_orbit.get(o_mask)
+                if prev is None or k[0] < prev[0]:
+                    by_orbit[o_mask] = (k[0], x)
+            cands = sorted((k, x, m) for m, (k, x) in by_orbit.items())
+            for i, (_k, x, o_mask) in enumerate(cands):
                 o = orb[x]
+                # once a larger orbit is taken, every smaller candidate is excluded for
+                # good: that is what makes each shape come out exactly once
+                child_forbidden = forbidden
+                for _k2, _x2, om2 in cands[:i]:
+                    child_forbidden |= om2
                 newcur = cur | o
                 np = possible
                 for c in o:
@@ -403,7 +510,7 @@ class Solver:
                 # the new orbit's cells leave the remaining region as well
                 rec(rem & ~o_mask, chosen, frozenset(newcur), sym, np,
                     closed_here, grown_here, orb=orb, omask=omask, fixed=fixed,
-                    singletons=new_singletons)
+                    singletons=new_singletons, forbidden=child_forbidden, anchor=anchor)
                 if not self.exhaustive:
                     return
 
@@ -422,6 +529,13 @@ class Solver:
             "nodes": self.nodes,
             "unique": (self.exhaustive and len(self.answers) == 1),
             "seconds": time.time() - t0,
+            "diagnostics": {
+                "states_closed": self.states_closed,
+                "filler_states": self.filler_pinned + self.filler_unpinned,
+                "filler_area_pinned_by_the_lower_bound": self.filler_pinned,
+                "filler_area_not_pinned": self.filler_unpinned,
+                "filler_area_histogram": dict(sorted(self.filler_sizes.items())),
+            },
             "solutions": [[sorted(s) for s in p] for p in self.solutions[:5]],
         }
 
