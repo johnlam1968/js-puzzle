@@ -452,5 +452,10 @@ print(res['singleton_demands'])
 | `tools/facet_pinpoint_11x11.py` | which sizes a cell can still have, window by window |
 | `tools/size_multiset_11x11.py` | the feasible size multisets under the conservation law (121) |
 | `tools/coverage_audit_11x11.py` | which of the 33 published numbers a given core actually exercises |
+| `tools/infer_sizes_11x11.py` | INFERENCE: what the 33 readings force about the state sizes (no search) |
+| `tools/corner_joint_11x11.py` | the 16-block against the readings, step by step |
+| `tools/corner_triple_11x11.py` | the (8,12,16) corner triple, joined with a bitset index |
+| `tools/infer_readings_11x11.py` | INFERENCE from the readings alone: size bounds, tight edges, path decompositions |
+| `tools/chain_corner_11x11.py` | the corner chain (61 = 12*5+1, 13 = 12+1, 77 = 61+16) -> 632 surviving triples |
 | `tools/corner_16_11x11.py` | the lower-right corner: the 16-cell block and the "61 + 16 = 77" reading |
 | `PLAN.md` | the defect register — D38 (the name), D43 (odd area), D48 (orbit semantics), D53, D64, D65, D85 |

@@ -3,7 +3,7 @@
  "n": 11,
  "generated_by": "tools/constraint_register_11x11.py",
  "coordinate_convention": "0-based (row, col)",
- "facet_count": 10,
+ "facet_count": 12,
  "facets": [
   {
    "id": "F-published",
@@ -1780,6 +1780,182 @@
      "status": "OBSERVATION -- not derived here",
      "note": "the crashed session read it as '32 of the 121 cells are already pinned into big states'.  It is a CLAIM ABOUT THE SHAPE OF THE SOLUTION, not a constraint the engine can check, and it is the one place where the human is ahead of the arithmetic.",
      "test": "it is testable: F-area already pins 32 cells into states of area >= 4.  The claim is that NINE of them are singletons -- which would make the d=1 demands much stronger (three more forced 1x1 states)."
+    }
+   ]
+  },
+  {
+   "id": "F-inferred",
+   "name": "what the published readings force about the state sizes",
+   "source": "derived in tools/infer_sizes_11x11.py from the readings alone",
+   "status": "PROVEN",
+   "locality": {
+    "kind": "field",
+    "radius": 1
+   },
+   "instances": [
+    {
+     "rule": "I1 (adjacency bound): for adjacent cells x,y, |d(x) - d(y)| <= min(size_x, size_y)",
+     "consequence": "each published cell inherits a LOWER BOUND on its state's size from every published neighbour",
+     "worked_example": "(10,8)=77 and (10,9)=61 are adjacent, so both states have at least 16 cells",
+     "status": "PROVEN"
+    },
+    {
+     "rule": "I2 (path decomposition): a reading v is k steps inside the state (cost size each) plus ONE crossing of cost r = min(size, next size)",
+     "consequence": "v = k*size + r with 1 <= r <= size, or v = k*size when the path ends on the state's OWN capitol (then the area is ODD)",
+     "the_two_load_bearing_cases": {
+      "r = 1": "the crossing costs 1 -> the next state has ONE cell -> it is a SINGLETON CAPITOL (the human's pattern: 61 = 12*5+1, 13 = 12+1)",
+      "r = 0": "the path ends inside the state -> that state has a capitol -> its area is ODD (D43)"
+     },
+     "status": "PROVEN"
+    },
+    {
+     "rule": "I3 (the corner bound): min(size(10,8), size(10,9)) >= 16",
+     "consequence": "the 12-cell state does NOT CONTAIN (10,9): if it did, the step (10,8)->(10,9) would cost at most 12 and d(10,8) <= 12 + 61 = 73 < 77.  So (10,9)'s own state has >= 16 cells and its path CROSSES INTO the 12-cell state (crossing cost min(size_9, 12) = 12).",
+     "status": "PROVEN",
+     "correction": "an earlier note here said the reading '61 = 12*5 + 1' was refuted.  That was WRONG: the reading survives, provided the five 12-cost steps are one CROSSING plus four inside the 12-cell state.  The human's arithmetic is right; only the anchor was wrong (the 12 belongs to the state entered, not to the state left)."
+    },
+    {
+     "rule": "I4 (the singleton-exit sizes): with the bound from I3 applied, the readings admit only these state sizes",
+     "table": {
+      "(10,9) = 61": [
+       20,
+       30,
+       60
+      ],
+      "(10,8) = 77": [
+       19,
+       38,
+       76
+      ],
+      "(7,10) = 13": [
+       2,
+       3,
+       4,
+       6,
+       12
+      ],
+      "(6,2) = 11": [
+       10
+      ],
+      "(7,2) = 17": [
+       8,
+       16
+      ],
+      "(3,3) = 51": [
+       1,
+       2,
+       5,
+       10,
+       25,
+       50
+      ],
+      "(8,8) = 45": [
+       1,
+       2,
+       4,
+       11,
+       22,
+       44
+      ],
+      "(10,1) = 26": [
+       1,
+       5,
+       25
+      ]
+     },
+     "consequence": "the human's '51 implies a LARGE shape in the upper middle' is sizes 25 or 50; the '61' cell's state is 20, 30 or 60 -- NOT 12",
+     "status": "PROVEN (the bound); PROVISIONAL (the singleton-exit reading)"
+    },
+    {
+     "rule": "I5 (the tight edge of the 77): if the tight neighbour of (10,8) is (10,9), the crossing costs 77 - 61 = 16 = min(size_8, size_9)",
+     "consequence": "exactly one of the two states has 16 cells, and since the (10,9) state's singleton-exit sizes are 20/30/60, it is the (10,8) state that has 16 cells",
+     "status": "PROVISIONAL (it rests on the 'travel right' hypothesis)"
+    },
+    {
+     "rule": "I6 (the exit singleton is hidden): the singleton that ends the (10,9) path is NOT the revealed capitol (10,5)",
+     "why": "the exit cell is at within-state distance k from (10,9), and k <= 3 for every candidate size; (10,5) is at Manhattan 4, and the only 3-step path from (10,9) to a neighbour of (10,5) runs through (10,8), which belongs to the 16-cell state",
+     "consequence": "there is a HIDDEN 1-cell capitol within Manhattan 4 of (10,9)",
+     "status": "PROVEN"
+    },
+    {
+     "rule": "I7 (where the 12-cell state is): 13 = 12 + 1 and 61 = 12*5 + 1 are the SAME chain",
+     "the_chain": [
+      "the (5,10) singleton is a 1-cell state, so its ring (4,10), (5,9), (6,10) all have d = 1",
+      "d(6,10) = 1 for FREE: one step into a 1-cell state costs exactly 1, whatever the size of (6,10)'s own state",
+      "d(7,10) = 13 = 12 + 1  =>  the step (7,10)->(6,10) costs 12 =>  a 12-cell state touches (7,10) and (6,10)",
+      "d(10,9) = 61 = 12*5 + 1  =>  the path is (10,9) --crossing--> the 12-cell state --4 steps inside--> (6,10) --1--> (5,10)",
+      "the Manhattan distance (10,9)->(6,10) is exactly 5 and (6,10)->(5,10) is 1, so the whole path is MONOTONE: 6 steps for a Manhattan distance of 6.  That is a tight fit and it is why the reading works."
+     ],
+     "consequence": "the 12-cell state contains (6,10), (7,10) and an ENTRY cell (9,9) or (10,10) 4 steps from (6,10) inside the state.  It does NOT contain (10,8) or (10,9) (both have size >= 16).",
+     "the_condition": "the tight neighbour of (7,10) is assumed to be (6,10); the alternatives (8,10) and (7,9) are unpublished.  So this is the READING, not a theorem.  What IS a theorem: d(6,10) = 1.",
+     "measured": "1044 twelve-cell states contain both (6,10) and (7,10); 783 of them hold no revealed capitol",
+     "status": "PROVISIONAL (the tight-neighbour condition)"
+    },
+    {
+     "rule": "I8 (an inferred reading): d(6,10) = 1",
+     "status": "PROVISIONAL (it follows from I7; it is not published)"
+    },
+    {
+     "rule": "I9 (the 51 chain): 51 = 50 + 1 puts a 50-cell state around (3,3), and it points at ONE hidden singleton that serves three readings",
+     "the_chain": [
+      "d(2,5) = 1 and d(3,6) = 1  =>  each is adjacent to a 1-cell state",
+      "(3,5) and (2,6) are adjacent to BOTH (2,5) and (3,6), so ONE singleton can serve both",
+      "d(3,3) = 51 = 50 + 1  =>  (3,3) is one step (cost 50) from a cell that is adjacent to a 1-cell state",
+      "so: the singleton at (3,5) [or (2,6)], and a 50-cell state containing (3,3) and (3,4) -- then (3,4) -> (3,5) costs min(50, 1) = 1"
+     ],
+     "why_it_matters": "this is the human's 'the 51 is near the two 1 readings, so there is a large shape in the upper middle' -- and it identifies WHICH large shape and WHICH singleton",
+     "status": "PROVISIONAL (the tight-neighbour conditions are not published)"
+    },
+    {
+     "rule": "I10 (the conservation clash): the 50-cell state and the 45-cell state cannot both exist",
+     "arithmetic": "50 (upper middle, from 51 = 50 + 1) + 45 (around (8,8), from 45 = 45 + 0) + 16 + 12 + 8 + 1 = 132 > 121 = the whole board",
+     "consequence": "at most ONE of them.  The two readings 51 and 45 are consistent with each other only through this: one of them is a large state and the other is not.",
+     "status": "PROVEN (the sum 121 is exact)"
+    },
+    {
+     "rule": "I12 (the corner chain, run): 632 surviving corner triples",
+     "the_chain": "d(6,10)=1 is free; d(7,10)=13=12+1 puts a 12-cell state on (7,10) and (6,10); d(10,9)=61=12*5+1 crosses INTO that state and walks 4 steps to (6,10) then exits to the (5,10) singleton; |77-61|=16 puts both (10,8) and (10,9) in a 16-cell state; d(6,9)=9=8+1 forces size(6,9)=8 exactly.",
+     "measured": "the chain cuts the blind search from 347,802 pairs to 149 12-cell + 483 8-cell + 7,534 16-cell candidates, and 632 triples survive every published reading inside them",
+     "skeleton": "in all 632 the 12-cell state's 12 cells are FIXED, and the readings d(4,10)=1, d(6,9)=9, d(7,10)=13, d(10,9)=61, d(10,8)=77 are explained exactly",
+     "status": "PROVEN (the chain); PROVISIONAL (the tails of the 8- and 16-cell states, and the whole thing assumes the (6,10) tight edge)"
+    },
+    {
+     "rule": "I13 (the 8-cell state must not shortcut (10,9))",
+     "why": "measured: a triple whose 8-cell state reaches (10,10) gives a local d(10,9) of 53, not 61 -- the 8-cell state offers a cheaper route than the 12-cell one.  L1 tightness bites a cell other than the one being solved.",
+     "status": "PROVEN"
+    },
+    {
+     "rule": "I14 (the 45 needs a nine-cell state)",
+     "why": "(8,8) lands inside the 12-cell state in 60 of 60 samples; the local field gives 49 against a published 45 (an upper bound, so no contradiction, but the path is not the 4-step one).  The only decomposition that works is 45 = 12*3 + 9: three steps inside the 12-cell state, then a crossing of cost 9 into a NINE-cell state.",
+     "consequence": "(8,8) sits exactly 3 steps from (6,10) inside the 12-cell state, and a 9-cell state exists next to it",
+     "status": "PROVISIONAL"
+    },
+    {
+     "rule": "I11 (how many singletons the readings force)",
+     "measured": "the five d=1 cells ((2,5), (3,6), (4,10), (5,9) and the derived (6,10)) are covered by TWO singletons: (5,10) covers (4,10), (5,9), (6,10); (3,5) [or (2,6)] covers (2,5) and (3,6) -- and the same (3,5) singleton is the one I9 needs for 51 = 50 + 1",
+     "status": "PROVEN for the cover; the CHOSEN positions are PROVISIONAL"
+    }
+   ]
+  },
+  {
+   "id": "F-withdrawn-readings",
+   "name": "readings that were guessed, and then refuted by the published numbers",
+   "source": "the human's corner hypothesis, re-checked here",
+   "status": "WITHDRAWN",
+   "locality": {
+    "kind": "field",
+    "radius": 1
+   },
+   "instances": [
+    {
+     "rule": "R2: 'the (10,9) state has 12 cells'",
+     "why_it_is_false": "(10,8) = 77 and (10,9) = 61 are ADJACENT, and for adjacent cells |d(x) - d(y)| <= min(size_x, size_y), so both states have at least 16 cells.  A 12-cell state at (10,9) would also give d(10,8) <= 12 + 61 = 73 < 77.",
+     "what_survives": "the ARITHMETIC of the human's reading survives exactly: 61 = 12*5 + 1 and 13 = 12 + 1 use the SAME 12-cell state and the SAME singleton at (5,10).  Only the anchor moves: the 12-cell state is the one the path CROSSES INTO, and it holds (6,10) and (7,10).  See I7.",
+     "status": "WITHDRAWN as stated; the reading itself is PROVISIONAL (I7)"
+    },
+    {
+     "rule": "R3: 'the 16-cell block at (10,8)' -- i.e. that a 16-cell state holds (10,8) and that the crossing to (10,9) costs 16",
+     "status": "PROVISIONAL, not withdrawn: the LOWER BOUND min >= 16 is proven (I3), and the equality needs the tight edge of the 77 to be (10,9) (I5).  The enumeration found 25,749 sixteen-cell states containing (10,8), 7,735 of them legal under the per-block filters -- but 0 of them fit beside the 12-block the trim had picked, and that 12-block was in the wrong place (I7)."
     }
    ]
   },

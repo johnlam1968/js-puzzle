@@ -1,0 +1,4304 @@
+{
+ "id": "inferred-readings-11x11",
+ "generated_by": "tools/infer_readings_11x11.py",
+ "published": {
+  "0,1": 8,
+  "0,2": 4,
+  "0,5": 11,
+  "0,9": 5,
+  "1,7": 11,
+  "2,2": 7,
+  "2,5": 1,
+  "2,10": 14,
+  "3,0": 28,
+  "3,3": 51,
+  "3,6": 1,
+  "3,8": 6,
+  "4,1": 22,
+  "4,8": 4,
+  "4,10": 1,
+  "5,3": 15,
+  "5,5": 10,
+  "5,7": 0,
+  "6,0": 11,
+  "6,2": 11,
+  "6,9": 9,
+  "7,2": 17,
+  "7,4": 14,
+  "7,7": 10,
+  "7,10": 13,
+  "8,0": 30,
+  "8,5": 6,
+  "8,8": 45,
+  "9,3": 10,
+  "10,1": 26,
+  "10,5": 0,
+  "10,8": 77,
+  "10,9": 61
+ },
+ "A_registry": {
+  "published_count": 33,
+  "registered_instances": 110,
+  "exercised_by_the_510_core": 26,
+  "dormant": {
+   "0,1": 8,
+   "0,2": 4,
+   "2,2": 7,
+   "2,5": 1,
+   "3,6": 1,
+   "5,7": 0,
+   "10,5": 0
+  },
+  "read": "the register RECORDS all 33; the searches EXERCISE only the ones their core reaches.  The dormant set is the top-left cluster -- it is the work list for a second core, not a hole in the register."
+ },
+ "B_bounds": {
+  "0,1": {
+   "d": 8,
+   "state_size_at_least": 4
+  },
+  "0,2": {
+   "d": 4,
+   "state_size_at_least": 4
+  },
+  "0,5": {
+   "d": 11,
+   "state_size_at_least": 1
+  },
+  "0,9": {
+   "d": 5,
+   "state_size_at_least": 1
+  },
+  "1,7": {
+   "d": 11,
+   "state_size_at_least": 1
+  },
+  "2,2": {
+   "d": 7,
+   "state_size_at_least": 1
+  },
+  "2,5": {
+   "d": 1,
+   "state_size_at_least": 1
+  },
+  "2,10": {
+   "d": 14,
+   "state_size_at_least": 1
+  },
+  "3,0": {
+   "d": 28,
+   "state_size_at_least": 1
+  },
+  "3,3": {
+   "d": 51,
+   "state_size_at_least": 1
+  },
+  "3,6": {
+   "d": 1,
+   "state_size_at_least": 1
+  },
+  "3,8": {
+   "d": 6,
+   "state_size_at_least": 2
+  },
+  "4,1": {
+   "d": 22,
+   "state_size_at_least": 1
+  },
+  "4,8": {
+   "d": 4,
+   "state_size_at_least": 2
+  },
+  "4,10": {
+   "d": 1,
+   "state_size_at_least": 1
+  },
+  "5,3": {
+   "d": 15,
+   "state_size_at_least": 1
+  },
+  "5,5": {
+   "d": 10,
+   "state_size_at_least": 1
+  },
+  "5,7": {
+   "d": 0,
+   "state_size_at_least": 1
+  },
+  "6,0": {
+   "d": 11,
+   "state_size_at_least": 1
+  },
+  "6,2": {
+   "d": 11,
+   "state_size_at_least": 6
+  },
+  "6,9": {
+   "d": 9,
+   "state_size_at_least": 1
+  },
+  "7,2": {
+   "d": 17,
+   "state_size_at_least": 6
+  },
+  "7,4": {
+   "d": 14,
+   "state_size_at_least": 1
+  },
+  "7,7": {
+   "d": 10,
+   "state_size_at_least": 1
+  },
+  "7,10": {
+   "d": 13,
+   "state_size_at_least": 1
+  },
+  "8,0": {
+   "d": 30,
+   "state_size_at_least": 1
+  },
+  "8,5": {
+   "d": 6,
+   "state_size_at_least": 1
+  },
+  "8,8": {
+   "d": 45,
+   "state_size_at_least": 1
+  },
+  "9,3": {
+   "d": 10,
+   "state_size_at_least": 1
+  },
+  "10,1": {
+   "d": 26,
+   "state_size_at_least": 1
+  },
+  "10,5": {
+   "d": 0,
+   "state_size_at_least": 1
+  },
+  "10,8": {
+   "d": 77,
+   "state_size_at_least": 16
+  },
+  "10,9": {
+   "d": 61,
+   "state_size_at_least": 16
+  }
+ },
+ "B_tight_edges": {
+  "0,1": [
+   {
+    "y": [
+     0,
+     2
+    ],
+    "d_y": 4,
+    "w": 4,
+    "means": "same state => size_x = size_y = 4; different states => min(size_x,size_y) = 4"
+   }
+  ],
+  "0,2": [],
+  "0,5": [],
+  "0,9": [],
+  "1,7": [],
+  "2,2": [],
+  "2,5": [],
+  "2,10": [],
+  "3,0": [],
+  "3,3": [],
+  "3,6": [],
+  "3,8": [
+   {
+    "y": [
+     4,
+     8
+    ],
+    "d_y": 4,
+    "w": 2,
+    "means": "same state => size_x = size_y = 2; different states => min(size_x,size_y) = 2"
+   }
+  ],
+  "4,1": [],
+  "4,8": [],
+  "4,10": [],
+  "5,3": [],
+  "5,5": [],
+  "6,0": [],
+  "6,2": [],
+  "6,9": [],
+  "7,2": [
+   {
+    "y": [
+     6,
+     2
+    ],
+    "d_y": 11,
+    "w": 6,
+    "means": "same state => size_x = size_y = 6; different states => min(size_x,size_y) = 6"
+   }
+  ],
+  "7,4": [],
+  "7,7": [],
+  "7,10": [],
+  "8,0": [],
+  "8,5": [],
+  "8,8": [],
+  "9,3": [],
+  "10,1": [],
+  "10,8": [
+   {
+    "y": [
+     10,
+     9
+    ],
+    "d_y": 61,
+    "w": 16,
+    "means": "same state => size_x = size_y = 16; different states => min(size_x,size_y) = 16"
+   }
+  ],
+  "10,9": []
+ },
+ "C_decompositions": {
+  "0,1": {
+   "d": 8,
+   "size_at_least": 4,
+   "options": [
+    {
+     "size": 4,
+     "steps": 1,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 6,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 7,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 8,
+     "steps": 0,
+     "cross": 8,
+     "means": "the crossing lands in an 8-cell state"
+    }
+   ]
+  },
+  "0,2": {
+   "d": 4,
+   "size_at_least": 4,
+   "options": [
+    {
+     "size": 4,
+     "steps": 0,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    }
+   ]
+  },
+  "0,5": {
+   "d": 11,
+   "size_at_least": 1,
+   "options": [
+    {
+     "size": 1,
+     "steps": 10,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 1,
+     "steps": 11,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 11 step(s) in"
+    },
+    {
+     "size": 2,
+     "steps": 5,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 3,
+     "steps": 3,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 4,
+     "steps": 2,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 2,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 6,
+     "steps": 1,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 7,
+     "steps": 1,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 8,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 9,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 10,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 11,
+     "steps": 0,
+     "cross": 11,
+     "means": "the crossing lands in an 11-cell state"
+    },
+    {
+     "size": 11,
+     "steps": 1,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 1 step(s) in"
+    }
+   ]
+  },
+  "0,9": {
+   "d": 5,
+   "size_at_least": 1,
+   "options": [
+    {
+     "size": 1,
+     "steps": 4,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 1,
+     "steps": 5,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 5 step(s) in"
+    },
+    {
+     "size": 2,
+     "steps": 2,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 3,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 4,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 5,
+     "steps": 0,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 1,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 1 step(s) in"
+    }
+   ]
+  },
+  "1,7": {
+   "d": 11,
+   "size_at_least": 1,
+   "options": [
+    {
+     "size": 1,
+     "steps": 10,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 1,
+     "steps": 11,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 11 step(s) in"
+    },
+    {
+     "size": 2,
+     "steps": 5,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 3,
+     "steps": 3,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 4,
+     "steps": 2,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 2,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 6,
+     "steps": 1,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 7,
+     "steps": 1,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 8,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 9,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 10,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 11,
+     "steps": 0,
+     "cross": 11,
+     "means": "the crossing lands in an 11-cell state"
+    },
+    {
+     "size": 11,
+     "steps": 1,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 1 step(s) in"
+    }
+   ]
+  },
+  "2,2": {
+   "d": 7,
+   "size_at_least": 1,
+   "options": [
+    {
+     "size": 1,
+     "steps": 6,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 1,
+     "steps": 7,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 7 step(s) in"
+    },
+    {
+     "size": 2,
+     "steps": 3,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 3,
+     "steps": 2,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 4,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 6,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 7,
+     "steps": 0,
+     "cross": 7,
+     "means": "the crossing lands in an 7-cell state"
+    },
+    {
+     "size": 7,
+     "steps": 1,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 1 step(s) in"
+    }
+   ]
+  },
+  "2,5": {
+   "d": 1,
+   "size_at_least": 1,
+   "options": [
+    {
+     "size": 1,
+     "steps": 0,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 1,
+     "steps": 1,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 1 step(s) in"
+    }
+   ]
+  },
+  "2,10": {
+   "d": 14,
+   "size_at_least": 1,
+   "options": [
+    {
+     "size": 1,
+     "steps": 13,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 1,
+     "steps": 14,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 14 step(s) in"
+    },
+    {
+     "size": 2,
+     "steps": 6,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 3,
+     "steps": 4,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 4,
+     "steps": 3,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 2,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 6,
+     "steps": 2,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 7,
+     "steps": 1,
+     "cross": 7,
+     "means": "the crossing lands in an 7-cell state"
+    },
+    {
+     "size": 7,
+     "steps": 2,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 2 step(s) in"
+    },
+    {
+     "size": 8,
+     "steps": 1,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    },
+    {
+     "size": 9,
+     "steps": 1,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 10,
+     "steps": 1,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 11,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 12,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 13,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 14,
+     "steps": 0,
+     "cross": 14,
+     "means": "the crossing lands in an 14-cell state"
+    }
+   ]
+  },
+  "3,0": {
+   "d": 28,
+   "size_at_least": 1,
+   "options": [
+    {
+     "size": 1,
+     "steps": 27,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 1,
+     "steps": 28,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 28 step(s) in"
+    },
+    {
+     "size": 2,
+     "steps": 13,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 3,
+     "steps": 9,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 4,
+     "steps": 6,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 5,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 6,
+     "steps": 4,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 7,
+     "steps": 3,
+     "cross": 7,
+     "means": "the crossing lands in an 7-cell state"
+    },
+    {
+     "size": 7,
+     "steps": 4,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 4 step(s) in"
+    },
+    {
+     "size": 8,
+     "steps": 3,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 9,
+     "steps": 3,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 10,
+     "steps": 2,
+     "cross": 8,
+     "means": "the crossing lands in an 8-cell state"
+    },
+    {
+     "size": 11,
+     "steps": 2,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    },
+    {
+     "size": 12,
+     "steps": 2,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 13,
+     "steps": 2,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 14,
+     "steps": 1,
+     "cross": 14,
+     "means": "the crossing lands in an 14-cell state"
+    },
+    {
+     "size": 15,
+     "steps": 1,
+     "cross": 13,
+     "means": "the crossing lands in an 13-cell state"
+    },
+    {
+     "size": 16,
+     "steps": 1,
+     "cross": 12,
+     "means": "the crossing lands in an 12-cell state"
+    },
+    {
+     "size": 17,
+     "steps": 1,
+     "cross": 11,
+     "means": "the crossing lands in an 11-cell state"
+    },
+    {
+     "size": 18,
+     "steps": 1,
+     "cross": 10,
+     "means": "the crossing lands in an 10-cell state"
+    },
+    {
+     "size": 19,
+     "steps": 1,
+     "cross": 9,
+     "means": "the crossing lands in an 9-cell state"
+    },
+    {
+     "size": 20,
+     "steps": 1,
+     "cross": 8,
+     "means": "the crossing lands in an 8-cell state"
+    },
+    {
+     "size": 21,
+     "steps": 1,
+     "cross": 7,
+     "means": "the crossing lands in an 7-cell state"
+    },
+    {
+     "size": 22,
+     "steps": 1,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    },
+    {
+     "size": 23,
+     "steps": 1,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 24,
+     "steps": 1,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 25,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 26,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 27,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 28,
+     "steps": 0,
+     "cross": 28,
+     "means": "the crossing lands in an 28-cell state"
+    }
+   ]
+  },
+  "3,3": {
+   "d": 51,
+   "size_at_least": 1,
+   "options": [
+    {
+     "size": 1,
+     "steps": 50,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 1,
+     "steps": 51,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 51 step(s) in"
+    },
+    {
+     "size": 2,
+     "steps": 25,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 3,
+     "steps": 16,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 3,
+     "steps": 17,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 17 step(s) in"
+    },
+    {
+     "size": 4,
+     "steps": 12,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 10,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 6,
+     "steps": 8,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 7,
+     "steps": 7,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 8,
+     "steps": 6,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 9,
+     "steps": 5,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    },
+    {
+     "size": 10,
+     "steps": 5,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 11,
+     "steps": 4,
+     "cross": 7,
+     "means": "the crossing lands in an 7-cell state"
+    },
+    {
+     "size": 12,
+     "steps": 4,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 13,
+     "steps": 3,
+     "cross": 12,
+     "means": "the crossing lands in an 12-cell state"
+    },
+    {
+     "size": 14,
+     "steps": 3,
+     "cross": 9,
+     "means": "the crossing lands in an 9-cell state"
+    },
+    {
+     "size": 15,
+     "steps": 3,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    },
+    {
+     "size": 16,
+     "steps": 3,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 17,
+     "steps": 2,
+     "cross": 17,
+     "means": "the crossing lands in an 17-cell state"
+    },
+    {
+     "size": 17,
+     "steps": 3,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 3 step(s) in"
+    },
+    {
+     "size": 18,
+     "steps": 2,
+     "cross": 15,
+     "means": "the crossing lands in an 15-cell state"
+    },
+    {
+     "size": 19,
+     "steps": 2,
+     "cross": 13,
+     "means": "the crossing lands in an 13-cell state"
+    },
+    {
+     "size": 20,
+     "steps": 2,
+     "cross": 11,
+     "means": "the crossing lands in an 11-cell state"
+    },
+    {
+     "size": 21,
+     "steps": 2,
+     "cross": 9,
+     "means": "the crossing lands in an 9-cell state"
+    },
+    {
+     "size": 22,
+     "steps": 2,
+     "cross": 7,
+     "means": "the crossing lands in an 7-cell state"
+    },
+    {
+     "size": 23,
+     "steps": 2,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 24,
+     "steps": 2,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 25,
+     "steps": 2,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 26,
+     "steps": 1,
+     "cross": 25,
+     "means": "the crossing lands in an 25-cell state"
+    },
+    {
+     "size": 27,
+     "steps": 1,
+     "cross": 24,
+     "means": "the crossing lands in an 24-cell state"
+    },
+    {
+     "size": 28,
+     "steps": 1,
+     "cross": 23,
+     "means": "the crossing lands in an 23-cell state"
+    },
+    {
+     "size": 29,
+     "steps": 1,
+     "cross": 22,
+     "means": "the crossing lands in an 22-cell state"
+    },
+    {
+     "size": 30,
+     "steps": 1,
+     "cross": 21,
+     "means": "the crossing lands in an 21-cell state"
+    },
+    {
+     "size": 31,
+     "steps": 1,
+     "cross": 20,
+     "means": "the crossing lands in an 20-cell state"
+    },
+    {
+     "size": 32,
+     "steps": 1,
+     "cross": 19,
+     "means": "the crossing lands in an 19-cell state"
+    },
+    {
+     "size": 33,
+     "steps": 1,
+     "cross": 18,
+     "means": "the crossing lands in an 18-cell state"
+    },
+    {
+     "size": 34,
+     "steps": 1,
+     "cross": 17,
+     "means": "the crossing lands in an 17-cell state"
+    },
+    {
+     "size": 35,
+     "steps": 1,
+     "cross": 16,
+     "means": "the crossing lands in an 16-cell state"
+    },
+    {
+     "size": 36,
+     "steps": 1,
+     "cross": 15,
+     "means": "the crossing lands in an 15-cell state"
+    },
+    {
+     "size": 37,
+     "steps": 1,
+     "cross": 14,
+     "means": "the crossing lands in an 14-cell state"
+    },
+    {
+     "size": 38,
+     "steps": 1,
+     "cross": 13,
+     "means": "the crossing lands in an 13-cell state"
+    },
+    {
+     "size": 39,
+     "steps": 1,
+     "cross": 12,
+     "means": "the crossing lands in an 12-cell state"
+    },
+    {
+     "size": 40,
+     "steps": 1,
+     "cross": 11,
+     "means": "the crossing lands in an 11-cell state"
+    },
+    {
+     "size": 41,
+     "steps": 1,
+     "cross": 10,
+     "means": "the crossing lands in an 10-cell state"
+    },
+    {
+     "size": 42,
+     "steps": 1,
+     "cross": 9,
+     "means": "the crossing lands in an 9-cell state"
+    },
+    {
+     "size": 43,
+     "steps": 1,
+     "cross": 8,
+     "means": "the crossing lands in an 8-cell state"
+    },
+    {
+     "size": 44,
+     "steps": 1,
+     "cross": 7,
+     "means": "the crossing lands in an 7-cell state"
+    },
+    {
+     "size": 45,
+     "steps": 1,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    },
+    {
+     "size": 46,
+     "steps": 1,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 47,
+     "steps": 1,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 48,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 49,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 50,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 51,
+     "steps": 0,
+     "cross": 51,
+     "means": "the crossing lands in an 51-cell state"
+    },
+    {
+     "size": 51,
+     "steps": 1,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 1 step(s) in"
+    }
+   ]
+  },
+  "3,6": {
+   "d": 1,
+   "size_at_least": 1,
+   "options": [
+    {
+     "size": 1,
+     "steps": 0,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 1,
+     "steps": 1,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 1 step(s) in"
+    }
+   ]
+  },
+  "3,8": {
+   "d": 6,
+   "size_at_least": 2,
+   "options": [
+    {
+     "size": 2,
+     "steps": 2,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 3,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 3,
+     "steps": 2,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 2 step(s) in"
+    },
+    {
+     "size": 4,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 6,
+     "steps": 0,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    }
+   ]
+  },
+  "4,1": {
+   "d": 22,
+   "size_at_least": 1,
+   "options": [
+    {
+     "size": 1,
+     "steps": 21,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 1,
+     "steps": 22,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 22 step(s) in"
+    },
+    {
+     "size": 2,
+     "steps": 10,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 3,
+     "steps": 7,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 4,
+     "steps": 5,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 4,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 6,
+     "steps": 3,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 7,
+     "steps": 3,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 8,
+     "steps": 2,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    },
+    {
+     "size": 9,
+     "steps": 2,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 10,
+     "steps": 2,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 11,
+     "steps": 1,
+     "cross": 11,
+     "means": "the crossing lands in an 11-cell state"
+    },
+    {
+     "size": 11,
+     "steps": 2,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 2 step(s) in"
+    },
+    {
+     "size": 12,
+     "steps": 1,
+     "cross": 10,
+     "means": "the crossing lands in an 10-cell state"
+    },
+    {
+     "size": 13,
+     "steps": 1,
+     "cross": 9,
+     "means": "the crossing lands in an 9-cell state"
+    },
+    {
+     "size": 14,
+     "steps": 1,
+     "cross": 8,
+     "means": "the crossing lands in an 8-cell state"
+    },
+    {
+     "size": 15,
+     "steps": 1,
+     "cross": 7,
+     "means": "the crossing lands in an 7-cell state"
+    },
+    {
+     "size": 16,
+     "steps": 1,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    },
+    {
+     "size": 17,
+     "steps": 1,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 18,
+     "steps": 1,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 19,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 20,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 21,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 22,
+     "steps": 0,
+     "cross": 22,
+     "means": "the crossing lands in an 22-cell state"
+    }
+   ]
+  },
+  "4,8": {
+   "d": 4,
+   "size_at_least": 2,
+   "options": [
+    {
+     "size": 2,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 3,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 4,
+     "steps": 0,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    }
+   ]
+  },
+  "4,10": {
+   "d": 1,
+   "size_at_least": 1,
+   "options": [
+    {
+     "size": 1,
+     "steps": 0,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 1,
+     "steps": 1,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 1 step(s) in"
+    }
+   ]
+  },
+  "5,3": {
+   "d": 15,
+   "size_at_least": 1,
+   "options": [
+    {
+     "size": 1,
+     "steps": 14,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 1,
+     "steps": 15,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 15 step(s) in"
+    },
+    {
+     "size": 2,
+     "steps": 7,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 3,
+     "steps": 4,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 3,
+     "steps": 5,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 5 step(s) in"
+    },
+    {
+     "size": 4,
+     "steps": 3,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 2,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 3,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 3 step(s) in"
+    },
+    {
+     "size": 6,
+     "steps": 2,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 7,
+     "steps": 2,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 8,
+     "steps": 1,
+     "cross": 7,
+     "means": "the crossing lands in an 7-cell state"
+    },
+    {
+     "size": 9,
+     "steps": 1,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    },
+    {
+     "size": 10,
+     "steps": 1,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 11,
+     "steps": 1,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 12,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 13,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 14,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 15,
+     "steps": 0,
+     "cross": 15,
+     "means": "the crossing lands in an 15-cell state"
+    },
+    {
+     "size": 15,
+     "steps": 1,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 1 step(s) in"
+    }
+   ]
+  },
+  "5,5": {
+   "d": 10,
+   "size_at_least": 1,
+   "options": [
+    {
+     "size": 1,
+     "steps": 9,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 1,
+     "steps": 10,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 10 step(s) in"
+    },
+    {
+     "size": 2,
+     "steps": 4,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 3,
+     "steps": 3,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 4,
+     "steps": 2,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 1,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 2,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 2 step(s) in"
+    },
+    {
+     "size": 6,
+     "steps": 1,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 7,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 8,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 9,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 10,
+     "steps": 0,
+     "cross": 10,
+     "means": "the crossing lands in an 10-cell state"
+    }
+   ]
+  },
+  "6,0": {
+   "d": 11,
+   "size_at_least": 1,
+   "options": [
+    {
+     "size": 1,
+     "steps": 10,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 1,
+     "steps": 11,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 11 step(s) in"
+    },
+    {
+     "size": 2,
+     "steps": 5,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 3,
+     "steps": 3,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 4,
+     "steps": 2,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 2,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 6,
+     "steps": 1,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 7,
+     "steps": 1,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 8,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 9,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 10,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 11,
+     "steps": 0,
+     "cross": 11,
+     "means": "the crossing lands in an 11-cell state"
+    },
+    {
+     "size": 11,
+     "steps": 1,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 1 step(s) in"
+    }
+   ]
+  },
+  "6,2": {
+   "d": 11,
+   "size_at_least": 6,
+   "options": [
+    {
+     "size": 6,
+     "steps": 1,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 7,
+     "steps": 1,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 8,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 9,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 10,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 11,
+     "steps": 0,
+     "cross": 11,
+     "means": "the crossing lands in an 11-cell state"
+    },
+    {
+     "size": 11,
+     "steps": 1,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 1 step(s) in"
+    }
+   ]
+  },
+  "6,9": {
+   "d": 9,
+   "size_at_least": 1,
+   "options": [
+    {
+     "size": 1,
+     "steps": 8,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 1,
+     "steps": 9,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 9 step(s) in"
+    },
+    {
+     "size": 2,
+     "steps": 4,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 3,
+     "steps": 2,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 3,
+     "steps": 3,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 3 step(s) in"
+    },
+    {
+     "size": 4,
+     "steps": 2,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 5,
+     "steps": 1,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 6,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 7,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 8,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 9,
+     "steps": 0,
+     "cross": 9,
+     "means": "the crossing lands in an 9-cell state"
+    },
+    {
+     "size": 9,
+     "steps": 1,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 1 step(s) in"
+    }
+   ]
+  },
+  "7,2": {
+   "d": 17,
+   "size_at_least": 6,
+   "options": [
+    {
+     "size": 6,
+     "steps": 2,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 7,
+     "steps": 2,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 8,
+     "steps": 2,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 9,
+     "steps": 1,
+     "cross": 8,
+     "means": "the crossing lands in an 8-cell state"
+    },
+    {
+     "size": 10,
+     "steps": 1,
+     "cross": 7,
+     "means": "the crossing lands in an 7-cell state"
+    },
+    {
+     "size": 11,
+     "steps": 1,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    },
+    {
+     "size": 12,
+     "steps": 1,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 13,
+     "steps": 1,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 14,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 15,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 16,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 17,
+     "steps": 0,
+     "cross": 17,
+     "means": "the crossing lands in an 17-cell state"
+    },
+    {
+     "size": 17,
+     "steps": 1,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 1 step(s) in"
+    }
+   ]
+  },
+  "7,4": {
+   "d": 14,
+   "size_at_least": 1,
+   "options": [
+    {
+     "size": 1,
+     "steps": 13,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 1,
+     "steps": 14,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 14 step(s) in"
+    },
+    {
+     "size": 2,
+     "steps": 6,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 3,
+     "steps": 4,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 4,
+     "steps": 3,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 2,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 6,
+     "steps": 2,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 7,
+     "steps": 1,
+     "cross": 7,
+     "means": "the crossing lands in an 7-cell state"
+    },
+    {
+     "size": 7,
+     "steps": 2,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 2 step(s) in"
+    },
+    {
+     "size": 8,
+     "steps": 1,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    },
+    {
+     "size": 9,
+     "steps": 1,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 10,
+     "steps": 1,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 11,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 12,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 13,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 14,
+     "steps": 0,
+     "cross": 14,
+     "means": "the crossing lands in an 14-cell state"
+    }
+   ]
+  },
+  "7,7": {
+   "d": 10,
+   "size_at_least": 1,
+   "options": [
+    {
+     "size": 1,
+     "steps": 9,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 1,
+     "steps": 10,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 10 step(s) in"
+    },
+    {
+     "size": 2,
+     "steps": 4,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 3,
+     "steps": 3,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 4,
+     "steps": 2,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 1,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 2,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 2 step(s) in"
+    },
+    {
+     "size": 6,
+     "steps": 1,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 7,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 8,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 9,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 10,
+     "steps": 0,
+     "cross": 10,
+     "means": "the crossing lands in an 10-cell state"
+    }
+   ]
+  },
+  "7,10": {
+   "d": 13,
+   "size_at_least": 1,
+   "options": [
+    {
+     "size": 1,
+     "steps": 12,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 1,
+     "steps": 13,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 13 step(s) in"
+    },
+    {
+     "size": 2,
+     "steps": 6,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 3,
+     "steps": 4,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 4,
+     "steps": 3,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 5,
+     "steps": 2,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 6,
+     "steps": 2,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 7,
+     "steps": 1,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    },
+    {
+     "size": 8,
+     "steps": 1,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 9,
+     "steps": 1,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 10,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 11,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 12,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 13,
+     "steps": 0,
+     "cross": 13,
+     "means": "the crossing lands in an 13-cell state"
+    },
+    {
+     "size": 13,
+     "steps": 1,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 1 step(s) in"
+    }
+   ]
+  },
+  "8,0": {
+   "d": 30,
+   "size_at_least": 1,
+   "options": [
+    {
+     "size": 1,
+     "steps": 29,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 1,
+     "steps": 30,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 30 step(s) in"
+    },
+    {
+     "size": 2,
+     "steps": 14,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 3,
+     "steps": 9,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 3,
+     "steps": 10,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 10 step(s) in"
+    },
+    {
+     "size": 4,
+     "steps": 7,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 5,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 6,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 6 step(s) in"
+    },
+    {
+     "size": 6,
+     "steps": 4,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    },
+    {
+     "size": 7,
+     "steps": 4,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 8,
+     "steps": 3,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    },
+    {
+     "size": 9,
+     "steps": 3,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 10,
+     "steps": 2,
+     "cross": 10,
+     "means": "the crossing lands in an 10-cell state"
+    },
+    {
+     "size": 11,
+     "steps": 2,
+     "cross": 8,
+     "means": "the crossing lands in an 8-cell state"
+    },
+    {
+     "size": 12,
+     "steps": 2,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    },
+    {
+     "size": 13,
+     "steps": 2,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 14,
+     "steps": 2,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 15,
+     "steps": 1,
+     "cross": 15,
+     "means": "the crossing lands in an 15-cell state"
+    },
+    {
+     "size": 15,
+     "steps": 2,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 2 step(s) in"
+    },
+    {
+     "size": 16,
+     "steps": 1,
+     "cross": 14,
+     "means": "the crossing lands in an 14-cell state"
+    },
+    {
+     "size": 17,
+     "steps": 1,
+     "cross": 13,
+     "means": "the crossing lands in an 13-cell state"
+    },
+    {
+     "size": 18,
+     "steps": 1,
+     "cross": 12,
+     "means": "the crossing lands in an 12-cell state"
+    },
+    {
+     "size": 19,
+     "steps": 1,
+     "cross": 11,
+     "means": "the crossing lands in an 11-cell state"
+    },
+    {
+     "size": 20,
+     "steps": 1,
+     "cross": 10,
+     "means": "the crossing lands in an 10-cell state"
+    },
+    {
+     "size": 21,
+     "steps": 1,
+     "cross": 9,
+     "means": "the crossing lands in an 9-cell state"
+    },
+    {
+     "size": 22,
+     "steps": 1,
+     "cross": 8,
+     "means": "the crossing lands in an 8-cell state"
+    },
+    {
+     "size": 23,
+     "steps": 1,
+     "cross": 7,
+     "means": "the crossing lands in an 7-cell state"
+    },
+    {
+     "size": 24,
+     "steps": 1,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    },
+    {
+     "size": 25,
+     "steps": 1,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 26,
+     "steps": 1,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 27,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 28,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 29,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 30,
+     "steps": 0,
+     "cross": 30,
+     "means": "the crossing lands in an 30-cell state"
+    }
+   ]
+  },
+  "8,5": {
+   "d": 6,
+   "size_at_least": 1,
+   "options": [
+    {
+     "size": 1,
+     "steps": 5,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 1,
+     "steps": 6,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 6 step(s) in"
+    },
+    {
+     "size": 2,
+     "steps": 2,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 3,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 3,
+     "steps": 2,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 2 step(s) in"
+    },
+    {
+     "size": 4,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 6,
+     "steps": 0,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    }
+   ]
+  },
+  "8,8": {
+   "d": 45,
+   "size_at_least": 1,
+   "options": [
+    {
+     "size": 1,
+     "steps": 44,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 1,
+     "steps": 45,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 45 step(s) in"
+    },
+    {
+     "size": 2,
+     "steps": 22,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 3,
+     "steps": 14,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 3,
+     "steps": 15,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 15 step(s) in"
+    },
+    {
+     "size": 4,
+     "steps": 11,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 5,
+     "steps": 8,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 9,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 9 step(s) in"
+    },
+    {
+     "size": 6,
+     "steps": 7,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 7,
+     "steps": 6,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 8,
+     "steps": 5,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 9,
+     "steps": 4,
+     "cross": 9,
+     "means": "the crossing lands in an 9-cell state"
+    },
+    {
+     "size": 9,
+     "steps": 5,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 5 step(s) in"
+    },
+    {
+     "size": 10,
+     "steps": 4,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 11,
+     "steps": 4,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 12,
+     "steps": 3,
+     "cross": 9,
+     "means": "the crossing lands in an 9-cell state"
+    },
+    {
+     "size": 13,
+     "steps": 3,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    },
+    {
+     "size": 14,
+     "steps": 3,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 15,
+     "steps": 2,
+     "cross": 15,
+     "means": "the crossing lands in an 15-cell state"
+    },
+    {
+     "size": 15,
+     "steps": 3,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 3 step(s) in"
+    },
+    {
+     "size": 16,
+     "steps": 2,
+     "cross": 13,
+     "means": "the crossing lands in an 13-cell state"
+    },
+    {
+     "size": 17,
+     "steps": 2,
+     "cross": 11,
+     "means": "the crossing lands in an 11-cell state"
+    },
+    {
+     "size": 18,
+     "steps": 2,
+     "cross": 9,
+     "means": "the crossing lands in an 9-cell state"
+    },
+    {
+     "size": 19,
+     "steps": 2,
+     "cross": 7,
+     "means": "the crossing lands in an 7-cell state"
+    },
+    {
+     "size": 20,
+     "steps": 2,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 21,
+     "steps": 2,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 22,
+     "steps": 2,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 23,
+     "steps": 1,
+     "cross": 22,
+     "means": "the crossing lands in an 22-cell state"
+    },
+    {
+     "size": 24,
+     "steps": 1,
+     "cross": 21,
+     "means": "the crossing lands in an 21-cell state"
+    },
+    {
+     "size": 25,
+     "steps": 1,
+     "cross": 20,
+     "means": "the crossing lands in an 20-cell state"
+    },
+    {
+     "size": 26,
+     "steps": 1,
+     "cross": 19,
+     "means": "the crossing lands in an 19-cell state"
+    },
+    {
+     "size": 27,
+     "steps": 1,
+     "cross": 18,
+     "means": "the crossing lands in an 18-cell state"
+    },
+    {
+     "size": 28,
+     "steps": 1,
+     "cross": 17,
+     "means": "the crossing lands in an 17-cell state"
+    },
+    {
+     "size": 29,
+     "steps": 1,
+     "cross": 16,
+     "means": "the crossing lands in an 16-cell state"
+    },
+    {
+     "size": 30,
+     "steps": 1,
+     "cross": 15,
+     "means": "the crossing lands in an 15-cell state"
+    },
+    {
+     "size": 31,
+     "steps": 1,
+     "cross": 14,
+     "means": "the crossing lands in an 14-cell state"
+    },
+    {
+     "size": 32,
+     "steps": 1,
+     "cross": 13,
+     "means": "the crossing lands in an 13-cell state"
+    },
+    {
+     "size": 33,
+     "steps": 1,
+     "cross": 12,
+     "means": "the crossing lands in an 12-cell state"
+    },
+    {
+     "size": 34,
+     "steps": 1,
+     "cross": 11,
+     "means": "the crossing lands in an 11-cell state"
+    },
+    {
+     "size": 35,
+     "steps": 1,
+     "cross": 10,
+     "means": "the crossing lands in an 10-cell state"
+    },
+    {
+     "size": 36,
+     "steps": 1,
+     "cross": 9,
+     "means": "the crossing lands in an 9-cell state"
+    },
+    {
+     "size": 37,
+     "steps": 1,
+     "cross": 8,
+     "means": "the crossing lands in an 8-cell state"
+    },
+    {
+     "size": 38,
+     "steps": 1,
+     "cross": 7,
+     "means": "the crossing lands in an 7-cell state"
+    },
+    {
+     "size": 39,
+     "steps": 1,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    },
+    {
+     "size": 40,
+     "steps": 1,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 41,
+     "steps": 1,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 42,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 43,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 44,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 45,
+     "steps": 0,
+     "cross": 45,
+     "means": "the crossing lands in an 45-cell state"
+    },
+    {
+     "size": 45,
+     "steps": 1,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 1 step(s) in"
+    }
+   ]
+  },
+  "9,3": {
+   "d": 10,
+   "size_at_least": 1,
+   "options": [
+    {
+     "size": 1,
+     "steps": 9,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 1,
+     "steps": 10,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 10 step(s) in"
+    },
+    {
+     "size": 2,
+     "steps": 4,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 3,
+     "steps": 3,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 4,
+     "steps": 2,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 1,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 2,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 2 step(s) in"
+    },
+    {
+     "size": 6,
+     "steps": 1,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 7,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 8,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 9,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 10,
+     "steps": 0,
+     "cross": 10,
+     "means": "the crossing lands in an 10-cell state"
+    }
+   ]
+  },
+  "10,1": {
+   "d": 26,
+   "size_at_least": 1,
+   "options": [
+    {
+     "size": 1,
+     "steps": 25,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 1,
+     "steps": 26,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 26 step(s) in"
+    },
+    {
+     "size": 2,
+     "steps": 12,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 3,
+     "steps": 8,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 4,
+     "steps": 6,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 5,
+     "steps": 5,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 6,
+     "steps": 4,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 7,
+     "steps": 3,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 8,
+     "steps": 3,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 9,
+     "steps": 2,
+     "cross": 8,
+     "means": "the crossing lands in an 8-cell state"
+    },
+    {
+     "size": 10,
+     "steps": 2,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    },
+    {
+     "size": 11,
+     "steps": 2,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 12,
+     "steps": 2,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 13,
+     "steps": 1,
+     "cross": 13,
+     "means": "the crossing lands in an 13-cell state"
+    },
+    {
+     "size": 13,
+     "steps": 2,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 2 step(s) in"
+    },
+    {
+     "size": 14,
+     "steps": 1,
+     "cross": 12,
+     "means": "the crossing lands in an 12-cell state"
+    },
+    {
+     "size": 15,
+     "steps": 1,
+     "cross": 11,
+     "means": "the crossing lands in an 11-cell state"
+    },
+    {
+     "size": 16,
+     "steps": 1,
+     "cross": 10,
+     "means": "the crossing lands in an 10-cell state"
+    },
+    {
+     "size": 17,
+     "steps": 1,
+     "cross": 9,
+     "means": "the crossing lands in an 9-cell state"
+    },
+    {
+     "size": 18,
+     "steps": 1,
+     "cross": 8,
+     "means": "the crossing lands in an 8-cell state"
+    },
+    {
+     "size": 19,
+     "steps": 1,
+     "cross": 7,
+     "means": "the crossing lands in an 7-cell state"
+    },
+    {
+     "size": 20,
+     "steps": 1,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    },
+    {
+     "size": 21,
+     "steps": 1,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 22,
+     "steps": 1,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 23,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 24,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 25,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 26,
+     "steps": 0,
+     "cross": 26,
+     "means": "the crossing lands in an 26-cell state"
+    }
+   ]
+  },
+  "10,8": {
+   "d": 77,
+   "size_at_least": 16,
+   "options": [
+    {
+     "size": 16,
+     "steps": 4,
+     "cross": 13,
+     "means": "the crossing lands in an 13-cell state"
+    },
+    {
+     "size": 17,
+     "steps": 4,
+     "cross": 9,
+     "means": "the crossing lands in an 9-cell state"
+    },
+    {
+     "size": 18,
+     "steps": 4,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 19,
+     "steps": 4,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 20,
+     "steps": 3,
+     "cross": 17,
+     "means": "the crossing lands in an 17-cell state"
+    },
+    {
+     "size": 21,
+     "steps": 3,
+     "cross": 14,
+     "means": "the crossing lands in an 14-cell state"
+    },
+    {
+     "size": 22,
+     "steps": 3,
+     "cross": 11,
+     "means": "the crossing lands in an 11-cell state"
+    },
+    {
+     "size": 23,
+     "steps": 3,
+     "cross": 8,
+     "means": "the crossing lands in an 8-cell state"
+    },
+    {
+     "size": 24,
+     "steps": 3,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 25,
+     "steps": 3,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 26,
+     "steps": 2,
+     "cross": 25,
+     "means": "the crossing lands in an 25-cell state"
+    },
+    {
+     "size": 27,
+     "steps": 2,
+     "cross": 23,
+     "means": "the crossing lands in an 23-cell state"
+    },
+    {
+     "size": 28,
+     "steps": 2,
+     "cross": 21,
+     "means": "the crossing lands in an 21-cell state"
+    },
+    {
+     "size": 29,
+     "steps": 2,
+     "cross": 19,
+     "means": "the crossing lands in an 19-cell state"
+    },
+    {
+     "size": 30,
+     "steps": 2,
+     "cross": 17,
+     "means": "the crossing lands in an 17-cell state"
+    },
+    {
+     "size": 31,
+     "steps": 2,
+     "cross": 15,
+     "means": "the crossing lands in an 15-cell state"
+    },
+    {
+     "size": 32,
+     "steps": 2,
+     "cross": 13,
+     "means": "the crossing lands in an 13-cell state"
+    },
+    {
+     "size": 33,
+     "steps": 2,
+     "cross": 11,
+     "means": "the crossing lands in an 11-cell state"
+    },
+    {
+     "size": 34,
+     "steps": 2,
+     "cross": 9,
+     "means": "the crossing lands in an 9-cell state"
+    },
+    {
+     "size": 35,
+     "steps": 2,
+     "cross": 7,
+     "means": "the crossing lands in an 7-cell state"
+    },
+    {
+     "size": 36,
+     "steps": 2,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 37,
+     "steps": 2,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 38,
+     "steps": 2,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 39,
+     "steps": 1,
+     "cross": 38,
+     "means": "the crossing lands in an 38-cell state"
+    },
+    {
+     "size": 40,
+     "steps": 1,
+     "cross": 37,
+     "means": "the crossing lands in an 37-cell state"
+    },
+    {
+     "size": 41,
+     "steps": 1,
+     "cross": 36,
+     "means": "the crossing lands in an 36-cell state"
+    },
+    {
+     "size": 42,
+     "steps": 1,
+     "cross": 35,
+     "means": "the crossing lands in an 35-cell state"
+    },
+    {
+     "size": 43,
+     "steps": 1,
+     "cross": 34,
+     "means": "the crossing lands in an 34-cell state"
+    },
+    {
+     "size": 44,
+     "steps": 1,
+     "cross": 33,
+     "means": "the crossing lands in an 33-cell state"
+    },
+    {
+     "size": 45,
+     "steps": 1,
+     "cross": 32,
+     "means": "the crossing lands in an 32-cell state"
+    },
+    {
+     "size": 46,
+     "steps": 1,
+     "cross": 31,
+     "means": "the crossing lands in an 31-cell state"
+    },
+    {
+     "size": 47,
+     "steps": 1,
+     "cross": 30,
+     "means": "the crossing lands in an 30-cell state"
+    },
+    {
+     "size": 48,
+     "steps": 1,
+     "cross": 29,
+     "means": "the crossing lands in an 29-cell state"
+    },
+    {
+     "size": 49,
+     "steps": 1,
+     "cross": 28,
+     "means": "the crossing lands in an 28-cell state"
+    },
+    {
+     "size": 50,
+     "steps": 1,
+     "cross": 27,
+     "means": "the crossing lands in an 27-cell state"
+    },
+    {
+     "size": 51,
+     "steps": 1,
+     "cross": 26,
+     "means": "the crossing lands in an 26-cell state"
+    },
+    {
+     "size": 52,
+     "steps": 1,
+     "cross": 25,
+     "means": "the crossing lands in an 25-cell state"
+    },
+    {
+     "size": 53,
+     "steps": 1,
+     "cross": 24,
+     "means": "the crossing lands in an 24-cell state"
+    },
+    {
+     "size": 54,
+     "steps": 1,
+     "cross": 23,
+     "means": "the crossing lands in an 23-cell state"
+    },
+    {
+     "size": 55,
+     "steps": 1,
+     "cross": 22,
+     "means": "the crossing lands in an 22-cell state"
+    },
+    {
+     "size": 56,
+     "steps": 1,
+     "cross": 21,
+     "means": "the crossing lands in an 21-cell state"
+    },
+    {
+     "size": 57,
+     "steps": 1,
+     "cross": 20,
+     "means": "the crossing lands in an 20-cell state"
+    },
+    {
+     "size": 58,
+     "steps": 1,
+     "cross": 19,
+     "means": "the crossing lands in an 19-cell state"
+    },
+    {
+     "size": 59,
+     "steps": 1,
+     "cross": 18,
+     "means": "the crossing lands in an 18-cell state"
+    },
+    {
+     "size": 60,
+     "steps": 1,
+     "cross": 17,
+     "means": "the crossing lands in an 17-cell state"
+    },
+    {
+     "size": 61,
+     "steps": 1,
+     "cross": 16,
+     "means": "the crossing lands in an 16-cell state"
+    },
+    {
+     "size": 62,
+     "steps": 1,
+     "cross": 15,
+     "means": "the crossing lands in an 15-cell state"
+    },
+    {
+     "size": 63,
+     "steps": 1,
+     "cross": 14,
+     "means": "the crossing lands in an 14-cell state"
+    },
+    {
+     "size": 64,
+     "steps": 1,
+     "cross": 13,
+     "means": "the crossing lands in an 13-cell state"
+    },
+    {
+     "size": 65,
+     "steps": 1,
+     "cross": 12,
+     "means": "the crossing lands in an 12-cell state"
+    },
+    {
+     "size": 66,
+     "steps": 1,
+     "cross": 11,
+     "means": "the crossing lands in an 11-cell state"
+    },
+    {
+     "size": 67,
+     "steps": 1,
+     "cross": 10,
+     "means": "the crossing lands in an 10-cell state"
+    },
+    {
+     "size": 68,
+     "steps": 1,
+     "cross": 9,
+     "means": "the crossing lands in an 9-cell state"
+    },
+    {
+     "size": 69,
+     "steps": 1,
+     "cross": 8,
+     "means": "the crossing lands in an 8-cell state"
+    },
+    {
+     "size": 70,
+     "steps": 1,
+     "cross": 7,
+     "means": "the crossing lands in an 7-cell state"
+    },
+    {
+     "size": 71,
+     "steps": 1,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    },
+    {
+     "size": 72,
+     "steps": 1,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 73,
+     "steps": 1,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 74,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 75,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 76,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 77,
+     "steps": 0,
+     "cross": 77,
+     "means": "the crossing lands in an 77-cell state"
+    },
+    {
+     "size": 77,
+     "steps": 1,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 1 step(s) in"
+    }
+   ]
+  },
+  "10,9": {
+   "d": 61,
+   "size_at_least": 16,
+   "options": [
+    {
+     "size": 16,
+     "steps": 3,
+     "cross": 13,
+     "means": "the crossing lands in an 13-cell state"
+    },
+    {
+     "size": 17,
+     "steps": 3,
+     "cross": 10,
+     "means": "the crossing lands in an 10-cell state"
+    },
+    {
+     "size": 18,
+     "steps": 3,
+     "cross": 7,
+     "means": "the crossing lands in an 7-cell state"
+    },
+    {
+     "size": 19,
+     "steps": 3,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 20,
+     "steps": 3,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 21,
+     "steps": 2,
+     "cross": 19,
+     "means": "the crossing lands in an 19-cell state"
+    },
+    {
+     "size": 22,
+     "steps": 2,
+     "cross": 17,
+     "means": "the crossing lands in an 17-cell state"
+    },
+    {
+     "size": 23,
+     "steps": 2,
+     "cross": 15,
+     "means": "the crossing lands in an 15-cell state"
+    },
+    {
+     "size": 24,
+     "steps": 2,
+     "cross": 13,
+     "means": "the crossing lands in an 13-cell state"
+    },
+    {
+     "size": 25,
+     "steps": 2,
+     "cross": 11,
+     "means": "the crossing lands in an 11-cell state"
+    },
+    {
+     "size": 26,
+     "steps": 2,
+     "cross": 9,
+     "means": "the crossing lands in an 9-cell state"
+    },
+    {
+     "size": 27,
+     "steps": 2,
+     "cross": 7,
+     "means": "the crossing lands in an 7-cell state"
+    },
+    {
+     "size": 28,
+     "steps": 2,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 29,
+     "steps": 2,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 30,
+     "steps": 2,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 31,
+     "steps": 1,
+     "cross": 30,
+     "means": "the crossing lands in an 30-cell state"
+    },
+    {
+     "size": 32,
+     "steps": 1,
+     "cross": 29,
+     "means": "the crossing lands in an 29-cell state"
+    },
+    {
+     "size": 33,
+     "steps": 1,
+     "cross": 28,
+     "means": "the crossing lands in an 28-cell state"
+    },
+    {
+     "size": 34,
+     "steps": 1,
+     "cross": 27,
+     "means": "the crossing lands in an 27-cell state"
+    },
+    {
+     "size": 35,
+     "steps": 1,
+     "cross": 26,
+     "means": "the crossing lands in an 26-cell state"
+    },
+    {
+     "size": 36,
+     "steps": 1,
+     "cross": 25,
+     "means": "the crossing lands in an 25-cell state"
+    },
+    {
+     "size": 37,
+     "steps": 1,
+     "cross": 24,
+     "means": "the crossing lands in an 24-cell state"
+    },
+    {
+     "size": 38,
+     "steps": 1,
+     "cross": 23,
+     "means": "the crossing lands in an 23-cell state"
+    },
+    {
+     "size": 39,
+     "steps": 1,
+     "cross": 22,
+     "means": "the crossing lands in an 22-cell state"
+    },
+    {
+     "size": 40,
+     "steps": 1,
+     "cross": 21,
+     "means": "the crossing lands in an 21-cell state"
+    },
+    {
+     "size": 41,
+     "steps": 1,
+     "cross": 20,
+     "means": "the crossing lands in an 20-cell state"
+    },
+    {
+     "size": 42,
+     "steps": 1,
+     "cross": 19,
+     "means": "the crossing lands in an 19-cell state"
+    },
+    {
+     "size": 43,
+     "steps": 1,
+     "cross": 18,
+     "means": "the crossing lands in an 18-cell state"
+    },
+    {
+     "size": 44,
+     "steps": 1,
+     "cross": 17,
+     "means": "the crossing lands in an 17-cell state"
+    },
+    {
+     "size": 45,
+     "steps": 1,
+     "cross": 16,
+     "means": "the crossing lands in an 16-cell state"
+    },
+    {
+     "size": 46,
+     "steps": 1,
+     "cross": 15,
+     "means": "the crossing lands in an 15-cell state"
+    },
+    {
+     "size": 47,
+     "steps": 1,
+     "cross": 14,
+     "means": "the crossing lands in an 14-cell state"
+    },
+    {
+     "size": 48,
+     "steps": 1,
+     "cross": 13,
+     "means": "the crossing lands in an 13-cell state"
+    },
+    {
+     "size": 49,
+     "steps": 1,
+     "cross": 12,
+     "means": "the crossing lands in an 12-cell state"
+    },
+    {
+     "size": 50,
+     "steps": 1,
+     "cross": 11,
+     "means": "the crossing lands in an 11-cell state"
+    },
+    {
+     "size": 51,
+     "steps": 1,
+     "cross": 10,
+     "means": "the crossing lands in an 10-cell state"
+    },
+    {
+     "size": 52,
+     "steps": 1,
+     "cross": 9,
+     "means": "the crossing lands in an 9-cell state"
+    },
+    {
+     "size": 53,
+     "steps": 1,
+     "cross": 8,
+     "means": "the crossing lands in an 8-cell state"
+    },
+    {
+     "size": 54,
+     "steps": 1,
+     "cross": 7,
+     "means": "the crossing lands in an 7-cell state"
+    },
+    {
+     "size": 55,
+     "steps": 1,
+     "cross": 6,
+     "means": "the crossing lands in an 6-cell state"
+    },
+    {
+     "size": 56,
+     "steps": 1,
+     "cross": 5,
+     "means": "the crossing lands in an 5-cell state"
+    },
+    {
+     "size": 57,
+     "steps": 1,
+     "cross": 4,
+     "means": "the crossing lands in an 4-cell state"
+    },
+    {
+     "size": 58,
+     "steps": 1,
+     "cross": 3,
+     "means": "the crossing lands in an 3-cell state"
+    },
+    {
+     "size": 59,
+     "steps": 1,
+     "cross": 2,
+     "means": "the crossing lands in an 2-cell state"
+    },
+    {
+     "size": 60,
+     "steps": 1,
+     "cross": 1,
+     "means": "the crossing lands in a 1-cell state => a SINGLETON CAPITOL"
+    },
+    {
+     "size": 61,
+     "steps": 0,
+     "cross": 61,
+     "means": "the crossing lands in an 61-cell state"
+    },
+    {
+     "size": 61,
+     "steps": 1,
+     "cross": 0,
+     "means": "the path ends on this state's OWN capitol, 1 step(s) in"
+    }
+   ]
+  }
+ },
+ "D_singletons": {
+  "demands": {
+   "2,5": {
+    "neighbours_that_could_be_the_singleton": [
+     [
+      1,
+      5
+     ],
+     [
+      3,
+      5
+     ],
+     [
+      2,
+      4
+     ],
+     [
+      2,
+      6
+     ]
+    ],
+    "note": "d = 1 => ONE step of cost 1 => the neighbour's state has exactly ONE cell => it is a singleton capitol (D43: a 1-cell state is odd, so it has a capitol)"
+   },
+   "3,6": {
+    "neighbours_that_could_be_the_singleton": [
+     [
+      2,
+      6
+     ],
+     [
+      4,
+      6
+     ],
+     [
+      3,
+      5
+     ],
+     [
+      3,
+      7
+     ]
+    ],
+    "note": "d = 1 => ONE step of cost 1 => the neighbour's state has exactly ONE cell => it is a singleton capitol (D43: a 1-cell state is odd, so it has a capitol)"
+   },
+   "4,10": {
+    "neighbours_that_could_be_the_singleton": [
+     [
+      3,
+      10
+     ],
+     [
+      5,
+      10
+     ],
+     [
+      4,
+      9
+     ]
+    ],
+    "note": "d = 1 => ONE step of cost 1 => the neighbour's state has exactly ONE cell => it is a singleton capitol (D43: a 1-cell state is odd, so it has a capitol)"
+   }
+  },
+  "d1_cells": [
+   [
+    2,
+    5
+   ],
+   [
+    3,
+    6
+   ],
+   [
+    4,
+    10
+   ]
+  ],
+  "minimum_singletons_covering_all_d1_cells": 2,
+  "sharing": "one singleton can serve several d=1 cells if it is adjacent to all of them: (4,10),(5,9),(6,10) are all adjacent to (5,10); (2,5) and (3,6) are both adjacent to (3,5) and to (2,6)"
+ },
+ "E_corner": {
+  "adjacency_bound": "|d(10,8) - d(10,9)| = 16 <= min(size_10,8, size_10,9)  =>  both states have at least 16 cells",
+  "the_12_in_61_is_NOT_the_state_of_10_9": "if (10,9) sat in a 12-cell state then the step (10,8)->(10,9) would cost at most 12, so d(10,8) <= 12 + 61 = 73 < 77.  The published 77 REFUTES it.  So the 12-cell state does NOT contain (10,9): (10,9)'s own state has >= 16 cells and its path CROSSES into the 12-cell state (crossing cost min(size_9,12) = 12).",
+  "the_12_state_must_hold_6_10_and_7_10": "13 = 12 + 1 says (7,10)'s tight neighbour is a 12-cell step away and then a 1-cell crossing; d(6,10) = 1 (it touches the (5,10) singleton), and 13 = w((7,10),(6,10)) + 1 with w = 12  =>  the 12-cell state contains BOTH (6,10) and (7,10).",
+  "the_singleton_at_5_10_serves_three_cells": "(4,10)=1, (5,9)=1 and (6,10)=1 are all adjacent to (5,10), so ONE singleton at (5,10) serves all three, and it is also the exit cell for 61 = 12*5+1 and 13 = 12+1.",
+  "the_16": "if (10,9) is the tight neighbour of (10,8) then w = 77 - 61 = 16 = min(size_8, size_9) (or the shared state's size), so exactly one of the two states has 16 cells.  The alternatives for (10,8)'s tight neighbour are (9,8) and (10,7), whose readings are not published -- so 77 = 61 + 16 is a WELL-FOUNDED but still UNVERIFIED choice, exactly as the human said.",
+  "the_eight": "9 = 8 + 1 at (6,9): the tight neighbour has d = 1 and the crossing costs 8, so min(size_6,9, size_that) = 8 -- with (6,10)'s state already 12, the 8 must be the size of the OTHER state, i.e. there IS an 8-cell state touching (6,9).",
+  "the_45": "45 = 45 + 0 is impossible here (a 45-cell state would need the whole upper middle AND the corner).  Measured on the surviving corner triples: (8,8) always lands INSIDE the 12-cell state, and the local field gives 49 for it while the published value is 45 -- an upper bound, so it is not a contradiction, but it says the path does NOT go 4 steps to (6,10).  The only decomposition that works is 45 = 12*3 + 9: THREE steps inside the 12-cell state and then a crossing of cost 9 into a NINE-cell state.  So (8,8) must sit exactly 3 steps from (6,10) inside the 12-cell state, and there is a 9-cell state next to it.",
+  "the_45_and_the_50_cannot_both_exist": "51 = 50 + 1 puts a 50-cell state in the upper middle; 45 = 45 + 0 puts a 45-cell state around (8,8).  50 + 45 = 95, and with the 16 + 12 + 8 + 1 already forced at the bottom right that is 132 > 121 cells.  The conservation law says at most ONE of them."
+ },
+ "F_big_states": {
+  "0,1": {
+   "d": 8,
+   "state_sizes_that_work": [
+    8
+   ]
+  },
+  "0,5": {
+   "d": 11,
+   "state_sizes_that_work": [
+    8,
+    9,
+    10,
+    11
+   ]
+  },
+  "1,7": {
+   "d": 11,
+   "state_sizes_that_work": [
+    8,
+    9,
+    10,
+    11
+   ]
+  },
+  "2,10": {
+   "d": 14,
+   "state_sizes_that_work": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14
+   ]
+  },
+  "3,0": {
+   "d": 28,
+   "state_sizes_that_work": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28
+   ]
+  },
+  "3,3": {
+   "d": 51,
+   "state_sizes_that_work": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51
+   ]
+  },
+  "4,1": {
+   "d": 22,
+   "state_sizes_that_work": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22
+   ]
+  },
+  "5,3": {
+   "d": 15,
+   "state_sizes_that_work": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+   ]
+  },
+  "5,5": {
+   "d": 10,
+   "state_sizes_that_work": [
+    8,
+    9,
+    10
+   ]
+  },
+  "6,0": {
+   "d": 11,
+   "state_sizes_that_work": [
+    8,
+    9,
+    10,
+    11
+   ]
+  },
+  "6,2": {
+   "d": 11,
+   "state_sizes_that_work": [
+    8,
+    9,
+    10,
+    11
+   ]
+  },
+  "6,9": {
+   "d": 9,
+   "state_sizes_that_work": [
+    8,
+    9
+   ]
+  },
+  "7,2": {
+   "d": 17,
+   "state_sizes_that_work": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ]
+  },
+  "7,4": {
+   "d": 14,
+   "state_sizes_that_work": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14
+   ]
+  },
+  "7,7": {
+   "d": 10,
+   "state_sizes_that_work": [
+    8,
+    9,
+    10
+   ]
+  },
+  "7,10": {
+   "d": 13,
+   "state_sizes_that_work": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+   ]
+  },
+  "8,0": {
+   "d": 30,
+   "state_sizes_that_work": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30
+   ]
+  },
+  "8,8": {
+   "d": 45,
+   "state_sizes_that_work": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45
+   ]
+  },
+  "9,3": {
+   "d": 10,
+   "state_sizes_that_work": [
+    8,
+    9,
+    10
+   ]
+  },
+  "10,1": {
+   "d": 26,
+   "state_sizes_that_work": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26
+   ]
+  },
+  "10,8": {
+   "d": 77,
+   "state_sizes_that_work": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    72,
+    73,
+    74,
+    75,
+    76,
+    77
+   ]
+  },
+  "10,9": {
+   "d": 61,
+   "state_sizes_that_work": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61
+   ]
+  }
+ },
+ "F_conservation": "sum of all state sizes = 121; the corner alone already forces 1 + 8 + 12 + 16 = 37 of them",
+ "G_constructive": {
+  "todo": "see tools/verify_corner_11x11.py -- it enumerates the 8/12/16-cell candidates that the inference points at and checks every published reading against them"
+ }
+}

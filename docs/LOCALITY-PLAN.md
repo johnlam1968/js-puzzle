@@ -276,12 +276,107 @@ cell at (10,9): **16 for the crossing step, then 61 more to a capitol.**
 * both cells are **high-d** (2·61 > 121), so by M4 neither may be adjacent to a capitol of
   *another* state. The 16-cost step between them is therefore a **cross-state** step, and
   `min(size(10,8), size(10,9)) = 16` — **one of the two states is exactly 16 cells.**
-* the **same-state** reading cannot work: the within-state step costs 16, and
-  `61 − 16 = 45` is not a multiple of 16. A 16-cell state cannot produce a d of 61 at
-  (10,9); that would need a **61-cell** state with (10,9) next to its own capitol
-  (61 of 121 cells, odd ⇒ it has a capitol by D43).
-* ⇒ **two live candidates for the "16-block"**: the state of (10,8), or the state of
-  (10,9). `tools/corner_16_11x11.py` enumerates both and says which survive.
+* **the sharper version of the same constraint, and it is measured, not assumed.**
+  `d(10,8) = 77` is the *exact* minimum cost to any capitol (L1 tight), so **every**
+  candidate path from (10,8) to any capitol must cost ≥ 77. If a cell `y` of the 16-block
+  touches a capitol `c`, the path inside the block to `y` plus the crossing costs
+  `16·dist_S((10,8), y) + min(16, size_c) ≥ 16·dist_S + 1`, so **`dist_S ≥ 5`**. ⇒ the
+  16-block may touch a revealed capitol only from 5 steps away inside the block:
+  `(10,6)`, `(10,4)` and `(9,5)` are **out** (Manhattan 4 from (10,8)); `(5,8)` and
+  `(6,7)` are **allowed** (distance 5). *M4 alone would forbid all of them — it is too
+  strong; the L1 form is the one to use.*
+* ~~the **same-state** reading cannot work: `61 − 16 = 45` is not a multiple of 16.~~
+  **CORRECTED — this was wrong.** A 16-cell state has no capitol (D43: a state with a
+  capitol has odd area), so the path out of (10,9) does not stay inside the state; it
+  crosses into other states, and that crossing is not required to be a multiple of 16.
+  The enumeration confirms it: **19,513 sixteen-cell states hold both (10,8) and (10,9)**.
+  ⇒ **both readings survive**, and they differ in exactly one thing:
+  **(A)** different states ⇒ the crossing step is `min(s(10,8), s(10,9)) = 16` ⇒ **one of
+  the two states has exactly 16 cells**; **(B)** the same state ⇒ that state has 16 cells
+  and holds both cells. Either way there is a **16-cell state next to (10,8)**.
+* ⇒ **the two live candidates for the "16-block"**: the state of (10,8), or the state of
+  (10,9). `tools/corner_16_11x11.py` enumerates all three variants:
+
+| variant | enumerated | survive the per-block filters |
+|---|---|---|
+| the 16-block holds (10,8) | 25,749 | 12,626 |
+| the 16-block holds (10,9) | 11,501 | 6,656 |
+| the 16-block holds **both** | 39,019 | 19,513 |
+
+(`tools/corner_joint_11x11.py` then adds the joint filters: M4, L1, disjointness from the
+8- and 12-blocks, and the "must poke out" test below.)
+
+**Two measurements that come out of the corner, both of them usable by hand:**
+
+**(a) The 16-block cannot fit in the corner.** Take the best-scoring (8, 12) pair from
+`tools/trim_510.py` (S8 = rows 2-5 cols 8-10 + (5,9); S12 = rows 6-9, cols 6-10), plus
+the forced singleton (5,10) and the two revealed capitols. In the window
+**rows 5-10 x cols 6-10** (30 cells) that leaves exactly **15 free cells**:
+
+```
+   5,6* 5,7X 5,8* 5,9X 5,10X
+   6,6* 6,7* 6,8* 6,9X 6,10X
+   7,6X 7,7X 7,8X 7,9X 7,10*
+   8,6* 8,7X 8,8X 8,9X 8,10X
+   9,6X 9,7X 9,8* 9,9* 9,10*
+  10,6* 10,7* 10,8* 10,9* 10,10*
+   (* = free,  X = taken)
+```
+
+⇒ **a 16-cell state containing (10,8) cannot be contained in that window** (15 < 16), so it
+**must poke out through row 4 or column 5**, and the only cells it can reach are
+**(4,6), (5,5), (6,5), (8,5)** — of which (5,5)=10 and (8,5)=6 are published, so F1 bites
+on them. *This is a one-line check for any hand-built shape: if it does not contain one of
+those four cells, it is wrong.* (Necessary, conditional on that 8/12 pair — not sufficient.)
+
+**(b) The size of the (10,9) state is narrowed to five values.** Write the path from (10,9)
+to its capitol as *k* steps inside its own state (cost *s* each) plus one exit step
+(cost `min(s, s_next)`), plus whatever the exit lands on:
+
+```
+   61 = k*s + r          0 <= r <= s,  r = 0 only if the path ends inside the state
+```
+
+With the area bound `s >= 16` this leaves **s in {16, 20, 30, 60, 61}** — every other
+size in 16..61 cannot produce a 61 (the remainder would exceed *s* or land negative).
+And M4 kills the degenerate reading: `s = 61, k = 0` means the first step lands on a
+**foreign** capitol, which `2*61 > 121` forbids. So the 61 is produced either by
+
+* **s = 61**: (10,9) sits next to its **own** capitol (a 61-cell state), or
+* **s = 16 / 20 / 30 / 60**: the path leaves the state and crosses into a smaller one —
+  and *s = 20, 30, 60* all have **r = 1**, i.e. the exit is into a **singleton** capitol,
+  which is exactly the shape of a solution: a big filler state, then a 1-cell capitol.
+
+**(c) A shape that is not symmetric is not a state.** `docs/DESIGN.md` §3.1: a state is
+**connected and has a non-trivial self-symmetry** ("州 = 连通 + 有非平凡自对称；否则不是州，
+不是'无首都的州'"). The orbit growth enumerates exactly that space, so the enumeration is
+**complete over states** — and a hand-built shape can be checked for it in one line:
+*if it has no lattice symmetry, it is not a state and no reading can save it.* (This is
+also why a 16-cell state has no capitol at all: an odd area is necessary for a capitol,
+and 16 is even.)
+
+**(d) The best (8,12) pair and the 16-block are incompatible.** Measured on the single
+best-scoring pair from the trim: of the 25,749 sixteen-cell states containing (10,8),
+**8,787** pass the L1-tightness and L1-leave filters, and **0** of them are disjoint from
+that 8- and 12-block — the corner is already full. The same for the 16-block anchored at
+(10,9): 5,155 pass the per-block filters, **0** are disjoint.
+
+⇒ so one of the three shapes in the corner is not the one the trim picked. That is the
+one number to take away from this round: **the trim's best pair is only one of 40,862
+survivors, and the three shapes have to be chosen together.**
+
+The full funnel, measured (`tools/corner_joint_11x11.py`):
+
+| the 16-block holds | enumerated | no capitol inside | L1 tightness | L1 leave-the-block | disjoint from the best 8/12 pair |
+|---|---|---|---|---|---|
+| (10,8) | 25,749 | 14,191 | 8,787 | 7,735 | **0** |
+| (10,9) | 11,501 | 7,386 | 5,774 | 5,155 | **0** |
+| **both** | 39,019 | 21,725 | 13,694 | 12,160 | **0** |
+
+⇒ **7,735 and 5,155 legal sixteen-cell shapes sit in the corner; the best-scoring 8- and
+12-block leaves them no room at all.** `tools/corner_triple_11x11.py` then joins the 16-blocks
+against **all** 40,862 surviving (8,12) pairs with a bitset index, so the answer is no
+longer "the best pair" but "how many pairs admit a 16-block".
 
 **And the methodological agreement.** *"Working out a larger shape is convenient, more
 convenent than working out possible smaller shapes."* That is not just a convenience — it
@@ -291,6 +386,132 @@ numerous**: there are 22,317 legal states in a 5×5, and the small ones are exac
 filler states whose *sizes* are all the answer needs. So: **grow the big ones (rigid,
 few, global), absorb the small ones (numerous, cheap, window-local)** — and the join
 between the two is the conservation law.
+
+---
+
+## 5.6 INFERENCE: what the readings themselves force
+
+*"Why don't you pause brute-force calculation, and use the published readings and the
+registry of constraints to do inference?"* — **the right call, and it changes the answer.**
+
+The rules so far were LOCAL: they say what a shape must look like. The rules here read a
+**number** and say what its **state** must look like. `tools/infer_sizes_11x11.py`.
+
+**The two rules that do all the work**
+
+| rule | statement | why |
+|---|---|---|
+| **I1** the adjacency bound | for adjacent x,y: `\|d(x) − d(y)\| ≤ min(s_x, s_y)` | the step between them costs at most the smaller state, and the path continues |
+| **I2** the path decomposition | `v = k·s + r`, `1 ≤ r ≤ s`, or `v = k·s` | k steps inside the state (cost s each) then ONE crossing of cost `r = min(s, next size)` |
+
+and the two cases that carry the information:
+
+* **`r = 1`** ⇒ the crossing costs 1 ⇒ the next state has **one cell** ⇒ it is a
+  **singleton capitol**. This is the human's own pattern: `61 = 12×5 + 1`, `13 = 12 + 1`.
+* **`r = 0`** ⇒ the path ends inside the state ⇒ that state has a capitol ⇒ its area is
+  **odd** (D43).
+
+**What comes out**
+
+| cell | d | its state has at least | singleton-exit sizes |
+|---|---|---|---|
+| (10,8) | 77 | **16** | 19, 38, 76 |
+| (10,9) | 61 | **16** | **20, 30, 60** |
+| (6,2) | 11 | 6 | 10 |
+| (7,2) | 17 | 6 | 8, 16 |
+| (0,1) | 8 | 4 | 7 |
+| (3,8) | 6 | 2 | 5 |
+| (4,8) | 4 | 2 | 3 |
+| (3,3) | 51 | 1 | 1, 2, 5, 10, **25, 50** |
+| (8,8) | 45 | 1 | 1, 2, 4, 11, 22, 44 |
+| (10,1) | 26 | 1 | 1, 5, 25 |
+
+**Three deductions that change the plan**
+
+1. **The "12" does not belong to (10,9) — it belongs to the state it CROSSES INTO.**
+   (10,8) and (10,9) are adjacent, so I1 gives `min(s₈, s₉) ≥ 16`; a 12-cell state
+   *containing* (10,9) would also give `d(10,8) ≤ 12 + 61 = 73 < 77`, so it is refuted.
+   **But the arithmetic `61 = 12×5 + 1` survives, with the anchor moved:** the path
+   *crosses into* a 12-cell state (cost `min(s₉,12) = 12`, legal because `s₉ ≥ 16`),
+   walks 4 steps inside it (12 each), and exits to the (5,10) singleton for 1.
+   **The human's reading was right; only my first placement of it was wrong.** (This is
+   recorded as a CORRECTION in the register, facet F-withdrawn-readings.)
+2. **The 12-cell state holds (6,10) and (7,10).** `13 = 12 + 1` puts a 12-cell state on
+   the step (7,10)->(6,10); `d(6,10) = 1` (one step into the (5,10) singleton) and
+   `d(7,10) = 12 + 1` put both in the **same** state. ⇒ **the trim's 12-block was in the
+   wrong place** — and that is exactly why **no** 16-cell block could fit beside it
+   (0 survivors). Measured: **1,044** twelve-cell states contain both (6,10) and (7,10);
+   **783** hold no revealed capitol; **149** also carry an entry cell 4 steps from (6,10).
+   Compare: 347,802 blind pairs.
+3. **The exit singleton is (5,10), not a hidden one.** Measured: the exit of the 61 path
+   is the cell that steps into the **1-cell state at (5,10)**, and the whole path
+   (10,9) -> ... -> (6,10) -> (5,10) is 6 steps for a Manhattan distance of 6 — monotone.
+   ⇒ the corner needs **no** hidden singleton at all: (5,10) serves (4,10), (5,9),
+   (6,10) *and* the 61 path.
+
+⇒ **the corner is now mostly INFERRED, not searched:** a 12-cell state at (6,10)+(7,10),
+a 16-cell state at (10,8), a 20/30/60-cell state at (10,9), a hidden singleton near
+(10,9), and the known (5,10) singleton. The search that remains is *three* enumerations
+with those anchors — not 347,802 pairs.
+
+### 5.7 THE CHAIN, RUN: 632 surviving corner triples
+
+*"Why don't you pause brute-force calculation, and use the published readings and the
+registry of constraints to do inference?"* — **done, and it paid.**
+`tools/chain_corner_11x11.py` reads the chain off the readings and then enumerates
+**only what the chain allows**:
+
+| the chain | what it forces |
+|---|---|
+| `d(6,10) = 1` | free: one step into a 1-cell state costs 1 whatever (6,10)'s own state is |
+| `d(7,10) = 13 = 12 + 1` | the step (7,10)->(6,10) costs 12 ⇒ **a 12-cell state touches both** |
+| `d(10,9) = 61 = 12*5 + 1` | the path crosses **into** the 12-cell state, walks 4 steps inside it, then exits to the (5,10) singleton. Manhattan (10,9)->(5,10) = 6 = the 6 steps of the path ⇒ **monotone** |
+| `\|77 − 61\| = 16 ≤ min(size₈, size₉)` | (L2/L3) both states have ≥ 16 cells ⇒ the 12-cell state contains neither (10,8) nor (10,9) |
+| `d(10,8) = 77 = 16 + 61` | the step (10,8)->(10,9) costs 16 ⇒ **a 16-cell state holds both** |
+| `d(6,9) = 9 = 8 + 1` | the step (6,9)->(6,10) costs 8 and (6,10)'s state is 12 ⇒ min = 8 forces **size(6,9) = 8 exactly** |
+
+**The candidate space, before and after**
+
+| | count |
+|---|---|
+| the blind search: (8-cell, 12-cell) pairs | 347,802 |
+| 12-cell candidates the chain allows | **149** |
+| 8-cell candidates the chain allows | **483** |
+| 16-cell candidates the chain allows | **7,534** |
+| disjoint (8,12) pairs that leave room for a 16 | 2,525 |
+| triples | 129,138 |
+| triples whose local field **equals** d(10,9) = 61 | **36,830** |
+| triples whose local field **equals** d(10,8) = 77 | **2,048** |
+| triples **not refuted** by any published reading inside them | **632** |
+
+**The 632 survivors share a skeleton.** In every one of them these cells are occupied:
+
+```
+  8-cell state   (1,9) (2,9) (3,9) (4,9) (4,10) (5,9) (6,9)          + 1 more
+ 12-cell state   (6,6) (6,10) (7,6) (7,8) (7,10) (8,6) (8,7)
+                 (8,8) (8,9) (8,10) (9,7) (9,9)                       = all 12
+ 16-cell state   (9,5) (9,6) (10,6) (10,7) (10,8) (10,9)            + 10 more
+```
+
+and the five readings `d(4,10)=1`, `d(6,9)=9`, `d(7,10)=13`, `d(10,9)=61`, `d(10,8)=77`
+are **explained exactly** in all 632.
+
+⇒ **the corner is essentially SOLVED as a skeleton**, with only the tails of the 8- and
+16-cell states still free (60 of them are in `data/derived/chain_corner_11x11.json`).
+
+**Two more deductions came out of the run itself**
+
+* **the 8-cell state must not give (10,9) a shortcut.** Measured: a triple where the
+  8-cell state reaches (10,10) produces a local d(10,9) of **53**, not 61 — the 8-cell
+  state offers a cheaper route than the 12-cell one. So the 8-cell state has to be
+  positioned so that the 12-cell route stays the cheapest. This is the L1 tightness
+  rule biting a *different* cell than the one being solved.
+* **the 45 needs a nine-cell state.** (8,8) lands inside the 12-cell state in **60 of 60**
+  samples, and the local field gives 49 for it against a published 45 (an upper bound, so
+  no contradiction — but the path is not the 4-step one). The only decomposition that
+  works is **45 = 12×3 + 9**: three steps inside the 12-cell state and then a crossing of
+  cost 9 into a **nine-cell state**. So (8,8) sits exactly 3 steps from (6,10) inside the
+  12-cell state, and there is a 9-cell state next to it.
 
 ---
 
