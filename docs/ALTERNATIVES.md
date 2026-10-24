@@ -451,4 +451,6 @@ print(res['singleton_demands'])
 | `tools/facet_pinning_11x11.py` | the per-facet pinning power, measured on the (5,10) candidate slice |
 | `tools/facet_pinpoint_11x11.py` | which sizes a cell can still have, window by window |
 | `tools/size_multiset_11x11.py` | the feasible size multisets under the conservation law (121) |
+| `tools/coverage_audit_11x11.py` | which of the 33 published numbers a given core actually exercises |
+| `tools/corner_16_11x11.py` | the lower-right corner: the 16-cell block and the "61 + 16 = 77" reading |
 | `PLAN.md` | the defect register — D38 (the name), D43 (odd area), D48 (orbit semantics), D53, D64, D65, D85 |

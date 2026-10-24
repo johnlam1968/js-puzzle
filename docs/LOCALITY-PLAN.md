@@ -45,6 +45,52 @@ The session retracted this itself, one turn before it degenerated; the register 
 
 ---
 
+## 1.5 Which of the 33 numbers are actually USED?
+
+*"Has the constraint registry taken all official revealed numbers into consideration?"*
+
+**Two different answers, and the second one matters.**
+
+* **Recorded: yes, all 33.** F-published has 33 instances, one per published cell.
+* **Used: 24–26 of them, depending on the core.** The rest are **dormant** — in the
+  register, and not yet in any search.
+
+`tools/coverage_audit_11x11.py` measures it. A number is *exercised* by a search over a
+core when one of the three tests actually touches it: F1 (it sits inside a candidate
+block), F2 (it is adjacent to the core, so a path through the core is a real path), F3 (its
+step-count ball hits the core, so "the ball must still contain a possible capitol" bites).
+
+| core | exercised | dormant |
+|---|---|---|
+| the (5,10) core: the 8-block + the 12-block + the singleton | **26 / 33** | 7 |
+| the lower-right corner: (10,8) + (10,9) + (5,10) | **24 / 33** | 9 |
+| the whole board (the trivial upper bound) | 33 / 33 | 0 |
+
+**The dormant set of the (5,10) core is exactly the top-left cluster:**
+
+| dormant number | what it is waiting for |
+|---|---|
+| (2,5) = 1, (3,6) = 1 | **the two other d=1 demands** — and their singletons, which are the only certain 1×1 states in the top-left half |
+| (0,1) = 8, (0,2) = 4 | the ≥ 4 states of the top-left corner |
+| (2,2) = 7 | the top-left cluster |
+| (5,7) = 0, (10,5) = 0 | the two revealed capitols, which are in the *middle* of the board |
+
+⇒ **so the honest state of the project is: the bottom-right corner is being worked with
+26 of the 33 readings; the top-left corner has 7 readings that nothing has touched yet.**
+
+⇒ **and that is exactly the shape of the multi-attention plan**: not one core and a
+surround, but **two cores** — the (5,10) core in the bottom-right and a second one in the
+top-left built from the two d=1 demands (whose singletons are forced: (2,5)'s is one of
+(3,5)/(2,6)/(2,4) and (3,6)'s is one of (2,6)/(4,6)/(3,5), and (2,6) can serve both) — and
+the **join** between them is the conservation law of §2.2.
+
+⇒ **the join is not a formality.** The two cores are at opposite ends of the board, and
+the total is 121: the sizes the two cores consume must leave exactly the right number of
+cells for everything in between, with exactly the right Σ|S|². That is a knapsack with one
+real constraint, and it is the constraint that the 14 feasible multisets of §4.1 live in.
+
+---
+
 ## 2. The multi-facet, multi-attention shape of the problem
 
 The instance has 121 cells and 33 readings, and every reading is a statement about a
@@ -219,8 +265,42 @@ supply.
 
 ---
 
+## 5.5 The lower-right corner: the "61 + 16 = 77" reading
+
+The human's reading of the corner: from the 77 cell at (10,8), going LEFT would step
+through larger (more expensive) states, so the cheapest route goes RIGHT, through the 61
+cell at (10,9): **16 for the crossing step, then 61 more to a capitol.**
+
+**The engine's verdict, in three lines:**
+
+* both cells are **high-d** (2·61 > 121), so by M4 neither may be adjacent to a capitol of
+  *another* state. The 16-cost step between them is therefore a **cross-state** step, and
+  `min(size(10,8), size(10,9)) = 16` — **one of the two states is exactly 16 cells.**
+* the **same-state** reading cannot work: the within-state step costs 16, and
+  `61 − 16 = 45` is not a multiple of 16. A 16-cell state cannot produce a d of 61 at
+  (10,9); that would need a **61-cell** state with (10,9) next to its own capitol
+  (61 of 121 cells, odd ⇒ it has a capitol by D43).
+* ⇒ **two live candidates for the "16-block"**: the state of (10,8), or the state of
+  (10,9). `tools/corner_16_11x11.py` enumerates both and says which survive.
+
+**And the methodological agreement.** *"Working out a larger shape is convenient, more
+convenent than working out possible smaller shapes."* That is not just a convenience — it
+is the reason the plan works. A big state is **rigid**: it has a symmetry, so it is a union
+of orbits, and AODFS grows it orbit by orbit from an anchor. A small state is **cheap but
+numerous**: there are 22,317 legal states in a 5×5, and the small ones are exactly the
+filler states whose *sizes* are all the answer needs. So: **grow the big ones (rigid,
+few, global), absorb the small ones (numerous, cheap, window-local)** — and the join
+between the two is the conservation law.
+
+---
+
 ## 6. The plan, in order
 
+0. **Close the coverage gap (§1.5).** 7 of the 33 readings are dormant, and they are all
+   in the top-left. Build the SECOND core there — from the two d=1 demands (their
+   singletons are forced) and the (0,1)/(0,2) ≥ 4 states — and then the two cores are
+   joined by the conservation law. *Cheap, and it is the only thing that makes the
+   top-left half of the board do any work.*
 1. **Build the window solver** on one 5×5 window, with the three filters: the
    state-local facets (F1/F4 as a pre-filter on the catalogue), the field facets as the
    d-sandwich (§2.1), and the conservation law as a partial-sum check. Measure how many
@@ -228,8 +308,9 @@ supply.
    is the only thing in the plan that has not been written.*
 2. **Run it on the 49 windows** and keep, per window, the surviving sub-partitions and
    their size maps.
-3. **Join** with the knapsack: the sum of the cells is 121, the sum of the squares is a
-   feasible Q, and the six big states are grown globally across the boundaries.
+3. **Join** the two cores with the knapsack: the sum of the cells is 121, the sum of the
+   squares is a feasible Q, and the six big states are grown globally across the
+   boundaries.
 4. **Only then** run the seeded descent, as a verifier of the join rather than as the
    search.
 5. **Keep the model (Route C, §2 of NEXT-APPROACHES.md) for what it is good at**: ranking
