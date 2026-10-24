@@ -386,19 +386,51 @@ def _max_cost(target, src, size_of, n, BIG) -> int:
 
 
 # --------------------------------------------------------------------------- #
+def normalise_spec(spec: dict) -> Tuple[List[State], List[Tuple[Cell, int]], Dict[Cell, int], List[Cell]]:
+    """Accept both the page's exported format and the older plain format.
+
+    exported (metric-too-ledger/1):
+        states           [{"id":0,"size":8,"cells":[[r,c],...],"symmetry":[...],
+                          "capitol":[r,c]|null}, ...]
+        assumed_capitols [{"cell":[r,c],"state_size":k}, ...]
+        published        a DESCRIPTION string, not the numbers
+
+    plain:
+        states           [[[r,c], ...], ...]
+        capitol_hypotheses [[ [r,c], k], ...]
+        published        {"r,c": v, ...}
+    """
+    states: List[State] = []
+    for st in spec.get("states", []) or []:
+        if isinstance(st, dict):
+            cells = st.get("cells", [])
+        else:
+            cells = st
+        states.append(frozenset(tuple(c) for c in cells))
+    caps: List[Tuple[Cell, int]] = []
+    raw = (spec.get("capitol_hypotheses") or spec.get("assumed_capitols")
+           or spec.get("assumed") or [])
+    for a in raw:
+        if isinstance(a, dict):
+            caps.append((tuple(a["cell"]), int(a.get("state_size", 1))))
+        else:
+            caps.append((tuple(a[0]), int(a[1] if len(a) > 1 and a[1] is not None else 1)))
+    published = spec.get("published")
+    if not isinstance(published, dict):
+        published = {}
+    hidden = [tuple(c) for c in (spec.get("hidden_capitols") or [])]
+    return states, caps, published, hidden
+
+
 def main(argv: List[str]) -> int:
     if not argv:
         print(__doc__)
         return 0
     spec = json.load(open(argv[0]))
-    published = {tuple(int(x) for x in k.split(",")): v
-                 for k, v in spec.get("published", {}).items()}
+    states, caps, published, hidden = normalise_spec(spec)
     if not published:
         from lr11 import tools as T
         published = dict(T.PUBLISHED)
-    states = [frozenset(tuple(c) for c in S) for S in spec.get("states", [])]
-    caps = [(tuple(c), k) for c, k in spec.get("capitol_hypotheses", [])]
-    hidden = [tuple(c) for c in spec.get("hidden_capitols", [])]
     rep = analyse(states, published, capitol_hypotheses=caps, hidden_capitols=hidden)
     print(json.dumps(rep, indent=2, default=str))
     return 0
