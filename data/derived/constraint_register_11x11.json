@@ -1,0 +1,2384 @@
+{
+ "id": "constraint-register-11x11",
+ "n": 11,
+ "generated_by": "tools/constraint_register_11x11.py",
+ "coordinate_convention": "0-based (row, col)",
+ "facet_count": 12,
+ "facets": [
+  {
+   "id": "F-published",
+   "name": "the 33 published numbers (the d-field, read off the image)",
+   "source": "data/puzzles/official-11x11/puzzle.json (OCR-verified, 33/33 cells)",
+   "status": "PROVEN",
+   "locality": {
+    "kind": "ball",
+    "radius": "per instance: floor((d+1)/2) steps"
+   },
+   "instances": [
+    {
+     "cell": [
+      0,
+      1
+     ],
+     "d": 8,
+     "step_budget": 4,
+     "radius": 4
+    },
+    {
+     "cell": [
+      0,
+      2
+     ],
+     "d": 4,
+     "step_budget": 2,
+     "radius": 2
+    },
+    {
+     "cell": [
+      0,
+      5
+     ],
+     "d": 11,
+     "step_budget": 6,
+     "radius": 6
+    },
+    {
+     "cell": [
+      0,
+      9
+     ],
+     "d": 5,
+     "step_budget": 3,
+     "radius": 3
+    },
+    {
+     "cell": [
+      1,
+      7
+     ],
+     "d": 11,
+     "step_budget": 6,
+     "radius": 6
+    },
+    {
+     "cell": [
+      2,
+      2
+     ],
+     "d": 7,
+     "step_budget": 4,
+     "radius": 4
+    },
+    {
+     "cell": [
+      2,
+      5
+     ],
+     "d": 1,
+     "step_budget": 1,
+     "radius": 1
+    },
+    {
+     "cell": [
+      2,
+      10
+     ],
+     "d": 14,
+     "step_budget": 7,
+     "radius": 7
+    },
+    {
+     "cell": [
+      3,
+      0
+     ],
+     "d": 28,
+     "step_budget": 14,
+     "radius": 14
+    },
+    {
+     "cell": [
+      3,
+      3
+     ],
+     "d": 51,
+     "step_budget": 26,
+     "radius": 26
+    },
+    {
+     "cell": [
+      3,
+      6
+     ],
+     "d": 1,
+     "step_budget": 1,
+     "radius": 1
+    },
+    {
+     "cell": [
+      3,
+      8
+     ],
+     "d": 6,
+     "step_budget": 3,
+     "radius": 3
+    },
+    {
+     "cell": [
+      4,
+      1
+     ],
+     "d": 22,
+     "step_budget": 11,
+     "radius": 11
+    },
+    {
+     "cell": [
+      4,
+      8
+     ],
+     "d": 4,
+     "step_budget": 2,
+     "radius": 2
+    },
+    {
+     "cell": [
+      4,
+      10
+     ],
+     "d": 1,
+     "step_budget": 1,
+     "radius": 1
+    },
+    {
+     "cell": [
+      5,
+      3
+     ],
+     "d": 15,
+     "step_budget": 8,
+     "radius": 8
+    },
+    {
+     "cell": [
+      5,
+      5
+     ],
+     "d": 10,
+     "step_budget": 5,
+     "radius": 5
+    },
+    {
+     "cell": [
+      5,
+      7
+     ],
+     "d": 0,
+     "step_budget": 0,
+     "radius": 0
+    },
+    {
+     "cell": [
+      6,
+      0
+     ],
+     "d": 11,
+     "step_budget": 6,
+     "radius": 6
+    },
+    {
+     "cell": [
+      6,
+      2
+     ],
+     "d": 11,
+     "step_budget": 6,
+     "radius": 6
+    },
+    {
+     "cell": [
+      6,
+      9
+     ],
+     "d": 9,
+     "step_budget": 5,
+     "radius": 5
+    },
+    {
+     "cell": [
+      7,
+      2
+     ],
+     "d": 17,
+     "step_budget": 9,
+     "radius": 9
+    },
+    {
+     "cell": [
+      7,
+      4
+     ],
+     "d": 14,
+     "step_budget": 7,
+     "radius": 7
+    },
+    {
+     "cell": [
+      7,
+      7
+     ],
+     "d": 10,
+     "step_budget": 5,
+     "radius": 5
+    },
+    {
+     "cell": [
+      7,
+      10
+     ],
+     "d": 13,
+     "step_budget": 7,
+     "radius": 7
+    },
+    {
+     "cell": [
+      8,
+      0
+     ],
+     "d": 30,
+     "step_budget": 15,
+     "radius": 15
+    },
+    {
+     "cell": [
+      8,
+      5
+     ],
+     "d": 6,
+     "step_budget": 3,
+     "radius": 3
+    },
+    {
+     "cell": [
+      8,
+      8
+     ],
+     "d": 45,
+     "step_budget": 23,
+     "radius": 23
+    },
+    {
+     "cell": [
+      9,
+      3
+     ],
+     "d": 10,
+     "step_budget": 5,
+     "radius": 5
+    },
+    {
+     "cell": [
+      10,
+      1
+     ],
+     "d": 26,
+     "step_budget": 13,
+     "radius": 13
+    },
+    {
+     "cell": [
+      10,
+      5
+     ],
+     "d": 0,
+     "step_budget": 0,
+     "radius": 0
+    },
+    {
+     "cell": [
+      10,
+      8
+     ],
+     "d": 77,
+     "step_budget": 39,
+     "radius": 39
+    },
+    {
+     "cell": [
+      10,
+      9
+     ],
+     "d": 61,
+     "step_budget": 31,
+     "radius": 31
+    }
+   ]
+  },
+  {
+   "id": "F-revealed-capitols",
+   "name": "the two revealed capitols (published d = 0)",
+   "source": "the published grid; d = 0 <=> the cell IS a capitol (L5)",
+   "status": "PROVEN",
+   "locality": {
+    "kind": "cell",
+    "radius": 0
+   },
+   "instances": [
+    {
+     "cell": [
+      5,
+      7
+     ],
+     "d": 0
+    },
+    {
+     "cell": [
+      10,
+      5
+     ],
+     "d": 0
+    }
+   ]
+  },
+  {
+   "id": "F-singleton-demand",
+   "name": "a d=1 cell is served by a 1x1 state ADJACENT to it (PLAN D64)",
+   "source": "src/hitting.py::singleton_candidates + the published neighbours",
+   "status": "PROVEN",
+   "locality": {
+    "kind": "ball",
+    "radius": 1
+   },
+   "instances": [
+    {
+     "demand": [
+      2,
+      5
+     ],
+     "d": 1,
+     "candidates": [
+      {
+       "cell": [
+        3,
+        5
+       ],
+       "status": "SURVIVES"
+      },
+      {
+       "cell": [
+        2,
+        4
+       ],
+       "status": "SURVIVES"
+      },
+      {
+       "cell": [
+        2,
+        6
+       ],
+       "status": "SURVIVES"
+      }
+     ],
+     "refuted": [
+      {
+       "cell": [
+        1,
+        5
+       ],
+       "refuted_by": [
+        [
+         [
+          0,
+          5
+         ],
+         11
+        ]
+       ]
+      }
+     ],
+     "unique": false
+    },
+    {
+     "demand": [
+      3,
+      6
+     ],
+     "d": 1,
+     "candidates": [
+      {
+       "cell": [
+        2,
+        6
+       ],
+       "status": "SURVIVES"
+      },
+      {
+       "cell": [
+        4,
+        6
+       ],
+       "status": "SURVIVES"
+      },
+      {
+       "cell": [
+        3,
+        5
+       ],
+       "status": "SURVIVES"
+      }
+     ],
+     "refuted": [
+      {
+       "cell": [
+        3,
+        7
+       ],
+       "refuted_by": [
+        [
+         [
+          3,
+          8
+         ],
+         6
+        ]
+       ]
+      }
+     ],
+     "unique": false
+    },
+    {
+     "demand": [
+      4,
+      10
+     ],
+     "d": 1,
+     "candidates": [
+      {
+       "cell": [
+        5,
+        10
+       ],
+       "status": "SURVIVES"
+      }
+     ],
+     "refuted": [
+      {
+       "cell": [
+        3,
+        10
+       ],
+       "refuted_by": [
+        [
+         [
+          2,
+          10
+         ],
+         14
+        ]
+       ]
+      },
+      {
+       "cell": [
+        4,
+        9
+       ],
+       "refuted_by": [
+        [
+         [
+          4,
+          8
+         ],
+         4
+        ]
+       ]
+      }
+     ],
+     "unique": true
+    }
+   ]
+  },
+  {
+   "id": "F-ring",
+   "name": "the ring of a forced singleton: d = 1 on its neighbours",
+   "source": "a 1x1 state is a capitol, and a cost-1 step reaches it",
+   "status": "PROVEN",
+   "locality": {
+    "kind": "ball",
+    "radius": 1
+   },
+   "instances": [
+    {
+     "cell": [
+      5,
+      9
+     ],
+     "d": 1,
+     "why": "one cost-1 step from that capitol"
+    },
+    {
+     "cell": [
+      5,
+      10
+     ],
+     "d": 0,
+     "why": "the 1x1 state is its own capitol"
+    },
+    {
+     "cell": [
+      6,
+      10
+     ],
+     "d": 1,
+     "why": "one cost-1 step from that capitol"
+    }
+   ]
+  },
+  {
+   "id": "F-area",
+   "name": "L2/L3: the state holding x has area >= |d(x) - d(y)| for adjacent y",
+   "source": "src/cost.py::check_L2 / check_L3 (the engine's own lemma bank)",
+   "status": "PROVEN",
+   "locality": {
+    "kind": "ball",
+    "radius": 1
+   },
+   "instances": [
+    {
+     "cell": [
+      0,
+      1
+     ],
+     "min_area": 4,
+     "via": "|d((0, 2)) - d((0, 1))| = |4 - 8|"
+    },
+    {
+     "cell": [
+      0,
+      2
+     ],
+     "min_area": 4,
+     "via": "|d((0, 1)) - d((0, 2))| = |8 - 4|"
+    },
+    {
+     "cell": [
+      3,
+      8
+     ],
+     "min_area": 2,
+     "via": "|d((4, 8)) - d((3, 8))| = |4 - 6|"
+    },
+    {
+     "cell": [
+      4,
+      8
+     ],
+     "min_area": 2,
+     "via": "|d((3, 8)) - d((4, 8))| = |6 - 4|"
+    },
+    {
+     "cell": [
+      5,
+      9
+     ],
+     "min_area": 8,
+     "via": "|d((6, 9)) - d((5, 9))| = |9 - 1|"
+    },
+    {
+     "cell": [
+      6,
+      2
+     ],
+     "min_area": 6,
+     "via": "|d((7, 2)) - d((6, 2))| = |17 - 11|"
+    },
+    {
+     "cell": [
+      6,
+      9
+     ],
+     "min_area": 8,
+     "via": "|d((5, 9)) - d((6, 9))| = |1 - 9|"
+    },
+    {
+     "cell": [
+      6,
+      10
+     ],
+     "min_area": 12,
+     "via": "|d((7, 10)) - d((6, 10))| = |13 - 1|"
+    },
+    {
+     "cell": [
+      7,
+      2
+     ],
+     "min_area": 6,
+     "via": "|d((6, 2)) - d((7, 2))| = |11 - 17|"
+    },
+    {
+     "cell": [
+      7,
+      10
+     ],
+     "min_area": 12,
+     "via": "|d((6, 10)) - d((7, 10))| = |1 - 13|"
+    },
+    {
+     "cell": [
+      10,
+      8
+     ],
+     "min_area": 16,
+     "via": "|d((10, 9)) - d((10, 8))| = |61 - 77|"
+    },
+    {
+     "cell": [
+      10,
+      9
+     ],
+     "min_area": 16,
+     "via": "|d((10, 8)) - d((10, 9))| = |77 - 61|"
+    }
+   ]
+  },
+  {
+   "id": "F-tight",
+   "name": "L1: d(x) > 0 => some neighbour y has d(y) = d(x) - w(x,y)",
+   "source": "src/cost.py::check_L1",
+   "status": "PROVEN",
+   "locality": {
+    "kind": "ball",
+    "radius": 1
+   },
+   "instances": [
+    {
+     "cell": [
+      0,
+      1
+     ],
+     "d": 8,
+     "tight_neighbour_must_satisfy": [
+      {
+       "neighbour": [
+        0,
+        2
+       ],
+       "d": 4,
+       "edge_cost": 4
+      }
+     ],
+     "neighbours_with_unknown_d": [
+      [
+       1,
+       1
+      ],
+      [
+       0,
+       0
+      ]
+     ]
+    },
+    {
+     "cell": [
+      0,
+      2
+     ],
+     "d": 4,
+     "tight_neighbour_must_satisfy": [
+      {
+       "neighbour": [
+        0,
+        1
+       ],
+       "d": 8,
+       "edge_cost": -4
+      }
+     ],
+     "neighbours_with_unknown_d": [
+      [
+       1,
+       2
+      ],
+      [
+       0,
+       3
+      ]
+     ]
+    },
+    {
+     "cell": [
+      0,
+      5
+     ],
+     "d": 11,
+     "tight_neighbour_must_satisfy": [],
+     "neighbours_with_unknown_d": [
+      [
+       1,
+       5
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       0,
+       6
+      ]
+     ]
+    },
+    {
+     "cell": [
+      0,
+      9
+     ],
+     "d": 5,
+     "tight_neighbour_must_satisfy": [],
+     "neighbours_with_unknown_d": [
+      [
+       1,
+       9
+      ],
+      [
+       0,
+       8
+      ],
+      [
+       0,
+       10
+      ]
+     ]
+    },
+    {
+     "cell": [
+      1,
+      7
+     ],
+     "d": 11,
+     "tight_neighbour_must_satisfy": [],
+     "neighbours_with_unknown_d": [
+      [
+       0,
+       7
+      ],
+      [
+       2,
+       7
+      ],
+      [
+       1,
+       6
+      ],
+      [
+       1,
+       8
+      ]
+     ]
+    },
+    {
+     "cell": [
+      2,
+      2
+     ],
+     "d": 7,
+     "tight_neighbour_must_satisfy": [],
+     "neighbours_with_unknown_d": [
+      [
+       1,
+       2
+      ],
+      [
+       3,
+       2
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       2,
+       3
+      ]
+     ]
+    },
+    {
+     "cell": [
+      2,
+      5
+     ],
+     "d": 1,
+     "tight_neighbour_must_satisfy": [],
+     "neighbours_with_unknown_d": [
+      [
+       1,
+       5
+      ],
+      [
+       3,
+       5
+      ],
+      [
+       2,
+       4
+      ],
+      [
+       2,
+       6
+      ]
+     ]
+    },
+    {
+     "cell": [
+      2,
+      10
+     ],
+     "d": 14,
+     "tight_neighbour_must_satisfy": [],
+     "neighbours_with_unknown_d": [
+      [
+       1,
+       10
+      ],
+      [
+       3,
+       10
+      ],
+      [
+       2,
+       9
+      ]
+     ]
+    },
+    {
+     "cell": [
+      3,
+      0
+     ],
+     "d": 28,
+     "tight_neighbour_must_satisfy": [],
+     "neighbours_with_unknown_d": [
+      [
+       2,
+       0
+      ],
+      [
+       4,
+       0
+      ],
+      [
+       3,
+       1
+      ]
+     ]
+    },
+    {
+     "cell": [
+      3,
+      3
+     ],
+     "d": 51,
+     "tight_neighbour_must_satisfy": [],
+     "neighbours_with_unknown_d": [
+      [
+       2,
+       3
+      ],
+      [
+       4,
+       3
+      ],
+      [
+       3,
+       2
+      ],
+      [
+       3,
+       4
+      ]
+     ]
+    },
+    {
+     "cell": [
+      3,
+      6
+     ],
+     "d": 1,
+     "tight_neighbour_must_satisfy": [],
+     "neighbours_with_unknown_d": [
+      [
+       2,
+       6
+      ],
+      [
+       4,
+       6
+      ],
+      [
+       3,
+       5
+      ],
+      [
+       3,
+       7
+      ]
+     ]
+    },
+    {
+     "cell": [
+      3,
+      8
+     ],
+     "d": 6,
+     "tight_neighbour_must_satisfy": [
+      {
+       "neighbour": [
+        4,
+        8
+       ],
+       "d": 4,
+       "edge_cost": 2
+      }
+     ],
+     "neighbours_with_unknown_d": [
+      [
+       2,
+       8
+      ],
+      [
+       3,
+       7
+      ],
+      [
+       3,
+       9
+      ]
+     ]
+    },
+    {
+     "cell": [
+      4,
+      1
+     ],
+     "d": 22,
+     "tight_neighbour_must_satisfy": [],
+     "neighbours_with_unknown_d": [
+      [
+       3,
+       1
+      ],
+      [
+       5,
+       1
+      ],
+      [
+       4,
+       0
+      ],
+      [
+       4,
+       2
+      ]
+     ]
+    },
+    {
+     "cell": [
+      4,
+      8
+     ],
+     "d": 4,
+     "tight_neighbour_must_satisfy": [
+      {
+       "neighbour": [
+        3,
+        8
+       ],
+       "d": 6,
+       "edge_cost": -2
+      }
+     ],
+     "neighbours_with_unknown_d": [
+      [
+       5,
+       8
+      ],
+      [
+       4,
+       7
+      ],
+      [
+       4,
+       9
+      ]
+     ]
+    },
+    {
+     "cell": [
+      4,
+      10
+     ],
+     "d": 1,
+     "tight_neighbour_must_satisfy": [
+      {
+       "neighbour": [
+        5,
+        10
+       ],
+       "d": 0,
+       "edge_cost": 1
+      }
+     ],
+     "neighbours_with_unknown_d": [
+      [
+       3,
+       10
+      ],
+      [
+       4,
+       9
+      ]
+     ]
+    },
+    {
+     "cell": [
+      5,
+      3
+     ],
+     "d": 15,
+     "tight_neighbour_must_satisfy": [],
+     "neighbours_with_unknown_d": [
+      [
+       4,
+       3
+      ],
+      [
+       6,
+       3
+      ],
+      [
+       5,
+       2
+      ],
+      [
+       5,
+       4
+      ]
+     ]
+    },
+    {
+     "cell": [
+      5,
+      5
+     ],
+     "d": 10,
+     "tight_neighbour_must_satisfy": [],
+     "neighbours_with_unknown_d": [
+      [
+       4,
+       5
+      ],
+      [
+       6,
+       5
+      ],
+      [
+       5,
+       4
+      ],
+      [
+       5,
+       6
+      ]
+     ]
+    },
+    {
+     "cell": [
+      6,
+      0
+     ],
+     "d": 11,
+     "tight_neighbour_must_satisfy": [],
+     "neighbours_with_unknown_d": [
+      [
+       5,
+       0
+      ],
+      [
+       7,
+       0
+      ],
+      [
+       6,
+       1
+      ]
+     ]
+    },
+    {
+     "cell": [
+      6,
+      2
+     ],
+     "d": 11,
+     "tight_neighbour_must_satisfy": [
+      {
+       "neighbour": [
+        7,
+        2
+       ],
+       "d": 17,
+       "edge_cost": -6
+      }
+     ],
+     "neighbours_with_unknown_d": [
+      [
+       5,
+       2
+      ],
+      [
+       6,
+       1
+      ],
+      [
+       6,
+       3
+      ]
+     ]
+    },
+    {
+     "cell": [
+      6,
+      9
+     ],
+     "d": 9,
+     "tight_neighbour_must_satisfy": [
+      {
+       "neighbour": [
+        5,
+        9
+       ],
+       "d": 1,
+       "edge_cost": 8
+      },
+      {
+       "neighbour": [
+        6,
+        10
+       ],
+       "d": 1,
+       "edge_cost": 8
+      }
+     ],
+     "neighbours_with_unknown_d": [
+      [
+       7,
+       9
+      ],
+      [
+       6,
+       8
+      ]
+     ]
+    },
+    {
+     "cell": [
+      7,
+      2
+     ],
+     "d": 17,
+     "tight_neighbour_must_satisfy": [
+      {
+       "neighbour": [
+        6,
+        2
+       ],
+       "d": 11,
+       "edge_cost": 6
+      }
+     ],
+     "neighbours_with_unknown_d": [
+      [
+       8,
+       2
+      ],
+      [
+       7,
+       1
+      ],
+      [
+       7,
+       3
+      ]
+     ]
+    },
+    {
+     "cell": [
+      7,
+      4
+     ],
+     "d": 14,
+     "tight_neighbour_must_satisfy": [],
+     "neighbours_with_unknown_d": [
+      [
+       6,
+       4
+      ],
+      [
+       8,
+       4
+      ],
+      [
+       7,
+       3
+      ],
+      [
+       7,
+       5
+      ]
+     ]
+    },
+    {
+     "cell": [
+      7,
+      7
+     ],
+     "d": 10,
+     "tight_neighbour_must_satisfy": [],
+     "neighbours_with_unknown_d": [
+      [
+       6,
+       7
+      ],
+      [
+       8,
+       7
+      ],
+      [
+       7,
+       6
+      ],
+      [
+       7,
+       8
+      ]
+     ]
+    },
+    {
+     "cell": [
+      7,
+      10
+     ],
+     "d": 13,
+     "tight_neighbour_must_satisfy": [
+      {
+       "neighbour": [
+        6,
+        10
+       ],
+       "d": 1,
+       "edge_cost": 12
+      }
+     ],
+     "neighbours_with_unknown_d": [
+      [
+       8,
+       10
+      ],
+      [
+       7,
+       9
+      ]
+     ]
+    },
+    {
+     "cell": [
+      8,
+      0
+     ],
+     "d": 30,
+     "tight_neighbour_must_satisfy": [],
+     "neighbours_with_unknown_d": [
+      [
+       7,
+       0
+      ],
+      [
+       9,
+       0
+      ],
+      [
+       8,
+       1
+      ]
+     ]
+    },
+    {
+     "cell": [
+      8,
+      5
+     ],
+     "d": 6,
+     "tight_neighbour_must_satisfy": [],
+     "neighbours_with_unknown_d": [
+      [
+       7,
+       5
+      ],
+      [
+       9,
+       5
+      ],
+      [
+       8,
+       4
+      ],
+      [
+       8,
+       6
+      ]
+     ]
+    },
+    {
+     "cell": [
+      8,
+      8
+     ],
+     "d": 45,
+     "tight_neighbour_must_satisfy": [],
+     "neighbours_with_unknown_d": [
+      [
+       7,
+       8
+      ],
+      [
+       9,
+       8
+      ],
+      [
+       8,
+       7
+      ],
+      [
+       8,
+       9
+      ]
+     ]
+    },
+    {
+     "cell": [
+      9,
+      3
+     ],
+     "d": 10,
+     "tight_neighbour_must_satisfy": [],
+     "neighbours_with_unknown_d": [
+      [
+       8,
+       3
+      ],
+      [
+       10,
+       3
+      ],
+      [
+       9,
+       2
+      ],
+      [
+       9,
+       4
+      ]
+     ]
+    },
+    {
+     "cell": [
+      10,
+      1
+     ],
+     "d": 26,
+     "tight_neighbour_must_satisfy": [],
+     "neighbours_with_unknown_d": [
+      [
+       9,
+       1
+      ],
+      [
+       10,
+       0
+      ],
+      [
+       10,
+       2
+      ]
+     ]
+    },
+    {
+     "cell": [
+      10,
+      8
+     ],
+     "d": 77,
+     "tight_neighbour_must_satisfy": [
+      {
+       "neighbour": [
+        10,
+        9
+       ],
+       "d": 61,
+       "edge_cost": 16
+      }
+     ],
+     "neighbours_with_unknown_d": [
+      [
+       9,
+       8
+      ],
+      [
+       10,
+       7
+      ]
+     ]
+    },
+    {
+     "cell": [
+      10,
+      9
+     ],
+     "d": 61,
+     "tight_neighbour_must_satisfy": [
+      {
+       "neighbour": [
+        10,
+        8
+       ],
+       "d": 77,
+       "edge_cost": -16
+      }
+     ],
+     "neighbours_with_unknown_d": [
+      [
+       9,
+       9
+      ],
+      [
+       10,
+       10
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "F-parity",
+   "name": "a state that HAS a capitol has ODD area (PLAN D43)",
+   "source": "PLAN.md D43; re-proved as a property in tests/test_lemmas.py",
+   "status": "PROVEN",
+   "locality": {
+    "kind": "state",
+    "radius": "the state's own extent"
+   },
+   "instances": [
+    {
+     "even_area_blocks_forced_by_the_trim": [
+      8,
+      12
+     ],
+     "consequence": "both are capitol-less FILLER states, so their cells reach a capitol through the blocks around them",
+     "converse_is_false": "the X pentomino: five cells, no capitol"
+    }
+   ]
+  },
+  {
+   "id": "F-ball",
+   "name": "the step-count lemma: d(x) = v puts a capitol within floor((v+1)/2) steps",
+   "source": "src/hitting.py (the lemma bank) -- the radius is per instance",
+   "status": "PROVEN",
+   "locality": {
+    "kind": "ball",
+    "radius": "per instance: floor((d+1)/2)"
+   },
+   "instances": [
+    {
+     "cell": [
+      0,
+      1
+     ],
+     "d": 8,
+     "step_budget": 4,
+     "hidden_capitol_within": [
+      [
+       0,
+       0
+      ],
+      [
+       0,
+       3
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       1,
+       3
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       2,
+       3
+      ],
+      [
+       3,
+       1
+      ],
+      [
+       3,
+       2
+      ]
+     ],
+     "n_candidates": 13,
+     "how": "the step-count lemma: a d=v cell has a capitol within floor((v+1)/2) steps, and a published d>0 cell is never a capitol"
+    },
+    {
+     "cell": [
+      0,
+      2
+     ],
+     "d": 4,
+     "step_budget": 2,
+     "hidden_capitol_within": [
+      [
+       0,
+       0
+      ],
+      [
+       0,
+       3
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       1,
+       3
+      ]
+     ],
+     "n_candidates": 6,
+     "how": "the step-count lemma: a d=v cell has a capitol within floor((v+1)/2) steps, and a published d>0 cell is never a capitol"
+    },
+    {
+     "cell": [
+      0,
+      5
+     ],
+     "d": 11,
+     "step_budget": 6,
+     "hidden_capitol_within": [
+      [
+       0,
+       0
+      ],
+      [
+       0,
+       3
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       0,
+       6
+      ],
+      [
+       0,
+       7
+      ],
+      [
+       0,
+       8
+      ],
+      [
+       0,
+       10
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       1,
+       3
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       1,
+       5
+      ],
+      [
+       1,
+       6
+      ],
+      [
+       1,
+       8
+      ],
+      [
+       1,
+       9
+      ],
+      [
+       1,
+       10
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       2,
+       3
+      ],
+      [
+       2,
+       4
+      ],
+      [
+       2,
+       6
+      ],
+      [
+       2,
+       7
+      ],
+      [
+       2,
+       8
+      ],
+      [
+       2,
+       9
+      ],
+      [
+       3,
+       2
+      ],
+      [
+       3,
+       4
+      ],
+      [
+       3,
+       5
+      ],
+      [
+       3,
+       7
+      ],
+      [
+       4,
+       3
+      ],
+      [
+       4,
+       4
+      ],
+      [
+       4,
+       5
+      ],
+      [
+       4,
+       6
+      ],
+      [
+       4,
+       7
+      ],
+      [
+       5,
+       4
+      ],
+      [
+       5,
+       6
+      ],
+      [
+       6,
+       5
+      ]
+     ],
+     "n_candidates": 36,
+     "how": "the step-count lemma: a d=v cell has a capitol within floor((v+1)/2) steps, and a published d>0 cell is never a capitol"
+    },
+    {
+     "cell": [
+      0,
+      9
+     ],
+     "d": 5,
+     "step_budget": 3,
+     "hidden_capitol_within": [
+      [
+       0,
+       6
+      ],
+      [
+       0,
+       7
+      ],
+      [
+       0,
+       8
+      ],
+      [
+       0,
+       10
+      ],
+      [
+       1,
+       8
+      ],
+      [
+       1,
+       9
+      ],
+      [
+       1,
+       10
+      ],
+      [
+       2,
+       8
+      ],
+      [
+       2,
+       9
+      ],
+      [
+       3,
+       9
+      ]
+     ],
+     "n_candidates": 10,
+     "how": "the step-count lemma: a d=v cell has a capitol within floor((v+1)/2) steps, and a published d>0 cell is never a capitol"
+    },
+    {
+     "cell": [
+      2,
+      2
+     ],
+     "d": 7,
+     "step_budget": 4,
+     "hidden_capitol_within": [
+      [
+       0,
+       0
+      ],
+      [
+       0,
+       3
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       1,
+       3
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       1,
+       5
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       2,
+       3
+      ],
+      [
+       2,
+       4
+      ],
+      [
+       2,
+       6
+      ],
+      [
+       3,
+       1
+      ],
+      [
+       3,
+       2
+      ],
+      [
+       3,
+       4
+      ],
+      [
+       3,
+       5
+      ],
+      [
+       4,
+       0
+      ],
+      [
+       4,
+       2
+      ],
+      [
+       4,
+       3
+      ],
+      [
+       4,
+       4
+      ],
+      [
+       5,
+       1
+      ],
+      [
+       5,
+       2
+      ]
+     ],
+     "n_candidates": 24,
+     "how": "the step-count lemma: a d=v cell has a capitol within floor((v+1)/2) steps, and a published d>0 cell is never a capitol"
+    },
+    {
+     "cell": [
+      2,
+      5
+     ],
+     "d": 1,
+     "step_budget": 1,
+     "hidden_capitol_within": [
+      [
+       1,
+       5
+      ],
+      [
+       3,
+       5
+      ],
+      [
+       2,
+       4
+      ],
+      [
+       2,
+       6
+      ]
+     ],
+     "n_candidates": 4,
+     "how": "a d=1 demand is served by a 1x1 state ADJACENT to it (PLAN D64), so the candidates are the neighbours that could still be that singleton"
+    },
+    {
+     "cell": [
+      3,
+      6
+     ],
+     "d": 1,
+     "step_budget": 1,
+     "hidden_capitol_within": [
+      [
+       2,
+       6
+      ],
+      [
+       4,
+       6
+      ],
+      [
+       3,
+       5
+      ],
+      [
+       3,
+       7
+      ]
+     ],
+     "n_candidates": 4,
+     "how": "a d=1 demand is served by a 1x1 state ADJACENT to it (PLAN D64), so the candidates are the neighbours that could still be that singleton"
+    },
+    {
+     "cell": [
+      4,
+      10
+     ],
+     "d": 1,
+     "step_budget": 1,
+     "hidden_capitol_within": [
+      [
+       3,
+       10
+      ],
+      [
+       5,
+       10
+      ],
+      [
+       4,
+       9
+      ]
+     ],
+     "n_candidates": 3,
+     "how": "a d=1 demand is served by a 1x1 state ADJACENT to it (PLAN D64), so the candidates are the neighbours that could still be that singleton"
+    },
+    {
+     "cell": [
+      6,
+      0
+     ],
+     "d": 11,
+     "step_budget": 6,
+     "hidden_capitol_within": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       3,
+       1
+      ],
+      [
+       3,
+       2
+      ],
+      [
+       4,
+       0
+      ],
+      [
+       4,
+       2
+      ],
+      [
+       4,
+       3
+      ],
+      [
+       4,
+       4
+      ],
+      [
+       5,
+       0
+      ],
+      [
+       5,
+       1
+      ],
+      [
+       5,
+       2
+      ],
+      [
+       5,
+       4
+      ],
+      [
+       6,
+       1
+      ],
+      [
+       6,
+       3
+      ],
+      [
+       6,
+       4
+      ],
+      [
+       6,
+       5
+      ],
+      [
+       6,
+       6
+      ],
+      [
+       7,
+       0
+      ],
+      [
+       7,
+       1
+      ],
+      [
+       7,
+       3
+      ],
+      [
+       7,
+       5
+      ],
+      [
+       8,
+       1
+      ],
+      [
+       8,
+       2
+      ],
+      [
+       8,
+       3
+      ],
+      [
+       8,
+       4
+      ],
+      [
+       9,
+       0
+      ],
+      [
+       9,
+       1
+      ],
+      [
+       9,
+       2
+      ],
+      [
+       10,
+       0
+      ],
+      [
+       10,
+       2
+      ]
+     ],
+     "n_candidates": 33,
+     "how": "the step-count lemma: a d=v cell has a capitol within floor((v+1)/2) steps, and a published d>0 cell is never a capitol"
+    }
+   ],
+   "counts": {
+    "published_cells_needing_a_hidden_capitol": 9,
+    "minimum_additional_capitols": 4,
+    "minimum_capitol_sets": 120,
+    "candidate_pool": 64
+   }
+  },
+  {
+   "id": "F-human",
+   "name": "the human's observations about this instance",
+   "source": "the human, in the session that crashed (and in this one)",
+   "status": "OBSERVATION",
+   "locality": {
+    "kind": "mixed",
+    "radius": "varies -- see each instance"
+   },
+   "instances": [
+    {
+     "text": "(5,10) is the best starting point. Have you use it to trim? It should connect to a 8-cell and a 12-cell blocks, because of 9 and 13 reading.",
+     "status": "CONFIRMED here",
+     "derivation": "F-singleton-demand makes (5,10) the unique 1x1 state at that end of the board; F-ring puts d = 1 on (5,9) and (6,10); F-area then gives |9-1| = 8 and |13-1| = 12",
+     "caveat": "the chain uses d(6,10) = 1, i.e. (6,10) is NOT a capitol.  The branch where it IS gives 9 and 13 instead -- not refuted, weaker."
+    },
+    {
+     "text": "the 9 one-cell states (the '9 + 2' reading): the frame is a few known sizes of small state + several big states + filler",
+     "status": "WITHDRAWN -- the supporting arithmetic does not hold",
+     "note": "the crashed session read it as '32 of the 121 cells are already pinned into big states'.  It is a CLAIM ABOUT THE SHAPE OF THE SOLUTION, not a constraint the engine can check.",
+     "why_withdrawn": [
+      "F-area pins 12 CELLS, not 32 (10 of them with min_area >= 4, 2 with min_area = 2) -- the '32' was never measured",
+      "and 'min_area >= 4' is a LOWER bound, which points the OPPOSITE way from 'is a singleton'.  A lower bound of 4 cannot imply size 1.",
+      "so 'F-area already pins 32 cells into states of area >= 4.  The claim is that NINE of them are singletons' never had a valid inference behind it"
+     ],
+     "what_is_left": "the d=1 demands are strong on their OWN -- a d=1 cell is one cost-1 step from a 1x1 state, and a 1x1 state IS a capitol (PLAN D64).  F-singleton-demand and F-ball carry that.  The number '9' is not derived from F-area and must not be carried as if it were.",
+     "the_load_bearing_reading": "the thing that does carry weight is the TIGHT reading of 13 = 12 + 1 and 61 = 12*5 + 1 (facet F-inferred, I7), not the count '9'."
+    }
+   ]
+  },
+  {
+   "id": "F-inferred",
+   "name": "what the published readings force about the state sizes",
+   "source": "derived in tools/infer_sizes_11x11.py from the readings alone",
+   "status": "PROVEN",
+   "locality": {
+    "kind": "field",
+    "radius": 1
+   },
+   "instances": [
+    {
+     "rule": "I1 (adjacency bound): for adjacent cells x,y, |d(x) - d(y)| <= min(size_x, size_y)",
+     "consequence": "each published cell inherits a LOWER BOUND on its state's size from every published neighbour",
+     "worked_example": "(10,8)=77 and (10,9)=61 are adjacent, so both states have at least 16 cells",
+     "status": "PROVEN"
+    },
+    {
+     "rule": "I2 (path decomposition): a reading v is k steps inside the state (cost size each) plus ONE crossing of cost r = min(size, next size)",
+     "consequence": "v = k*size + r with 1 <= r <= size, or v = k*size when the path ends on the state's OWN capitol (then the area is ODD)",
+     "the_two_load_bearing_cases": {
+      "r = 1": "the crossing costs 1 -> the next state has ONE cell -> it is a SINGLETON CAPITOL (the human's pattern: 61 = 12*5+1, 13 = 12+1)",
+      "r = 0": "the path ends inside the state -> that state has a capitol -> its area is ODD (D43)"
+     },
+     "status": "PROVEN"
+    },
+    {
+     "rule": "I3 (the corner bound): min(size(10,8), size(10,9)) >= 16",
+     "consequence": "the 12-cell state does NOT CONTAIN (10,9): if it did, the step (10,8)->(10,9) would cost at most 12 and d(10,8) <= 12 + 61 = 73 < 77.  So (10,9)'s own state has >= 16 cells and its path CROSSES INTO the 12-cell state (crossing cost min(size_9, 12) = 12).",
+     "status": "PROVEN",
+     "correction": "an earlier note here said the reading '61 = 12*5 + 1' was refuted.  That was WRONG: the reading survives, provided the five 12-cost steps are one CROSSING plus four inside the 12-cell state.  The human's arithmetic is right; only the anchor was wrong (the 12 belongs to the state entered, not to the state left)."
+    },
+    {
+     "rule": "I4 (the singleton-exit sizes): with the bound from I3 applied, the readings admit only these state sizes",
+     "table": {
+      "(10,9) = 61": [
+       20,
+       30,
+       60
+      ],
+      "(10,8) = 77": [
+       19,
+       38,
+       76
+      ],
+      "(7,10) = 13": [
+       2,
+       3,
+       4,
+       6,
+       12
+      ],
+      "(6,2) = 11": [
+       10
+      ],
+      "(7,2) = 17": [
+       8,
+       16
+      ],
+      "(3,3) = 51": [
+       1,
+       2,
+       5,
+       10,
+       25,
+       50
+      ],
+      "(8,8) = 45": [
+       1,
+       2,
+       4,
+       11,
+       22,
+       44
+      ],
+      "(10,1) = 26": [
+       1,
+       5,
+       25
+      ]
+     },
+     "consequence": "the human's '51 implies a LARGE shape in the upper middle' is sizes 25 or 50; the '61' cell's state is 20, 30 or 60 -- NOT 12",
+     "status": "PROVEN (the bound); PROVISIONAL (the singleton-exit reading)"
+    },
+    {
+     "rule": "I5 (the tight edge of the 77): if the tight neighbour of (10,8) is (10,9), the crossing costs 77 - 61 = 16 = min(size_8, size_9)",
+     "consequence": "exactly one of the two states has 16 cells, and since the (10,9) state's singleton-exit sizes are 20/30/60, it is the (10,8) state that has 16 cells",
+     "status": "PROVISIONAL (it rests on the 'travel right' hypothesis)"
+    },
+    {
+     "rule": "I6 (the exit singleton is hidden): the singleton that ends the (10,9) path is NOT the revealed capitol (10,5)",
+     "why": "the exit cell is at within-state distance k from (10,9), and k <= 3 for every candidate size; (10,5) is at Manhattan 4, and the only 3-step path from (10,9) to a neighbour of (10,5) runs through (10,8), which belongs to the 16-cell state",
+     "consequence": "there is a HIDDEN 1-cell capitol within Manhattan 4 of (10,9)",
+     "status": "PROVEN"
+    },
+    {
+     "rule": "I7 (where the 12-cell state is): 13 = 12 + 1 and 61 = 12*5 + 1 are the SAME chain",
+     "the_chain": [
+      "the (5,10) singleton is a 1-cell state, so its ring (4,10), (5,9), (6,10) all have d = 1",
+      "d(6,10) = 1 for FREE: one step into a 1-cell state costs exactly 1, whatever the size of (6,10)'s own state",
+      "d(7,10) = 13 = 12 + 1  =>  the step (7,10)->(6,10) costs 12 =>  a 12-cell state touches (7,10) and (6,10)",
+      "d(10,9) = 61 = 12*5 + 1  =>  the path is (10,9) --crossing--> the 12-cell state --4 steps inside--> (6,10) --1--> (5,10)",
+      "the Manhattan distance (10,9)->(6,10) is exactly 5 and (6,10)->(5,10) is 1, so the whole path is MONOTONE: 6 steps for a Manhattan distance of 6.  That is a tight fit and it is why the reading works."
+     ],
+     "consequence": "the 12-cell state contains (6,10), (7,10) and an ENTRY cell (9,9) or (10,10) 4 steps from (6,10) inside the state.  It does NOT contain (10,8) or (10,9) (both have size >= 16).",
+     "the_condition": "the tight neighbour of (7,10) is assumed to be (6,10); the alternatives (8,10) and (7,9) are unpublished.  So this is the READING, not a theorem.  What IS a theorem: d(6,10) = 1.",
+     "measured": "1044 twelve-cell states contain both (6,10) and (7,10); 783 of them hold no revealed capitol",
+     "status": "PROVISIONAL (the tight-neighbour condition)"
+    },
+    {
+     "rule": "I8 (an inferred reading): d(6,10) = 1",
+     "status": "PROVISIONAL (it follows from I7; it is not published)"
+    },
+    {
+     "rule": "I9 (the 51 chain): 51 = 50 + 1 puts a 50-cell state around (3,3), and it points at ONE hidden singleton that serves three readings",
+     "the_chain": [
+      "d(2,5) = 1 and d(3,6) = 1  =>  each is adjacent to a 1-cell state",
+      "(3,5) and (2,6) are adjacent to BOTH (2,5) and (3,6), so ONE singleton can serve both",
+      "d(3,3) = 51 = 50 + 1  =>  (3,3) is one step (cost 50) from a cell that is adjacent to a 1-cell state",
+      "so: the singleton at (3,5) [or (2,6)], and a 50-cell state containing (3,3) and (3,4) -- then (3,4) -> (3,5) costs min(50, 1) = 1"
+     ],
+     "why_it_matters": "this is the human's 'the 51 is near the two 1 readings, so there is a large shape in the upper middle' -- and it identifies WHICH large shape and WHICH singleton",
+     "status": "PROVISIONAL (the tight-neighbour conditions are not published)"
+    },
+    {
+     "rule": "I10 (the conservation clash): the 50-cell state and the 45-cell state cannot both exist",
+     "arithmetic": "50 (upper middle, from 51 = 50 + 1) + 45 (around (8,8), from 45 = 45 + 0) + 16 + 12 + 8 + 1 = 132 > 121 = the whole board",
+     "consequence": "at most ONE of them.  The two readings 51 and 45 are consistent with each other only through this: one of them is a large state and the other is not.",
+     "status": "PROVEN (the sum 121 is exact)"
+    },
+    {
+     "rule": "I12 (the corner chain, run): the surviving corner triples",
+     "the_chain": "d(6,10)=1 is free; d(7,10)=13=12+1 puts a 12-cell state on (7,10) and (6,10); d(10,9)=61=12*5+1 crosses INTO that state and walks 4 steps to (6,10) then exits to the (5,10) singleton; |77-61|=16 puts both (10,8) and (10,9) in a 16-cell state; d(6,9)=9=8+1 forces size(6,9)=8 exactly.",
+     "measured": "the chain cuts the blind search from 347,802 pairs to 149 12-cell + 630 8-cell + 7,534 16-cell candidates",
+     "the_two_branches": "the '8' in 9 = 8 + 1 has TWO carriers -- (6,9)'s own state, or the state holding (5,9) -- because both (5,9) and (6,10) are d=1 neighbours of (6,9).  L2/L3 cannot separate them, so both are enumerated: 483 candidates carry it at (6,9), 399 at (5,9), 252 at both.",
+     "the_surviving_split": "of the triples that survive every published reading inside them, the overwhelming majority have the 8 carried by (5,9), and only a small minority by (6,9).  The 12-cell state's 12 cells are FIXED in every survivor.",
+     "the_sampling_bias_trap": "an earlier version of this note said the 12-cell state's twelve cells were FIXED.  That was sampling bias: the stored samples are the FIRST 60 survivors, all from one branch.  Measured over all 58,765, only (6,10) and (7,10) are certain, and the 8-cell state's core is five cells ((2,9) (3,9) (4,9) (4,10) (5,9)).",
+     "status": "PROVEN (the chain and the split); PROVISIONAL (the tight-edge choices and the tails of the 16-cell state)"
+    },
+    {
+     "rule": "I13 (the 8-cell state must not shortcut (10,9))",
+     "why": "measured: a triple whose 8-cell state reaches (10,10) gives a local d(10,9) of 53, not 61 -- the 8-cell state offers a cheaper route than the 12-cell one.  L1 tightness bites a cell other than the one being solved.",
+     "status": "PROVEN"
+    },
+    {
+     "rule": "I14 (the 45 needs a nine-cell state)",
+     "why": "(8,8) lands inside the 12-cell state in 60 of 60 samples; the local field gives 49 against a published 45 (an upper bound, so no contradiction, but the path is not the 4-step one).  The only decomposition that works is 45 = 12*3 + 9: three steps inside the 12-cell state, then a crossing of cost 9 into a NINE-cell state.",
+     "consequence": "(8,8) sits exactly 3 steps from (6,10) inside the 12-cell state, and a 9-cell state exists next to it",
+     "status": "PROVISIONAL"
+    },
+    {
+     "rule": "I11 (how many singletons the readings force)",
+     "measured": "the five d=1 cells ((2,5), (3,6), (4,10), (5,9) and the derived (6,10)) are covered by TWO singletons: (5,10) covers (4,10), (5,9), (6,10); (3,5) [or (2,6)] covers (2,5) and (3,6) -- and the same (3,5) singleton is the one I9 needs for 51 = 50 + 1",
+     "status": "PROVEN for the cover; the CHOSEN positions are PROVISIONAL"
+    }
+   ]
+  },
+  {
+   "id": "F-withdrawn-readings",
+   "name": "readings that were guessed, and then refuted by the published numbers",
+   "source": "the human's corner hypothesis, re-checked here",
+   "status": "WITHDRAWN",
+   "locality": {
+    "kind": "field",
+    "radius": 1
+   },
+   "instances": [
+    {
+     "rule": "R2: 'the (10,9) state has 12 cells'",
+     "why_it_is_false": "(10,8) = 77 and (10,9) = 61 are ADJACENT, and for adjacent cells |d(x) - d(y)| <= min(size_x, size_y), so both states have at least 16 cells.  A 12-cell state at (10,9) would also give d(10,8) <= 12 + 61 = 73 < 77.",
+     "what_survives": "the ARITHMETIC of the human's reading survives exactly: 61 = 12*5 + 1 and 13 = 12 + 1 use the SAME 12-cell state and the SAME singleton at (5,10).  Only the anchor moves: the 12-cell state is the one the path CROSSES INTO, and it holds (6,10) and (7,10).  See I7.",
+     "status": "WITHDRAWN as stated; the reading itself is PROVISIONAL (I7)"
+    },
+    {
+     "rule": "R3: 'the 16-cell block at (10,8)' -- i.e. that a 16-cell state holds (10,8) and that the crossing to (10,9) costs 16",
+     "status": "PROVISIONAL, not withdrawn: the LOWER BOUND min >= 16 is proven (I3), and the equality needs the tight edge of the 77 to be (10,9) (I5).  The enumeration found 25,749 sixteen-cell states containing (10,8), 7,735 of them legal under the per-block filters -- but 0 of them fit beside the 12-block the trim had picked, and that 12-block was in the wrong place (I7)."
+    }
+   ]
+  },
+  {
+   "id": "F-withdrawn",
+   "name": "rules that were stated and then refuted",
+   "source": "the crashed session's last turn, and re-checked here",
+   "status": "WITHDRAWN",
+   "locality": {
+    "kind": "n/a",
+    "radius": "n/a"
+   },
+   "instances": [
+    {
+     "rule": "R1: a capitol at s => every published neighbour of s has d <= 1",
+     "claimed_consequence": "the hidden-capitol pool shrinks from 88 cells to 15, and no cover of size <= 5 exists",
+     "why_it_is_false": "the step from x to an adjacent capitol c costs min(size_x, size_c), and BOTH sizes can be large.  So d(x) <= min(size_x, size_c), which is NOT <= 1.  A cell with d = 8 can sit next to a capitol of a 12-cell state.",
+     "consequence": "the 15-cell pool and the '>5 hidden capitols' number are VOID. Do not use them.  (The crashed session retracted this itself in its last thinking, one turn before it degenerated.)",
+     "re_checked_here": true
+    }
+   ]
+  }
+ ],
+ "summary": {
+  "published_cells": 33,
+  "revealed_capitols": 2,
+  "forced_singletons": 1,
+  "imputed_d_values": 3,
+  "area_bounds": 12,
+  "cells_needing_a_hidden_capitol": 9,
+  "max_instance_radius": 39
+ }
+}
