@@ -33,7 +33,8 @@ async function probe(browser, url, label) {
     downloads: fired.slice(),
     toast: await p.$eval('#toast', e => e.className.includes('show') ? e.innerText.slice(0, 70) : '(no toast)'),
     status: await p.$eval('#status', e => e.innerText.slice(0, 60)),
-    jsonBox: (await p.$eval('#jsonOut', e => e.value)).slice(0, 40).replace(/\n/g, ' '),
+    jsonBoxGone: await p.evaluate(() => !document.getElementById('jsonOut')),
+    clipboard: await p.evaluate(() => { try { return navigator.clipboard.readText().then(t => t.slice(0, 40).replace(/\n/g, ' ')).catch(() => '(unreadable)'); } catch (e) { return '(no clipboard api)'; } }),
   };
   await p.click('#savePng');
   await p.waitForTimeout(1500);
