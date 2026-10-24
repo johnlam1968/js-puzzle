@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ledger · It's a Metric, Too</title>
+<meta name="description" content="Assumption ledger for Jane Street's “It's a Metric, Too”: put a state's area on the board, assume a capitol, and see every published number re-checked against the real travel costs.">
+<meta name="theme-color" content="#e9eeec" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111a1e" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230e6b70'/%3E%3Cpath d='M6 6h9v9H6zM17 6h9v9h-9zM6 17h9v9H6z' fill='%23fff' opacity='.85'/%3E%3Ccircle cx='21.5' cy='21.5' r='3.5' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Ledger sheet: the board is a worksheet, the right column is the audit trail. */
+:root {
+  --ground: #e9eeec; --sheet: #f7f9f8; --ink: #1b2a31; --muted: #5b6b70; --line: #c3cdcc;
+  --accent: #0e6b70; --accent-ink: #ffffff; --bad: #b3261e; --good: #2f6b2a; --warn: #8a5a00;
+  --blank: #fbfcfb;
+  --t0: #eaa98f; --t1: #ecc96a; --t2: #9fc884; --t3: #7fbfc4; --t4: #9aa6de;
+  --t5: #c897d0; --t6: #e797ae; --t7: #c8b183; --t8: #79a9dc; --t9: #c4dfa0;
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --f-num: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #111a1e; --sheet: #172327; --ink: #e3ecec; --muted: #93a5a8; --line: #33464b;
+    --accent: #5cc3c4; --accent-ink: #0c1b1d; --bad: #ff8a80; --good: #9bd68f; --warn: #e0b25e;
+    --blank: #1c2a2f;
+    --t0: #7e4a3a; --t1: #7f6b2f; --t2: #4b6c40; --t3: #386a6e; --t4: #4b5687;
+    --t5: #6c4b78; --t6: #80485a; --t7: #6f6147; --t8: #3a6189; --t9: #56764f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #111a1e; --sheet: #172327; --ink: #e3ecec; --muted: #93a5a8; --line: #33464b;
+  --accent: #5cc3c4; --accent-ink: #0c1b1d; --bad: #ff8a80; --good: #9bd68f; --warn: #e0b25e;
+  --blank: #1c2a2f;
+  --t0: #7e4a3a; --t1: #7f6b2f; --t2: #4b6c40; --t3: #386a6e; --t4: #4b5687;
+  --t5: #6c4b78; --t6: #80485a; --t7: #6f6147; --t8: #3a6189; --t9: #56764f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--ground); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: max(20px, env(safe-area-inset-top, 0px));
+  padding-bottom: max(40px, env(safe-area-inset-bottom, 0px));
+}
+.back { font-size: 0.85rem; color: var(--muted); text-decoration: none; display: inline-block; margin-bottom: 4px; }
+.back:hover { color: var(--accent); }
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 18px; }
+header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 20px; }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(1.6rem, 3.6vw, 2.3rem); line-height: 1.1; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+.sub { color: var(--muted); margin: 0; font-size: 0.93rem; max-width: 62ch; }
+.sub a { color: var(--accent); }
+h2 { font-family: var(--f-display); font-size: 1.05rem; margin: 0 0 8px; letter-spacing: -0.005em; }
+button, select, input { font: inherit; touch-action: manipulation; }
+@media (pointer: coarse) { select.btn, input.btn { font-size: 16px; } }
+.btn { background: var(--sheet); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 7px 12px; cursor: pointer; font-weight: 500; font-size: 0.9rem; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn:disabled { opacity: 0.45; cursor: default; }
+select.btn, input.btn { padding: 6px 8px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+main { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 22px; align-items: start; }
+@media (max-width: 860px) { main { grid-template-columns: minmax(0, 1fr); } }
+.plate { background: var(--sheet); border: 1px solid var(--line); border-radius: 4px; padding: clamp(10px, 2.5vw, 20px); display: grid; gap: 10px; }
+.plate-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.plate-head b { color: var(--ink); font-weight: 600; }
+.boardbox { container-type: inline-size; width: 100%; max-width: 560px; margin: 0 auto; }
+#board {
+  display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); grid-rows: repeat(var(--n), minmax(0, 1fr));
+  width: 100%; aspect-ratio: 1; border: 2.5px solid var(--ink); touch-action: none; user-select: none; -webkit-user-select: none;
+  -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
+}
+.cell { position: relative; display: grid; place-items: center; background: var(--blank);
+  border-right: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  font-family: var(--f-num); font-weight: 600; font-size: calc(100cqw / var(--n) * 0.34); font-variant-numeric: tabular-nums; color: var(--ink); }
+.cell .sz { position: absolute; top: 1px; left: 3px; font-size: max(8px, calc(100cqw / var(--n) * 0.19)); font-weight: 500; color: var(--muted); line-height: 1; }
+.cell .sz.nocap { color: var(--bad); font-weight: 700; }
+.cell .dv { position: absolute; bottom: 1px; right: 3px; font-size: max(8px, calc(100cqw / var(--n) * 0.19)); font-weight: 500; color: var(--muted); line-height: 1; }
+.cell .dv.bad { color: var(--bad); font-weight: 700; }
+.cell .cap { position: absolute; width: 24%; aspect-ratio: 1; border-radius: 50%; background: var(--ink); box-shadow: 0 0 0 2px var(--sheet); }
+.cell.assumed { outline: 2px dashed var(--accent); outline-offset: -2px; }
+.cell.assumed .cap { background: var(--accent); }
+.cell.sel { outline: 2px solid var(--ink); outline-offset: -2px; }
+.chip { font: 500 0.88rem/1 var(--f-body); color: var(--ink); background: var(--sheet); border: 1px solid var(--line); border-radius: 999px; padding: 8px 13px; cursor: pointer; display: inline-flex; gap: 6px; align-items: baseline; }
+.chip small { color: var(--muted); font-size: 0.74rem; font-family: var(--f-num); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--sheet); border-color: var(--ink); }
+.chip[aria-pressed="true"] small { color: inherit; opacity: 0.7; }
+.swatch { width: 13px; height: 13px; border-radius: 4px; border: 1px solid rgba(0,0,0,.25); }
+.tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.tools .sep { width: 1px; height: 26px; background: var(--line); }
+.status { font-size: 0.9rem; padding: 8px 10px; border-radius: 6px; background: var(--blank); border: 1px solid var(--line); }
+.status.bad { border-color: var(--bad); color: var(--bad); }
+.status.good { border-color: var(--good); color: var(--good); }
+.status.warn { border-color: var(--warn); color: var(--warn); }
+.panel { background: var(--sheet); border: 1px solid var(--line); border-radius: 4px; padding: 14px; display: grid; gap: 12px; }
+.tally { display: flex; flex-wrap: wrap; gap: 6px; }
+.tally .chip { padding: 5px 10px; font-size: 0.8rem; }
+table.ledger { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+table.ledger th { text-align: left; font-weight: 500; color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 3px 4px; border-bottom: 1px solid var(--line); }
+table.ledger td { padding: 3px 4px; border-bottom: 1px solid rgba(0,0,0,.05); font-family: var(--f-num); vertical-align: top; }
+table.ledger tr { cursor: pointer; }
+table.ledger tr:hover td { background: rgba(0,0,0,.04); }
+.v { font-weight: 700; }
+.v.CONTRADICTED { color: var(--bad); }
+.v.NEEDS_HIDDEN_CAPITOL, .v.NEEDS_EXACT_PATH { color: var(--warn); }
+.v.FORCED, .v.TIGHT_GEODESIC, .v.TIGHT_CHEAPEST { color: var(--good); }
+.why { color: var(--muted); font-family: var(--f-body); font-size: 0.78rem; line-height: 1.35; }
+.route { color: var(--muted); font-size: 0.72rem; }
+.hint { color: var(--muted); font-size: 0.85rem; }
+.hint code { font-family: var(--f-num); font-size: 0.85em; }
+.notes { display: grid; gap: 8px; }
+.note { border-left: 3px solid var(--line); padding: 2px 0 2px 9px; font-size: 0.85rem; }
+.note.bad { border-color: var(--bad); }
+.note.warn { border-color: var(--warn); }
+.note.good { border-color: var(--good); }
+.sugg { display: flex; flex-wrap: wrap; gap: 6px; }
+.sugg button { font-size: 0.8rem; padding: 4px 9px; }
+details summary { cursor: pointer; font-size: 0.85rem; color: var(--muted); }
+/* the export area: a download can be blocked, so the same content is always
+   on the page as text (copyable) and as a picture (saveable by long-press) */
+.io { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 4px; border-top: 1px solid var(--line); }
+.io-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); margin-right: 2px; }
+.io .btn { font-size: 0.84rem; padding: 6px 11px; }
+.exports { display: grid; gap: 10px; }
+.exp { display: grid; gap: 5px; }
+.exp label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
+.exp textarea {
+  width: 100%; font: 500 11px/1.45 var(--f-num); color: var(--ink); background: var(--blank);
+  border: 1px solid var(--line); border-radius: 6px; padding: 7px 8px; resize: vertical;
+}
+.exp img { max-width: 100%; border: 1px solid var(--line); border-radius: 6px; background: var(--ground); }
+/* the toast: whatever happened has to be visible without scrolling */
+.toast {
+  position: fixed; left: 50%; top: 10px; z-index: 50; max-width: min(92vw, 560px);
+  transform: translate(-50%, -260%); opacity: 0; pointer-events: none;
+  background: var(--ink); color: var(--sheet); border-radius: 8px; padding: 9px 14px;
+  font-size: 0.86rem; line-height: 1.35; box-shadow: 0 6px 22px rgba(0,0,0,.24);
+  transition: transform .22s ease, opacity .22s ease;
+}
+.toast.show { transform: translate(-50%, 0); opacity: 1; }
+.toast.good { background: var(--good); color: #fff; }
+.toast.bad { background: var(--bad); color: #fff; }
+</style>
+</head>
+<body>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="wrap">
+  <a class="back" href="index.html">← All puzzles</a>
+  <header>
+    <div>
+      <h1>Assumption ledger</h1>
+      <p class="sub">Paint the states you are assuming, mark the capitols you are assuming — including the
+      <b>hidden</b> ones — and every published number is re-checked against the real travel costs.
+      The <a href="map.html">capitol map</a> shows where a capitol could be; this page shows what your assumptions cost you.</p>
+    </div>
+    <div class="tools">
+      <button class="btn" id="presetCorner">Corner hypothesis</button>
+      <input type="file" id="fileIn" accept="application/json,.json" hidden>
+    </div>
+  </header>
+
+  <main>
+    <div class="plate">
+      <div class="plate-head"><span><b>Original</b> · 11×11</span><span id="stateCount">no states yet</span></div>
+      <div class="boardbox"><div id="board" style="--n:11"></div></div>
+      <p class="hint" id="cellKey">
+        <b>Top-left of a square</b> — the area of the state it is in; a <b>✱</b> means that state has
+        <b>no capitol</b> (its symmetries fix more than one square, or none), so it contributes no
+        destination and every step inside it costs the whole area. <b>Bottom-right</b> — the cheapest
+        distance from that square to a capitol we already know about, if every unknown square were as
+        small as possible. It is a floor, not the answer: a hidden capitol can be nearer, which is
+        exactly what a number below that floor demands.
+      </p>
+
+      <div class="tools" id="tools">
+        <span class="chip" aria-pressed="true" data-tool="paint"><span class="swatch" style="background:var(--t0)"></span>Paint state</span>
+        <span class="chip" aria-pressed="false" data-tool="cap">Assume capitol</span>
+        <span class="chip" aria-pressed="false" data-tool="erase">Erase</span>
+        <span class="sep"></span>
+        <span id="palette" class="tools"></span>
+        <span class="sep"></span>
+        <label class="hint" for="capSize">assumed capitol's state size</label>
+        <input class="btn" id="capSize" type="number" min="1" max="121" value="1" style="width:5.2em">
+        <span class="sep"></span>
+        <button class="btn" id="presetClear">Clear</button>
+        <button class="btn" id="undoBtn" disabled>Undo</button>
+      </div>
+
+      <div class="status" id="status">Paint a state, or load the corner hypothesis.</div>
+
+      <div class="io">
+        <span class="io-label">save / share</span>
+        <button class="btn" id="saveJson">Save JSON</button>
+        <button class="btn" id="copyJson">Copy JSON</button>
+        <button class="btn" id="openJson">Open JSON</button>
+        <button class="btn" id="savePng">Save PNG</button>
+      </div>
+      <div class="exp" id="pngRow" hidden>
+        <label>PNG preview — long-press it to save</label>
+        <img id="pngOut" alt="the painted board">
+      </div>
+      <textarea id="jsonFallback" rows="6" spellcheck="false" hidden></textarea>
+    </div>
+
+    <div class="panel">
+      <div>
+        <h2>Verdicts</h2>
+        <div class="tally" id="tally"></div>
+      </div>
+      <div style="max-height:52vh;overflow:auto">
+        <table class="ledger" id="verdicts">
+          <thead><tr><th>square</th><th>reads</th><th>range</th><th>verdict</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div>
+        <h2>Notes</h2>
+        <div class="notes" id="notes"></div>
+      </div>
+      <details>
+        <summary>Where could a hidden capitol be?</summary>
+        <div class="hint" id="cands"></div>
+      </details>
+    </div>
+  </main>
+</div>
+
+<script>
+'use strict';
+/* ---------------------------------------------------------------------------
+   The assumption ledger.
+
+   Rules that this page encodes, and that a value-only check gets wrong:
+
+     * A state's capitol exists only if EVERY non-trivial self-symmetry leaves
+       EXACTLY ONE square fixed.  A mirror that runs along a column of squares
+       fixes all of them, so such a state has NO capitol and contributes no
+       destination to the distance field.  Every even-sized state is in this
+       class: a state with a capitol has size 1 + (sum of 2/4/8), so it is
+       always odd.
+     * A square that reads 1 cannot be a 1x1 state: a singleton is its own
+       capitol, so it would read 0.
+     * A square that reads 0 IS a capitol, but that does not make it a
+       singleton -- the size of a capitol's own state is a separate question.
+
+   Two books are kept for every square:
+     lower  every unknown square is charged as little as possible (size 1);
+     upper  a route through two unknown squares has no upper bound at all, so
+            it is not used; a route from a known square into an unknown one is
+            charged the known side.
+   A published number is CONTRADICTED only when the upper book is already
+   cheaper than it.  A published number BELOW the lower book is not a
+   contradiction -- it is a DEMAND for a hidden capitol.
+--------------------------------------------------------------------------- */
+
+const N = 11;
+const CLUES = [[0,1,8],[0,2,4],[0,5,11],[0,9,5],[1,7,11],[2,2,7],[2,5,1],[2,10,14],[3,0,28],[3,3,51],[3,6,1],[3,8,6],
+  [4,1,22],[4,8,4],[4,10,1],[5,3,15],[5,5,10],[5,7,0],[6,0,11],[6,2,11],[6,9,9],[7,2,17],[7,4,14],[7,7,10],[7,10,13],
+  [8,0,30],[8,5,6],[8,8,45],[9,3,10],[10,1,26],[10,5,0],[10,8,77],[10,9,61]];
+const NCOL = 10;
+const TONES = ['--t0','--t1','--t2','--t3','--t4','--t5','--t6','--t7','--t8','--t9'];
+
+const clueAt = new Array(N * N).fill(-1);
+for (const [r, c, v] of CLUES) clueAt[r * N + c] = v;
+
+const $ = id => document.getElementById(id);
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+};
+
+let colors = new Array(N * N).fill(-1);   // state id per square, -1 = unknown
+let assumed = new Map();                  // square -> assumed state size of its capitol
+let tool = 'paint', paintColor = 0, selected = -1;
+let painting = false, undoStack = [];
+
+/* ---------- geometry (same rule kernel as the other pages) ---------- */
+function nbrs(i, n) {
+  const r = (i / n) | 0, c = i % n, out = [];
+  if (r > 0) out.push(i - n); if (c < n - 1) out.push(i + 1); if (r < n - 1) out.push(i + n); if (c > 0) out.push(i - 1);
+  return out;
+}
+function regionInfo(cells, n) {
+  let minC = n, maxC = -1, minR = n, maxR = -1;
+  const member = new Set(cells);
+  for (const i of cells) { const r = (i / n) | 0, c = i % n; minC = Math.min(minC, c); maxC = Math.max(maxC, c); minR = Math.min(minR, r); maxR = Math.max(maxR, r); }
+  const p = minC + maxC, q = minR + maxR;
+  let anySym = false, capOk = true, cap = -1; const fixes = [], symNames = [];
+  for (let g = 0; g < 7; g++) {
+    if (g >= 3 && ((p + q) & 1)) continue;
+    let ok = true, fixed = 0, fixedCell = -1;
+    for (const i of cells) {
+      const r = (i / n) | 0, c = i % n; let nc, nr;
+      switch (g) {
+        case 0: nc = p - c; nr = q - r; break;
+        case 1: nc = p - c; nr = r; break;
+        case 2: nc = c; nr = q - r; break;
+        case 3: nc = r + ((p - q) >> 1); nr = c + ((q - p) >> 1); break;
+        case 4: nc = ((p + q) >> 1) - r; nr = ((p + q) >> 1) - c; break;
+        case 5: nc = ((p + q) >> 1) - r; nr = ((q - p) >> 1) + c; break;
+        default: nc = ((p - q) >> 1) + r; nr = ((p + q) >> 1) - c; break;
+      }
+      if (nc < 0 || nr < 0 || nc >= n || nr >= n || !member.has(nr * n + nc)) { ok = false; break; }
+      if (nc === c && nr === r) { fixed++; fixedCell = i; }
+    }
+    if (!ok) continue;
+    anySym = true; fixes.push(fixed);
+    symNames.push(['rot180','refV','refH','refD1','refD2','rot90','rot270'][g]);
+    if (fixed !== 1) capOk = false;
+    else if (cap === -1) cap = fixedCell;
+    else if (cap !== fixedCell) capOk = false;
+  }
+  return { sym: anySym, capitol: anySym && capOk ? cap : -1, fixes, symNames };
+}
+function components(labels, n) {
+  const N2 = n * n, comp = new Array(N2).fill(-1), list = [];
+  for (let i = 0; i < N2; i++) {
+    if (labels[i] < 0 || comp[i] >= 0) continue;
+    const id = list.length, cells = [i]; comp[i] = id;
+    for (let k = 0; k < cells.length; k++) for (const v of nbrs(cells[k], n)) if (comp[v] < 0 && labels[v] === labels[i]) { comp[v] = id; cells.push(v); }
+    const info = regionInfo(cells, n);
+    list.push({ cells, sym: info.sym, capitol: info.capitol, fixes: info.fixes });
+  }
+  return { comp, list };
+}
+function cellName(i) { const r = (i / N) | 0, c = i % N; return 'r' + r + 'c' + c; }
+
+/* ---------- the two books ---------- */
+function book(sizeOf, sources, optimistic) {
+  const NN = N * N, dist = new Array(NN).fill(Infinity), prev = new Array(NN).fill(-1), done = new Array(NN).fill(false);
+  for (const s of sources) dist[s] = 0;
+  for (let it = 0; it < NN; it++) {
+    let u = -1;
+    for (let i = 0; i < NN; i++) if (!done[i] && (u < 0 || dist[i] < dist[u])) u = i;
+    if (u < 0 || dist[u] === Infinity) break;
+    done[u] = true;
+    for (const v of nbrs(u, N)) {
+      const ku = sizeOf.get(u), kv = sizeOf.get(v);
+      let w;
+      if (ku === undefined && kv === undefined) { if (!optimistic) continue; w = 1; }
+      else if (ku === undefined) w = optimistic ? 1 : kv;
+      else if (kv === undefined) w = optimistic ? 1 : ku;
+      else w = Math.min(ku, kv);
+      if (dist[u] + w < dist[v]) { dist[v] = dist[u] + w; prev[v] = u; }
+    }
+  }
+  const route = i => { const out = []; let x = i; while (x >= 0) { out.push(x); x = prev[x]; } return out.reverse(); };
+  return { dist, route };
+}
+
+/* ---------- the ledger ---------- */
+function ledger() {
+  const { list } = components(colors, N);
+  const sizeOf = new Map(), sources = new Set(), notes = [];
+  const stateInfo = list.map((s, idx) => {
+    for (const c of s.cells) sizeOf.set(c, s.cells.length);
+    if (s.capitol >= 0) sources.add(s.capitol);
+    return s;
+  });
+  for (let i = 0; i < N * N; i++) if (clueAt[i] === 0) sources.add(i);   // a 0 IS a capitol
+  for (const [i, k] of assumed) { sizeOf.set(i, k); sources.add(i); }     // assumed capitols
+
+  for (const s of stateInfo) {
+    if (!s.sym) notes.push({ k: 'bad', t: 'A painted region has no symmetry at all, so it is not a state in the first place — repaint it as a shape that has one (a mirror or a rotation).' });
+    else if (s.capitol < 0) notes.push({ k: 'warn', t: 'This state of size ' + s.cells.length + ' has NO capitol. You do not paint capitols: they are derived from the shape, and here every symmetry fixes ' + s.fixes.join('/') + ' squares instead of exactly one. It is still a legal state, but it contributes no destination, and every step inside it costs ' + s.cells.length + '.' });
+    if (s.capitol >= 0 && clueAt[s.capitol] >= 0 && clueAt[s.capitol] !== 0) notes.push({ k: 'bad', t: 'The capitol of a painted state sits on the ' + clueAt[s.capitol] + ' at ' + cellName(s.capitol) + ', but a capitol reads 0.' });
+    for (const c of s.cells) if (clueAt[c] === 0 && s.capitol !== c) notes.push({ k: 'bad', t: 'The 0 at ' + cellName(c) + ' is inside a state whose capitol is elsewhere.' });
+  }
+
+  // The two books are about the distance to the capitols we ALREADY KNOW about
+  // (the published 0s, the capitols of the states you painted, and the capitols
+  // you assumed).  They are not bounds on the true distance d: a hidden capitol
+  // can be nearer than both.  That asymmetry is the whole point --
+  //   farKnown  <  v  is a CONTRADICTION (a known capitol is strictly cheaper)
+  //   nearKnown >  v  is a DEMAND (a hidden capitol has to be strictly nearer)
+  const nearKnown = book(sizeOf, sources, true);    // optimistic: unknown squares as small as possible
+  const farKnown = book(sizeOf, sources, false);    // defensible: routes through two unknown squares are not used
+
+  const rows = [];
+  for (const [r, c, v] of CLUES) {
+    const i = r * N + c;
+    const L = nearKnown.dist[i] === Infinity ? null : nearKnown.dist[i];
+    const U = farKnown.dist[i] === Infinity ? null : farKnown.dist[i];
+    let verdict, why;
+    if (L !== null && U !== null && L === U && L === v) { verdict = 'FORCED'; why = 'your assumptions pin the distance to exactly ' + v; }
+    else if (U !== null && U < v) { verdict = 'CONTRADICTED'; why = 'a capitol you already know about is reachable for ' + U + ', which is cheaper than ' + v + ', so the number cannot be the minimum'; }
+    else if (U !== null && U === v) { verdict = 'TIGHT_GEODESIC'; why = 'a known capitol is reachable for at most ' + v + ', and the number says the minimum is ' + v + ', so no hidden capitol may be nearer'; }
+    else if (L !== null && L > v) { verdict = 'NEEDS_HIDDEN_CAPITOL'; why = 'the nearest capitol you know about is at least ' + L + ' away, but the number says ' + v + ', so a hidden capitol has to be strictly nearer than that'; }
+    else if (L !== null && L === v) { verdict = 'TIGHT_CHEAPEST'; why = v + ' is the floor: no capitol can be nearer than ' + v + ', and one has to sit at exactly ' + v; }
+    else { verdict = 'NEEDS_EXACT_PATH'; why = 'the number sits inside the range, so a capitol has to be reachable at exactly ' + v; }
+    rows.push({ i, v, L, U, verdict, why, route: U !== null ? farKnown.route(i) : null });
+  }
+  return { list: stateInfo, sizeOf, sources, nearKnown, farKnown, rows, notes };
+}
+
+/* ---------- where could a hidden capitol be? ---------- */
+function hiddenCapitolCandidates(rows) {
+  const out = [];
+  for (const row of rows) {
+    if (row.verdict !== 'NEEDS_HIDDEN_CAPITOL' && row.verdict !== 'NEEDS_EXACT_PATH') continue;
+    if (row.L === null) continue;
+    // a capitol within reach: at most (v+1)/2 steps (every step but the last
+    // costs at least 2, since a step of cost 1 enters a 1x1 state, which is
+    // itself a capitol).
+    const D = Math.floor((row.v + 1) / 2), cand = [];
+    for (let j = 0; j < N * N; j++) {
+      if (j === row.i) continue;
+      if (clueAt[j] > 0) continue;                 // a square with a number is not a capitol
+      if (Math.abs((j / N | 0) - (row.i / N | 0)) + Math.abs((j % N) - (row.i % N)) <= D) cand.push(j);
+    }
+    if (cand.length) out.push({ row, cand });
+  }
+  return out;
+}
+
+/* ---------- 1x1 candidates forced by a published 1 ---------- */
+function singletonCandidates() {
+  const out = [];
+  for (const [r, c, v] of CLUES) {
+    if (v !== 1) continue;
+    const i = r * N + c;
+    // a 1x1 state must sit next to the square, must not be a square that
+    // already belongs to a painted state, and must not be a published 0
+    // (a 0 is a capitol of some state, but we do not know that state's size)
+    const cand = nbrs(i, N).filter(j => clueAt[j] !== 0 && colors[j] < 0);
+    out.push({ i, cand });
+  }
+  return out;
+}
+
+/* ---------- painting ---------- */
+function buildBoard() {
+  const b = $('board');
+  b.innerHTML = '';
+  for (let i = 0; i < N * N; i++) {
+    const d = document.createElement('div');
+    d.className = 'cell'; d.dataset.i = i;
+    b.appendChild(d);
+  }
+}
+function paint(i) {
+  const d = $('board').children[i];
+  const led = lastLedger;
+  const col = colors[i] >= 0 ? 'var(' + TONES[colors[i] % NCOL] + ')' : 'var(--blank)';
+  d.style.background = col;
+  d.innerHTML = '';
+  if (colors[i] >= 0) {
+    const s = led.list.find(s => s.cells.includes(i));
+    const sp = document.createElement('span'); sp.className = 'sz' + (s && s.capitol < 0 ? ' nocap' : '');
+    sp.textContent = s ? s.cells.length : '';
+    if (s && s.capitol < 0) sp.textContent = s.cells.length + '✱';
+    d.appendChild(sp);
+    if (s && s.capitol === i) { const c = document.createElement('span'); c.className = 'cap'; d.appendChild(c); }
+  }
+  if (assumed.has(i)) { const c = document.createElement('span'); c.className = 'cap'; d.appendChild(c); d.classList.add('assumed'); }
+  else d.classList.remove('assumed');
+  if (clueAt[i] >= 0) { const t = document.createElement('span'); t.textContent = clueAt[i]; d.appendChild(t); }
+  const dv = led.nearKnown.dist[i];
+  if (dv !== Infinity && dv !== 0) {
+    const v = document.createElement('span'); v.className = 'dv'; v.textContent = dv;
+    d.appendChild(v);
+  }
+  if (selected === i) d.classList.add('sel'); else d.classList.remove('sel');
+}
+function setStatus(html, kind) { const st = $('status'); st.innerHTML = html; st.className = 'status' + (kind ? ' ' + kind : ''); }
+function pushUndo() { undoStack.push({ c: colors.slice(), a: [...assumed] }); if (undoStack.length > 200) undoStack.shift(); }
+function doUndo() { const u = undoStack.pop(); if (!u) return; colors = u.c; assumed = new Map(u.a); refresh(); }
+function setPaintColor(id) {
+  if (!Number.isInteger(id) || id < 0 || id >= NCOL) id = 0;   // a bad id would paint nothing at all
+  paintColor = id;
+  tool = 'paint';
+  $('tools').querySelectorAll('.chip[data-tool]').forEach(c => c.setAttribute('aria-pressed', String(c.dataset.tool === 'paint')));
+  $('palette').querySelectorAll('.chip[data-id]').forEach(c => c.setAttribute('aria-pressed', String(+c.dataset.id === id)));
+  const sw = $('palette').querySelector('.chip[data-id="' + id + '"] .swatch');
+  if (sw) sw.style.outline = '2px solid var(--ink)';
+  $('palette').querySelectorAll('.chip[data-id] .swatch').forEach(o => { if (o !== sw) o.style.outline = ''; });
+}
+function setCell(i) {
+  if (tool === 'erase') { colors[i] = -1; assumed.delete(i); }
+  else if (tool === 'cap') {
+    const k = Math.max(1, Math.min(121, +$('capSize').value || 1));
+    if (assumed.has(i)) assumed.delete(i); else { assumed.set(i, k); colors[i] = -1; }
+  } else {
+    if (colors[i] === paintColor) { colors[i] = -1; }
+    else { colors[i] = paintColor; assumed.delete(i); }
+  }
+  refresh();
+}
+
+/* ---------- render ---------- */
+let lastLedger = null;
+function refresh() {
+  lastLedger = ledger();
+  const led = lastLedger;
+  for (let i = 0; i < N * N; i++) paint(i);
+
+  const counts = {};
+  for (const r of led.rows) counts[r.verdict] = (counts[r.verdict] || 0) + 1;
+  $('tally').innerHTML = Object.keys(counts).sort().map(k =>
+    '<span class="chip"><b class="v ' + k + '">' + counts[k] + '</b> ' + k.replace(/_/g, ' ').toLowerCase() + '</span>').join('');
+
+  const tb = $('verdicts').querySelector('tbody');
+  tb.innerHTML = led.rows.map(r => {
+    const range = (r.L === null ? '–' : r.L) + '–' + (r.U === null ? '∞' : r.U);
+    return '<tr data-i="' + r.i + '"><td>' + cellName(r.i) + '</td><td>' + r.v + '</td><td>' + range + '</td>' +
+      '<td><span class="v ' + r.verdict + '">' + r.verdict + '</span><div class="why">' + r.why + '</div>' +
+      (r.route && r.route.length > 1 ? '<div class="route">' + r.route.map(cellName).join(' → ') + '</div>' : '') + '</td></tr>';
+  }).join('');
+  tb.querySelectorAll('tr').forEach(tr => tr.addEventListener('click', () => { selected = +tr.dataset.i; refresh(); }));
+
+  const nStates = led.list.length;
+  $('undoBtn').disabled = undoStack.length === 0;
+  $('stateCount').textContent = nStates ? nStates + ' state' + (nStates > 1 ? 's' : '') + ' · ' +
+    led.list.filter(s => s.capitol >= 0).length + ' with a capitol · ' + (N * N - led.sizeOf.size) + ' squares unknown' : 'no states yet';
+
+  const bad = led.rows.filter(r => r.verdict === 'CONTRADICTED');
+  const st = $('status');
+  if (bad.length) { st.className = 'status bad'; st.innerHTML = '<b>' + bad.length + ' published number' + (bad.length > 1 ? 's are' : ' is') + ' contradicted.</b> ' + bad.map(r => cellName(r.i) + ' reads ' + r.v + ' but ' + r.why).join('; ') + '.'; }
+  else if (!nStates && !assumed.size) { st.className = 'status'; st.textContent = 'Paint a state, or load the corner hypothesis.'; }
+  else { st.className = 'status good'; st.innerHTML = 'No contradiction: every published number is still reachable under these assumptions.'; }
+
+  const notes = led.notes.slice();
+  const singles = singletonCandidates();
+  if (singles.length) {
+    notes.push({ k: 'warn', t: 'A square that reads 1 needs a 1×1 state right next to it (a step of cost 1). Candidates: ' +
+      singles.map(s => cellName(s.i) + ' → ' + s.cand.map(cellName).join('/')).join('; ') + '.' });
+  }
+  $('notes').innerHTML = notes.map(n => '<div class="note ' + n.k + '">' + n.t + '</div>').join('') ||
+    '<div class="hint">Nothing to flag. Assumptions that fit the numbers are not the same as assumptions that are true.</div>';
+
+  const cands = hiddenCapitolCandidates(led.rows);
+  $('cands').innerHTML = cands.length
+    ? cands.map(c => '<p><b>' + cellName(c.row.i) + ' reads ' + c.row.v + '</b>: a hidden capitol within ' + Math.floor((c.row.v + 1) / 2) + ' steps, i.e. ' + c.cand.map(cellName).join(', ') + '.</p>').join('')
+    : '<p>No square currently demands a hidden capitol.</p>';
+
+  save();
+}
+
+/* ---------- presets ---------- */
+const PRESET_CORNER = {
+  // the Γ state (11), the 8-cell state, the 16-cell state, the forced 1×1 at
+  // (5,10) and the hidden 1×1 at (3,5) that both published 1s ask for.
+  states: [
+    [[2,4],[2,5],[2,6],[3,6],[4,6],[5,6],[6,6],[7,6],[8,6],[8,7],[8,8]],
+    [[1,9],[2,9],[3,8],[3,9],[3,10],[4,9],[5,9],[6,9]],
+    [[8,5],[9,1],[9,2],[9,3],[9,4],[9,5],[9,6],[9,7],[9,8],[9,9],[10,0],[10,1],[10,2],[10,8],[10,9],[10,10]],
+  ],
+  assumed: [[5,10,1],[3,5,1]],
+};
+function loadPreset(p) {
+  colors = new Array(N * N).fill(-1);
+  p.states.forEach((cells, id) => cells.forEach(([r, c]) => { colors[r * N + c] = id; }));
+  assumed = new Map(p.assumed.map(([r, c, k]) => [r * N + c, k]));
+  refresh();
+}
+
+/* ---------- save and load ---------- */
+function toast(msg, kind) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (kind ? ' ' + kind : '');
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => { t.className = 'toast'; }, 6000);
+}
+function download(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.rel = 'noopener';
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  // the anchor must survive a moment: some browsers (notably older Safari)
+  // process the download asynchronously and drop it if the link is removed
+  // straight away
+  setTimeout(() => { a.remove(); URL.revokeObjectURL(a.href); }, 4000);
+}
+function stamp() {
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes());
+}
+function boardJSON() {
+  const led = lastLedger;
+  return {
+    format: 'metric-too-ledger/1',
+    n: N,
+    saved: new Date().toISOString(),
+    published: "Jane Street, It's a Metric, Too (October 2026) -- the 33 official numbers",
+    states: led.list.map((s, id) => ({
+      id,
+      colour: colors[s.cells[0]],          // the palette colour it was painted with
+      size: s.cells.length,
+      cells: s.cells.map(i => [Math.floor(i / N), i % N]),
+      symmetry: regionInfo(s.cells, N).symNames,
+      capitol: s.capitol >= 0 ? [Math.floor(s.capitol / N), s.capitol % N] : null,
+    })),
+    assumed_capitols: [...assumed].map(([i, k]) => ({
+      cell: [Math.floor(i / N), i % N], state_size: k,
+    })),
+  };
+}
+function loadJSON(data) {
+  // accepts the exported shape and the plain preset shape
+  const cellsOf = st => (Array.isArray(st) && Array.isArray(st[0]) && typeof st[0][0] === 'number')
+    ? st : (st.cells || []);
+  colors = new Array(N * N).fill(-1);
+  (data.states || []).forEach((st, id) => cellsOf(st).forEach(([r, c]) => { colors[r * N + c] = id; }));
+  assumed = new Map();
+  (data.assumed_capitols || data.assumed || []).forEach(a => {
+    if (Array.isArray(a)) { const [r, c, k] = a; assumed.set(r * N + c, k == null ? 1 : k); }
+    else { const [r, c] = a.cell; assumed.set(r * N + c, a.state_size || 1); }
+  });
+  refresh();
+}
+function drawBoardCanvas() {
+  const S = 46, pad = 18, head = 62, foot = 78, dpr = 2;
+  const W = pad * 2 + S * N, H = head + S * N + foot;
+  const cv = document.createElement('canvas');
+  cv.width = W * dpr; cv.height = H * dpr;
+  const g = cv.getContext('2d');
+  g.scale(dpr, dpr);  const cs = getComputedStyle(document.documentElement);
+  const C = n => (cs.getPropertyValue(n) || '').trim() || '#ffffff';
+  const led = lastLedger;
+  g.fillStyle = C('--ground'); g.fillRect(0, 0, W, H);
+  g.fillStyle = C('--ink');
+  g.font = '700 18px system-ui, sans-serif';
+  g.fillText("It's a Metric, Too - assumption ledger", pad, 26);
+  g.font = '12px system-ui, sans-serif';
+  g.fillStyle = C('--muted');
+  g.fillText(new Date().toLocaleString() + '  |  ' + led.list.length + ' states, ' +
+    led.list.filter(s => s.capitol >= 0).length + ' with a capitol, ' + assumed.size + ' assumed capitols',
+    pad, 44);
+  const x0 = pad, y0 = head;
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    const i = r * N + c, x = x0 + c * S, y = y0 + r * S;
+    const st = led.list.find(s => s.cells.includes(i));
+    g.fillStyle = st ? C('--t' + (colors[i] % NCOL)) : C('--blank');
+    g.fillRect(x + 1, y + 1, S - 2, S - 2);
+    if (clueAt[i] >= 0) {
+      g.fillStyle = C('--ink');
+      g.font = '600 17px ui-monospace, monospace';
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText(String(clueAt[i]), x + S / 2, y + S / 2);
+    }
+    if (st) {
+      g.fillStyle = st.capitol < 0 ? C('--bad') : C('--muted');
+      g.font = '700 9px system-ui, sans-serif';
+      g.textAlign = 'left'; g.textBaseline = 'top';
+      g.fillText(String(st.cells.length) + (st.capitol < 0 ? '*' : ''), x + 3, y + 2);
+      if (st.capitol === i) {
+        g.fillStyle = C('--ink');
+        g.beginPath(); g.arc(x + S / 2, y + S / 2, 7, 0, 2 * Math.PI); g.fill();
+      }
+    }
+    if (assumed.has(i)) {
+      g.strokeStyle = C('--accent'); g.lineWidth = 2; g.setLineDash([4, 3]);
+      g.strokeRect(x + 3, y + 3, S - 6, S - 6); g.setLineDash([]);
+      g.fillStyle = C('--accent');
+      g.beginPath(); g.arc(x + S / 2, y + S / 2, 5, 0, 2 * Math.PI); g.fill();
+    }
+    const dv = led.nearKnown.dist[i];
+    if (dv !== Infinity && dv !== 0) {
+      g.fillStyle = C('--muted'); g.font = '9px system-ui, sans-serif';
+      g.textAlign = 'right'; g.textBaseline = 'bottom';
+      g.fillText(String(dv), x + S - 3, y + S - 2);
+    }
+  }
+  g.strokeStyle = C('--line'); g.lineWidth = 1;
+  for (let i = 0; i <= N; i++) {
+    g.beginPath(); g.moveTo(x0 + i * S, y0); g.lineTo(x0 + i * S, y0 + N * S); g.stroke();
+    g.beginPath(); g.moveTo(x0, y0 + i * S); g.lineTo(x0 + N * S, y0 + i * S); g.stroke();
+  }
+  g.strokeStyle = C('--ink'); g.lineWidth = 3;
+  g.strokeRect(x0, y0, N * S, N * S);
+  const tally = {};
+  for (const row of led.rows) tally[row.verdict] = (tally[row.verdict] || 0) + 1;
+  g.fillStyle = C('--muted'); g.font = '11px system-ui, sans-serif';
+  g.textAlign = 'left'; g.textBaseline = 'top';
+  g.fillText('top-left = the area of the state   (* = that state has no capitol)',
+    pad, y0 + N * S + 10);
+  g.fillText('bottom-right = the cheapest distance to a capitol we already know about',
+    pad, y0 + N * S + 28);
+  g.fillText(Object.entries(tally).map(([k, v]) => v + ' ' + k.replace(/_/g, ' ').toLowerCase()).join('   '),
+    pad, y0 + N * S + 46);
+  return cv;
+}
+function boardPNG() {
+  const cv = drawBoardCanvas();
+  const name = 'metric-too-ledger-' + stamp() + '.png';
+  cv.toBlob(b => {
+    if (!b) { toast('The picture could not be made in this browser.', 'bad'); return; }
+    const url = URL.createObjectURL(b);
+    const img = $('pngOut');
+    img.src = url; img.hidden = false;
+    $('pngRow').hidden = false;
+    download(b, name);
+    toast('Picture ready: ' + name + '. It is also shown below - long-press it to save on a phone.', 'good');
+    setStatus('Picture ready: <b>' + name + '</b>. It is shown below the board as well; on a phone, long-press it to save.', 'good');
+  }, 'image/png');
+}
+
+/* ---------- events ---------- */
+$('board').addEventListener('pointerdown', e => {
+  const el = e.target.closest('.cell'); if (!el) return;
+  e.preventDefault(); pushUndo(); painting = true; setCell(+el.dataset.i);
+});
+$('board').addEventListener('pointermove', e => {
+  if (!painting) return;
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  const c = el && el.closest && el.closest('.cell');
+  if (c && c.parentNode === $('board')) setCell(+c.dataset.i);
+});
+window.addEventListener('pointerup', () => { painting = false; });
+$('tools').addEventListener('click', e => {
+  const chip = e.target.closest('.chip[data-tool]');
+  if (chip) {
+    tool = chip.dataset.tool;
+    $('tools').querySelectorAll('.chip[data-tool]').forEach(c => c.setAttribute('aria-pressed', String(c === chip)));
+    return;
+  }
+  // the palette: the id is on the chip, and clicking the little swatch inside
+  // it must count as clicking the chip
+  const palChip = e.target.closest('.chip[data-id]');
+  if (palChip) { setPaintColor(+palChip.dataset.id); return; }
+});
+$('presetCorner').addEventListener('click', () => { pushUndo(); loadPreset(PRESET_CORNER); });
+$('presetClear').addEventListener('click', () => { pushUndo(); colors = new Array(N * N).fill(-1); assumed = new Map(); refresh(); });
+$('undoBtn').addEventListener('click', doUndo);
+$('saveJson').addEventListener('click', () => {
+  const data = boardJSON();
+  const text = JSON.stringify(data, null, 2);
+  const name = 'metric-too-ledger-' + stamp() + '.json';
+  download(new Blob([text], { type: 'application/json' }), name);
+  toast('JSON ready: ' + name + '. Copy JSON puts the very same text on your clipboard.', 'good');
+  setStatus('JSON ready: <b>' + name + '</b> - ' + data.states.length + ' states and ' +
+    data.assumed_capitols.length + ' assumed capitols. <b>Copy JSON</b> puts the same text on your ' +
+    'clipboard, and a rule tool can read it with <code>python3 lr11/assume.py ' + name + '</code>.', 'good');
+});
+$('copyJson').addEventListener('click', async () => {
+  const text = JSON.stringify(boardJSON(), null, 2);
+  let ok = false;
+  try { if (navigator.clipboard && navigator.clipboard.writeText) ok = await navigator.clipboard.writeText(text); } catch (e) { ok = false; }
+  if (!ok) {
+    // no async clipboard here (older browsers, and file:// pages): the old way,
+    // through a throw-away text area
+    const tmp = document.createElement('textarea');
+    tmp.value = text;
+    tmp.setAttribute('readonly', '');
+    tmp.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+    document.body.appendChild(tmp);
+    tmp.select();
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    tmp.remove();
+  }
+  if (ok) {
+    toast('JSON copied to the clipboard - paste it to a friend, or to a rule tool.', 'good');
+    setStatus('JSON copied to the clipboard.', 'good');
+    return;
+  }
+  // last resort: show it, selected, so it can be copied by hand
+  const box = $('jsonFallback');
+  box.hidden = false;
+  box.value = text;
+  box.focus(); box.select();
+  toast('The browser would not let the page copy. The JSON is now in a box, selected - press Cmd/Ctrl+C.', 'bad');
+});
+$('openJson').addEventListener('click', () => $('fileIn').click());
+$('fileIn').addEventListener('change', async e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  try {
+    pushUndo();
+    loadJSON(JSON.parse(await f.text()));
+    setStatus('Loaded ' + f.name + '.', 'good');
+  } catch (err) {
+    setStatus('Could not read that file: ' + err.message, 'bad');
+  }
+  e.target.value = '';
+});
+$('savePng').addEventListener('click', () => boardPNG());
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); doUndo(); return; }
+  if (e.key >= '0' && e.key <= '9') setPaintColor(+e.key);
+});
+
+/* ---------- palette ---------- */
+const pal = $('palette');
+for (let i = 0; i < NCOL; i++) {
+  const s = document.createElement('span');
+  s.className = 'chip'; s.dataset.id = i; s.title = 'state colour ' + i;
+  s.setAttribute('aria-pressed', String(i === 0));
+  s.innerHTML = '<span class="swatch" style="background:var(' + TONES[i] + ')"></span>' + i;
+  pal.appendChild(s);
+}
+
+/* ---------- persistence ---------- */
+function save() { store.set('mt2ledger', { c: colors, a: [...assumed] }); }
+(function boot() {
+  const saved = store.get('mt2ledger');
+  if (saved) { colors = saved.c; assumed = new Map(saved.a); }
+  buildBoard();
+  setPaintColor(0);
+  refresh();
+})();
+</script>
+</body></html>

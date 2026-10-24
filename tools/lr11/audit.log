@@ -1,0 +1,93 @@
+==============================================================================
+A. the drawn triple, re-checked
+==============================================================================
+  singleton(5,10)    size= 1  capitol=(5, 10)  published@capitol=not published
+  8-state            size= 8  capitol=None  published@capitol=not published
+  16-state           size=16  capitol=None  published@capitol=not published
+  Gamma(11)          size=11  capitol=(5, 6)  published@capitol=not published
+
+  contradicted        : 0
+  structural problems : 0
+  known capitols      : [(5, 6), (5, 7), (5, 10), (10, 5)]
+  covered / free cells: 36 / 85
+
+  upper bounds from the KNOWN states alone (exact inside them):
+      (0, 1) published   8   known-state upper bound    -
+      (0, 2) published   4   known-state upper bound    -
+      (0, 5) published  11   known-state upper bound    -
+      (0, 9) published   5   known-state upper bound    -
+      (1, 7) published  11   known-state upper bound    -
+      (2, 2) published   7   known-state upper bound    -
+      (2, 5) published   1   known-state upper bound   44
+      (2, 10) published  14   known-state upper bound    -
+      (3, 0) published  28   known-state upper bound    -
+      (3, 3) published  51   known-state upper bound    -
+      (3, 6) published   1   known-state upper bound   22
+      (3, 8) published   6   known-state upper bound   25
+      (4, 1) published  22   known-state upper bound    -
+      (4, 8) published   4   known-state upper bound    -
+      (4, 10) published   1   known-state upper bound    -
+      (5, 3) published  15   known-state upper bound    -
+      (5, 5) published  10   known-state upper bound    -
+      (5, 7) published   0   known-state upper bound    0   (geodesic: no hidden capitol may be closer)
+      (6, 0) published  11   known-state upper bound    -
+      (6, 2) published  11   known-state upper bound    -
+      (6, 9) published   9   known-state upper bound    9   (geodesic: no hidden capitol may be closer)
+      (7, 2) published  17   known-state upper bound    -
+      (7, 4) published  14   known-state upper bound    -
+      (7, 7) published  10   known-state upper bound    -
+      (7, 10) published  13   known-state upper bound    -
+      (8, 0) published  30   known-state upper bound    -
+      (8, 5) published   6   known-state upper bound   44
+      (8, 8) published  45   known-state upper bound   55
+      (9, 3) published  10   known-state upper bound   92
+      (10, 1) published  26   known-state upper bound  140
+      (10, 5) published   0   known-state upper bound    0   (geodesic: no hidden capitol may be closer)
+      (10, 8) published  77   known-state upper bound   82
+      (10, 9) published  61   known-state upper bound   98
+
+==============================================================================
+B. claim C1 -- a published 1 cell must not be a 1x1 state
+==============================================================================
+  published 1 cells: [(2, 5), (3, 6), (4, 10)]
+    (2, 5): singleton is a legal state = True; its capitol is (2, 5) (so d would be 0, but the cue says 1)
+          internal_consistency() says: None   <- GAP: does not catch it
+    (3, 6): singleton is a legal state = True; its capitol is (3, 6) (so d would be 0, but the cue says 1)
+          internal_consistency() says: None   <- GAP: does not catch it
+    (4, 10): singleton is a legal state = True; its capitol is (4, 10) (so d would be 0, but the cue says 1)
+          internal_consistency() says: None   <- GAP: does not catch it
+
+==============================================================================
+C. claim C2 -- the drawn 16-cell state vs the 77 at (10,8)
+==============================================================================
+  (10, 8): capitol None is not connected inside the state
+  (10, 9): capitol None is not connected inside the state
+  bottom-right corner of the 16-state: [(9, 8), (9, 9), (10, 8), (10, 9), (10, 10)] (5 cells)
+  published numbers inside it: {(10, 8): 77, (10, 9): 61}
+
+==============================================================================
+D. claim C3 -- can d(2,10) = 14 be reached in the drawn triple?
+==============================================================================
+  (2,10) is inside a drawn state? no - it is free
+  upper bound from known states alone: None
+  check_partial lower bound (optimistic) : 3
+  check_partial upper bound (to a revealed capitol): 17
+  to reach exactly 14 the state of (2,10) must be large enough that the
+  crossing cost does not undercut it; the neighbours are (1,10),(3,10),(2,9):
+    (1, 10): free
+    (3, 10): ['8-state']
+    (2, 9): ['8-state']
+    (2, 11): free
+
+==============================================================================
+E. what did the enumeration assume about the revealed capitols?
+==============================================================================
+  revealed capitols (published 0): [(5, 7), (10, 5)]
+    (5, 7): inside a drawn state? NO - its state size was left FREE
+    (10, 5): inside a drawn state? NO - its state size was left FREE
+  in check_partial the revealed 0-cells are added to `known_capitals` but
+  NOT to `known_size`, so their state size is never fixed to 1.
+  the singleton that WAS forced is (5,10), from d(4,10)=1:
+     cost((4,10)->(5,10)) = min(|S(4,10)|, |S(5,10)|) = 1
+     and |S(4,10)| = 1 is impossible (a singleton reads 0, not 1)
+     => |S(5,10)| = 1.  Sound.
