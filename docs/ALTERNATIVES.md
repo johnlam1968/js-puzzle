@@ -458,4 +458,74 @@ print(res['singleton_demands'])
 | `tools/infer_readings_11x11.py` | INFERENCE from the readings alone: size bounds, tight edges, path decompositions |
 | `tools/chain_corner_11x11.py` | the corner chain (61 = 12*5+1, 13 = 12+1, 77 = 61+16) -> 632 surviving triples |
 | `tools/corner_16_11x11.py` | the lower-right corner: the 16-cell block and the "61 + 16 = 77" reading |
+| `docs/NEW-ROUTES.md` | four routes outside A/B/C: profile-first, generated twins, satisfiability, style transfer |
 | `PLAN.md` | the defect register — D38 (the name), D43 (odd area), D48 (orbit semantics), D53, D64, D65, D85 |
+
+---
+
+## 10. A defect in the constraint register (a third session, 2026-10-23)
+
+*Found while re-reading the register's facets, instance by instance. It changes a displayed
+field, not a computed number — but the displayed field is the one a plan gets read from.*
+
+`tools/constraint_register_11x11.py` builds the `F-ball` instance list like this:
+
+```python
+"hidden_capitol_within": [[r + dr, c + dc]
+                          for dr in (-k, 0, k) for dc in (-k, 0, k)
+                          if 0 <= r + dr < N and 0 <= c + dc < N
+                          and (dr or dc)],
+```
+
+**This is not the ball.** It is the **eight corner points of the k-box** (the Chebyshev
+corners), and it does not exclude cells that carry a published `d > 0` — those cells can never
+be capitols, because a cell with a reading is not a capitol and a cell with `d = 0` already is
+one.
+
+**The engine is right; the register's display is not.** `src/hitting.py::ball()` is Manhattan
+(`|Δr| + |Δc| ≤ radius`) and `split_demands()` filters with
+`candidates = [c for c in raw if c not in hints]`. So the register's *counts* — 9 demands,
+`candidate_pool` 64, `min_additional_capitols` 4, `minimum_capitol_sets` 120 — are **correct**;
+only the printed geography is wrong.
+
+**MEASURED** — engine truth vs. the register's list:
+
+| demand | true candidates | the register prints |
+|---|---|---|
+| (0,1) d=8 | **13** | [(0,5), (4,1), (4,5)] — and (0,5)=11, (4,1)=22 cannot be capitols |
+| (0,5) d=11 | **36** | [(6,5)] |
+| (2,2) d=7 | **24** | 3 corner points |
+| (6,0) d=11 | **33** | 3 corner points |
+| (0,9) d=5 | **10** | 3 corner points |
+| (2,5) / (3,6) / (4,10) d=1 | 4 / 4 / 3 | the 8-neighbourhood, including published cells |
+
+⇒ **The top-left corner is not pinned to a handful of cells.** Any plan built on "the hidden
+capitols are at (4,5), (6,5), (0,6)…" is built on a fiction.
+
+**The fix** (one line):
+
+```python
+"hidden_capitol_within": [list(c) for c in ball((r, c), k, N) if c not in HINTS],
+```
+
+### 10.1 A second observation, on the "9 one-cell states" claim
+
+`F-human`'s second instance records where that claim came from:
+
+> *"F-area already pins 32 cells into states of area >= 4. The claim is that NINE of them are
+> singletons…"*
+
+Two things do not line up:
+
+1. F-area pins **12** cells, not 32 (and only 10 of them have a minimum area ≥ 4; two are = 2);
+2. **"area ≥ 4" is the opposite of "is a singleton"** — a lower bound cannot produce a singleton.
+
+⇒ So the entry's own proposed test cannot discriminate, and the note *"it is the one place where
+the human is ahead of the arithmetic"* may have it the wrong way round: this looks like
+arithmetic that was written wrong, not intuition that ran ahead. The claim is a statement about
+the *shape of the solution*, and it should be carried as an observation — not as the thing the
+narrowing depends on. (`docs/NEW-ROUTES.md` §6 shows what the narrowing actually rests on: the
+six tight edges, {2, 4, 6, 8, 12, 16}.)
+
+**Status:** reported to the `docs/aodfs-layman` session; **not yet fixed** in the branch this
+was written against (checked at `9058c21e`).
