@@ -930,6 +930,134 @@ likelihood in a Bayesian argument. A ranking that is badly calibrated is still a
   configurations and the energy will be meaningless. This is the "engine is the only source of
   truth" rule, applied to a stochastic search.
 
+### 4.7 The (5,10) trim — the seed the descent was missing
+
+§4.4g.1 left one item open: *"the obvious candidate is the seed data that is currently unused:
+seed the descent with a capitol set from the hitting set instead of the all-singletons start."*
+A capitol set is a weak seed — it says only *where* the capitols are, not *how big* the blocks
+around them are. The `d = 1` demand at (4,10) says much more, and it says it in one line.
+
+> **The observation.** *(5,10) is the best starting point. Have you use it to trim? It should
+> connect to a 8-cell and a 12-cell blocks, because of 9 and 13 reading.*
+
+**MEASURED — the observation is correct, and it is provable, not a guess.**
+
+**Step 1 — (5,10) is the ONE forced 1×1 state at that end of the board.** A `d = 1` cell is
+served by a 1×1 state *adjacent* to it (PLAN D64), and the candidates for the demand at (4,10)
+are (3,10), (5,10), (4,9). A 1×1 state at `x` makes **every** neighbour of `x` have `d = 1`, so a
+neighbour with a published value > 1 refutes it:
+
+| candidate | refuted by | why |
+|---|---|---|
+| (3,10) | (2,10) = **14** | a singleton at (3,10) would give d(2,10) = 1 |
+| (4,9) | (4,8) = **4** | a singleton at (4,9) would give d(4,8) = 1 |
+| **(5,10)** | — | **survives** |
+
+⇒ **the demand at (4,10) forces exactly one 1×1 state, at (5,10)** — and the other two `d = 1`
+demands ((2,5) and (3,6)) do *not* have a unique candidate, so (5,10) is the only *certain*
+singleton on the board.
+
+**Step 2 — the step the earlier ground map was missing: impute `d = 1` on the singleton's ring.**
+A 1×1 state is its own capitol, so `d(5,10) = 0`, and every neighbour of it reaches a capitol in
+one cost-1 step:
+
+```
+d(4,10) = 1   (published — and it is the demand that created the singleton)
+d(5, 9) = 1   (imputed)
+d(6,10) = 1   (imputed)
+```
+
+⇒ **this is the whole trim.** The previous ground map listed the bounds from *published*
+neighbours only, so it never saw the two numbers that matter most in the bottom-right corner.
+
+**Step 3 — the 9 and the 13 read off the ring.** For adjacent `x, y`, `|d(x) − d(y)| ≤ min(size_x,
+size_y)`, so the state holding `x` has area `≥ |d(x) − d(y)|` (L2/L3):
+
+| pair | difference | consequence |
+|---|---|---|
+| (6,9)=9 ↔ (5,9)=1 | **8** | state((5,9)) ≥ **8**, state((6,9)) ≥ 8 |
+| (7,10)=13 ↔ (6,10)=1 | **12** | state((6,10)) ≥ **12**, state((7,10)) ≥ 12 |
+
+⇒ **the singleton at (5,10) is flanked by an 8-cell block and a 12-cell block**, and the two
+numbers that say so are the published **9** and **13**. The reading is *mechanical*: the cost of
+crossing a block of size `m` is `m`, and the singleton's ring costs 1, so `9 = 8 + 1` and
+`13 = 12 + 1`.
+
+**Step 4 — a parity lemma that the two blocks share.** A state that HAS a capitol has **odd**
+area: the capitol is one cell and every other cell lies in an orbit of size ≥ 2. ⇒ **an 8-cell
+state and a 12-cell state have NO capitol at all.** Both blocks are *filler* states, like the
+4-bar of the official 5×5. MEASURED over the whole enumeration: **0 of 623** eight-cell states
+and **0 of 2790** twelve-cell states contain the anchor have a capitol.
+
+**Step 5 — the one caveat, stated honestly.** Step 3 used `d(6,10) = 1`. That holds unless (6,10)
+is itself a capitol. It cannot be a 1×1 state (a cost-1 step to it would give `d(6,9) ≤ 1`,
+against the published 9), but it *could* be the capitol of a bigger state, and then the same
+argument gives **9 and 13** instead of 8 and 12. ⇒ the 8/12 reading is the branch in which (6,10)
+is **not** a capitol; the other branch is not refuted, only weaker. The tightness also needs the
+tight edge (L1) to land on the ring: the drop 9 → 1 must be paid by one edge, so at least one of
+state((5,9)), state((6,9)) is exactly 8, and at least one of state((6,10)), state((7,10)) is
+exactly 12.
+
+**Step 6 — the trim, run for real.** AODFS orbit growth (`src/grow.py`) from the two anchors,
+then three sound filters:
+
+| filter | what it says | 8-cell | 12-cell |
+|---|---|---|---|
+| — | legal states of that size containing the anchor | 623 | 2790 |
+| F1 | a cell inside a capitol-less block must be able to leave it: `m · dist + 1 ≤ d` | 343 | 1014 |
+| F2 | a path through the core is *one* path, so `d ≤ core_path`; a cheaper core path refutes it | — | — |
+| F3 | the step-count lemma: the ball of radius `⌊(v+1)/2⌋` around a hint must still contain a cell that can be a capitol | — | — |
+| — | **pairs that survive all three** | **40,862 of 347,802** | |
+
+The best pair explains five published numbers **exactly**:
+
+```
+8-cell  [(2,9),(3,8),(3,9),(3,10),(4,8),(4,9),(4,10),(5,9)]        sym refH+refV+rot180
+12-cell [(6,9),(6,10),(7,6),(7,7),(7,8),(7,9),(8,7),(8,8),(8,9),(8,10),(9,6),(9,7)]  sym rot180
+
+d(4,10) =  1   core path =  1   EXPLAINS      d(7,10) = 13   core path = 13   EXPLAINS
+d(6, 9) =  9   core path =  9   EXPLAINS      d(8, 8) = 45   core path = 45   EXPLAINS
+```
+
+⇒ the route the two numbers describe is literally there in the shapes: **(6,9) → (5,9) costs 8
+(the 8-block) and (7,10) → (6,10) costs 12 (the 12-block), and each ends with a cost-1 step
+into the (5,10) singleton.** The 8 and the 12 are not a coincidence of the arithmetic; they are
+the two halves of the user's picture, and the shapes that carry them are enumerated.
+
+**Step 7 — the seeded descent, which is what the trim was for.** With the core in place (the
+8-block, the 12-block, the (5,10) singleton, everything else singletons) the greedy descent of
+§4.4g.1 now runs *past* the point where the all-singletons start stalls:
+
+| start | best E | steps | stuck? |
+|---|---|---|---|
+| all singletons (previous measurement) | **480** | 40 | **yes** — a local minimum with no improving neighbour |
+| seeded with the (5,10) trim, best of 5 pairs | **236** | 200 | not yet — but see below |
+| the same pair, run for 1,200 steps | **236** | 1,200 | **yes** — a plateau at E = 236 |
+
+⇒ **the seed halves the stall energy (480 → 236) and that is all it does.** The 1,200-step run
+reaches E = 236 within about 100 steps and then stays there for 1,100 more. The seeded
+descent is therefore **not** the mechanism that finishes this instance: it is the mechanism
+that finds the right basin, and the shapes still have to be *grown* (Route A / AODFS) from
+there. The other four seeded starts land at E = 260 / 289 / 257 / 244, all of them still
+descending at step 200 — the same shape of result.
+
+⇒ **the honest caveat: none of them reached E = 0.** A lower E is progress, not a solution.
+The only thing that counts is `E = 0` verified by the engine.
+
+**Where this goes next.** The plan for the rest of the search — the facet register, the 5×5
+window decomposition, the conservation law as the join, and the per-facet pinning power — is
+`docs/LOCALITY-PLAN.md`.
+
+**What this does NOT establish.** The filters are one-sided, so a survivor is *necessary*, never
+*sufficient*: 40,862 pairs survive, and the ranking among them is a heuristic. The branch in
+§Step 5 is open. And a descent that reaches a lower E is progress, not a solution — the only
+thing that counts is `E = 0` verified by the engine.
+
+**What was deliberately NOT changed.** `src/` — the engine — is untouched. In particular the
+solver's area bound (`src/solver.py::_need`) still uses *published* neighbours only, so it does
+not see the ring-imputed `d = 1` bounds of §Step 2. Extending it is an engine change and
+belongs on `main`, not on this branch.
+
 ---
 
 ## 5. How the three compose
@@ -986,6 +1114,18 @@ cheaply** on the 5×5 and the 4×4 before the 11×11 is touched.
   general is empirical (§3A.3). **A negative result would be the most valuable outcome of the
   whole project**: it would say the exact route has run out of constraints, and that the
   simulation route (§4) is the right tool rather than a consolation prize.
+* **Is (6,10) a capitol or not?** (§4.7, Step 5) The 8/12 reading of the (5,10) trim assumes
+  it is not; the branch where it *is* gives 9 and 13 instead and is not refuted. The two
+  branches predict different shapes, so one of them is wrong, and the descent may say which.
+* **Does the seeded descent ever reach E = 0?** (§4.7, Step 7) It is at E = 236 after 200 steps
+  and still descending, where the all-singletons start stalls at 480. The step budget is the
+  only thing that stopped it.
+* **Should the engine's area bound use the imputed `d = 1` ring?** (§4.7) `src/solver.py::_need`
+  uses published neighbours only, so the solver's prune does not see the 8 and the 12 that the
+  (5,10) ring makes visible. That is an engine change, and it belongs on `main`.
+* **The 40,862 surviving (8-cell, 12-cell) pairs** (§4.7) are *necessary*, not sufficient. The
+  three filters are one-sided, so something else has to rank them — and the ranking is where the
+  model of §2 would earn its place.
 
 ---
 

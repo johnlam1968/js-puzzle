@@ -444,4 +444,11 @@ print(res['singleton_demands'])
 | `src/grow.py` | the growth itself: `grow_states`, `symmetry_choices`, `orbits_of` |
 | `src/hitting.py` | capitol positions as a hitting set; also `singleton_demands` (the `d = 1` rule) |
 | `src/solver.py` | the readings-driven solver: `_need` (area bound), the `d = 1` prunes, the tight-edge work |
+| `docs/LOCALITY-PLAN.md` | the plan that came out of the (5,10) trim: the facet register, the 5×5 window decomposition, the conservation law as the join, and the per-facet pinning power |
+| `tools/constraint_register_11x11.py` | every constraint we have, with its source, its status and its locality |
+| `tools/ground_map_11x11.py` | the ground map of the 11×11, trimmed from the (5,10) demand |
+| `tools/trim_510.py` | the two blocks the trim forces, the three filters, and the seeded descent |
+| `tools/facet_pinning_11x11.py` | the per-facet pinning power, measured on the (5,10) candidate slice |
+| `tools/facet_pinpoint_11x11.py` | which sizes a cell can still have, window by window |
+| `tools/size_multiset_11x11.py` | the feasible size multisets under the conservation law (121) |
 | `PLAN.md` | the defect register — D38 (the name), D43 (odd area), D48 (orbit semantics), D53, D64, D65, D85 |

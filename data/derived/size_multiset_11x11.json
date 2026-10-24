@@ -1,0 +1,97 @@
+{
+ "id": "size-multiset-11x11",
+ "generated_by": "tools/size_multiset_11x11.py",
+ "total_cells": 121,
+ "capitol_lower_bound": 6,
+ "hitting_set": {
+  "min_additional": 4,
+  "minimum_sets": 120,
+  "candidate_pool": 64
+ },
+ "bounds_used": [
+  16,
+  12,
+  8,
+  6,
+  4,
+  2
+ ],
+ "variants": {
+  "tight-singletons2": {
+   "singletons": 2,
+   "multisets": 13,
+   "Q_min": 1851,
+   "Q_max": 3475,
+   "states_min": 9,
+   "states_max": 33,
+   "answer_floor_min": 311472,
+   "answer_floor_max": 1097784,
+   "variant": "TIGHT: the six area bounds are six DIFFERENT big states"
+  },
+  "tight-singletons3": {
+   "singletons": 3,
+   "multisets": 11,
+   "Q_min": 2185,
+   "Q_max": 2579,
+   "states_min": 10,
+   "states_max": 27,
+   "answer_floor_min": 434020,
+   "answer_floor_max": 604658,
+   "variant": "TIGHT: the six area bounds are six DIFFERENT big states"
+  },
+  "tight-singletons9": {
+   "singletons": 9,
+   "multisets": 14,
+   "Q_min": 1801,
+   "Q_max": 2387,
+   "states_min": 16,
+   "states_max": 33,
+   "answer_floor_min": 294872,
+   "answer_floor_max": 517979,
+   "variant": "TIGHT: the six area bounds are six DIFFERENT big states"
+  },
+  "loose-singletons2": {
+   "singletons": 2,
+   "multisets": 274040,
+   "Q_min": 1731,
+   "Q_max": 23397103,
+   "states_min": 7,
+   "states_max": 111354,
+   "answer_floor_min": 272396,
+   "answer_floor_max": 49765857162964,
+   "variant": "LOOSE: one big state may serve several of the bounds"
+  },
+  "loose-singletons3": {
+   "singletons": 3,
+   "multisets": 415597,
+   "Q_min": 1693,
+   "Q_max": 22336976,
+   "states_min": 7,
+   "states_max": 100953,
+   "answer_floor_min": 260568,
+   "answer_floor_max": 45358226984052,
+   "variant": "LOOSE: one big state may serve several of the bounds"
+  },
+  "loose-singletons9": {
+   "singletons": 9,
+   "multisets": 357023,
+   "Q_min": 1423,
+   "Q_max": 13759644,
+   "states_min": 10,
+   "states_max": 63158,
+   "answer_floor_min": 184084,
+   "answer_floor_max": 17211618455157,
+   "variant": "LOOSE: one big state may serve several of the bounds"
+  }
+ },
+ "laws": {
+  "cells": "sum over states of |S| = 121",
+  "row_sums": "sum over rows of row_sum(row) = sum over states of |S|^2 = Q",
+  "answer": "answer = sum over rows of row_sum(row)^2 >= Q^2 / 11"
+ },
+ "open": [
+  "how many singletons are there really?  2 is forced, 9 is the human's claim",
+  "are the six area bounds met by six different states?  (TIGHT vs LOOSE)",
+  "the placement: the multiset fixes Q, but the answer needs the row sums"
+ ]
+}

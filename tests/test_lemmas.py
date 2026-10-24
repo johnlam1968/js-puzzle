@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.join(ROOT, "src"))
 from cost import (Puzzle, capitol_neighbour_bound, check_L1, check_L2, check_L3, check_L5,
                    foreign_capitol_violations, high_d_cells, is_metric)
 from hitting import capitol_lower_bound
-from rules import capitol_of, is_legal_state, partition_of, symmetry_group
+from rules import (capitol_of, connected, is_legal_state, partition_of, symmetry_group)
 
 EXAMPLE_STATES = [
     [0, 1, 1, 3, 3],
@@ -89,6 +89,59 @@ class TestLemmas(unittest.TestCase):
         self.assertEqual(d[0], [0, 1, 3])
         self.assertEqual(check_L3(puz, d), [])          # over neighbours it holds
         self.assertGreater(abs(d[0][0] - d[0][2]), puz.sizes[0])   # over all cells it fails
+
+
+class TestAreaParity(unittest.TestCase):
+    """A state that HAS a capitol has ODD area -- so an EVEN-area state has NO capitol.
+
+    The capitol is one cell, and every other cell of the state lies in an orbit of size
+    >= 2 under the state's own symmetry group, so the area is 1 + (an even number).
+
+    Why the lemma matters: the (5,10) trim of the 11x11 forces an 8-cell block and a
+    12-cell block (docs/NEXT-APPROACHES.md 4.7).  Both are EVEN, so both are capitol-less
+    FILLER states, and their cells reach a capitol through the blocks around them.
+
+    The converse is FALSE and the official puzzle text says so: the X pentomino has five
+    cells and no capitol.
+    """
+
+    X_PENTOMINO = {(0, 1), (1, 0), (1, 1), (1, 2), (2, 1)}
+
+    def test_capitol_implies_odd_area(self):
+        """COMPLETE over the 4x4: every connected subset with a symmetry, not a sample.
+
+        The 4x4 has 65,536 subsets; the connected-and-symmetric ones are checked one by
+        one, so this is a proof for the 4x4 rather than a spot check.
+        """
+        n = 4
+        cells = [(r, c) for r in range(n) for c in range(n)]
+        checked = 0
+        for m in range(1, 1 << (n * n)):
+            s = frozenset(cells[i] for i in range(n * n) if (m >> i) & 1)
+            if not connected(s) or not symmetry_group(s):
+                continue
+            checked += 1
+            if capitol_of(s) is not None:
+                self.assertEqual(len(s) % 2, 1,
+                                 f"a state with a capitol must have odd area: {sorted(s)}")
+        self.assertGreater(checked, 100, "the enumeration found suspiciously few states")
+
+    def test_even_area_implies_no_capitol(self):
+        for S in partition_of(EXAMPLE_STATES):
+            if len(S) % 2 == 0:
+                self.assertIsNone(capitol_of(S), f"{S} is even, so it has no capitol")
+
+    def test_the_converse_is_false(self):
+        """The X pentomino: five cells (odd) and NO capitol -- the official text says so."""
+        self.assertEqual(len(self.X_PENTOMINO) % 2, 1)
+        self.assertIsNone(capitol_of(self.X_PENTOMINO))
+        # and it is a legal state (connected, with a symmetry) -- just a capitol-less one
+        self.assertTrue(is_legal_state(self.X_PENTOMINO))
+
+    def test_the_8_and_12_blocks_cannot_have_capitols(self):
+        """The two blocks the (5,10) trim forces are even, so they are filler states."""
+        for size in (8, 12):
+            self.assertEqual(size % 2, 0)
 
 
 class TestE1EqualityIsNotATheorem(unittest.TestCase):

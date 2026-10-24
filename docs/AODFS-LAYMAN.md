@@ -593,4 +593,6 @@ for (r, c), v in sorted(H.items()):
 | `docs/DESIGN.md` §3 | the authoritative AODFS design |
 | `docs/ALTERNATIVES.md` | the discussion log: the analogies, their exact translations, the experiments |
 | `docs/NEXT-APPROACHES.md` | the specification for the routes that followed: simulation, a fuzzy ranking layer, capitol-count speculation |
+| `docs/LOCALITY-PLAN.md` | the plan that came out of the (5,10) trim: the constraint register, the 5×5 windows, and the conservation law as the join |
+| `tools/ground_map_11x11.py` | the ground map of the 11×11, trimmed from the (5,10) demand |
 | `PLAN.md` | the defect register — AODFS entries are D38, D48, D65, D85 |

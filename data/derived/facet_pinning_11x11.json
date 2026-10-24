@@ -1,0 +1,43 @@
+{
+ "id": "facet-pinning-11x11",
+ "generated_by": "tools/facet_pinning_11x11.py",
+ "candidate_set": "the (8-cell, 12-cell) pairs around the forced (5,10) singleton",
+ "candidates": 86359,
+ "per_facet": [
+  {
+   "facet": "F1-leave-the-block",
+   "killed": 0,
+   "survives_alone": 86359,
+   "survival_rate_alone": 1.0,
+   "pinning_power": 1.0,
+   "pinning_power_percent": 100.0
+  },
+  {
+   "facet": "F2-core-path",
+   "killed": 45493,
+   "survives_alone": 40866,
+   "survival_rate_alone": 0.473211,
+   "pinning_power": 0.473211,
+   "pinning_power_percent": 47.321
+  },
+  {
+   "facet": "F3-capitol-ball",
+   "killed": 4,
+   "survives_alone": 86355,
+   "survival_rate_alone": 0.999954,
+   "pinning_power": 0.999954,
+   "pinning_power_percent": 99.995
+  },
+  {
+   "facet": "F4-revealed-capitol-inside",
+   "killed": 0,
+   "survives_alone": 86359,
+   "survival_rate_alone": 1.0,
+   "pinning_power": 1.0,
+   "pinning_power_percent": 100.0
+  }
+ ],
+ "joint_survivors": 40862,
+ "joint_survival_rate": 0.473164,
+ "read": "the per-facet 'pinning power' is the fraction of candidates the facet kills on its own.  The joint number is what all four together do."
+}
