@@ -1139,3 +1139,41 @@ cheaply** on the 5×5 and the 4×4 before the 11×11 is touched.
 | `src/hitting.py` | the hitting set, and `singleton_demands` (the `d = 1` rule) |
 | `src/grow.py` | the growth machinery |
 | `system1-measure` (separate repo) | the measurement side: question sets, composition, rules — the natural home for the §2 question sets |
+| `docs/NEW-ROUTES.md` | four routes **outside** A, B and C — profile-first, generated twins, satisfiability, style transfer |
+
+---
+
+## 9. Four routes that are **not** A, B or C
+
+*(`docs/NEW-ROUTES.md`, written by a third session. It proposes four routes that change **what is
+enumerated**, rather than what the search looks for — and one measurement that changes what "the
+answer" is.)*
+
+**The measurement.** On the official 5×5's truth file:
+
+```
+row_sum(i) = Σ_states ( |S| × |{ cells of S in row i }| )
+```
+
+The 11-cell state alone contributes 55 to row 4 — **55² = 3,025 is 37.6% of the answer 8,045.**
+And `Q = Σ|S|² = Σᵢ row_sum(i)` is **placement-invariant** (a state of size *m* adds *m* to each
+of its *m* cells, in whatever rows they sit). ⇒ **the answer's freedom lives in the
+row-distribution of the big states, not in the partition.**
+
+| route | the idea | why it is not A/B/C |
+|---|---|---|
+| **P — profile-first** | enumerate the big states' row-distributions; bound the fillers' contribution with a transportation LP ⇒ a **certified interval** for the answer, with no solver run at all | A/B/C enumerate *tilings*; P enumerates *row-distributions* and relaxes the rest |
+| **T — generated twins** | this repository is a *generator*: mint 6×6 / 7×7 instances **with known truth** ⇒ the window solver (49 windows) finally has a ground truth to be tested against, and the §5.6 inference chain gets a **hit rate** | every route so far treats the 5×5 as the only truth available — and a 5×5 board hosts exactly **one** window |
+| **S — satisfiability** | encode the question for Z3 / CP-SAT instead of enumerating; most likely to pay on the **small top-left core**, where UNSAT is a proof the descent can never give | a different failure mode: enumeration explodes, a solver returns UNSAT or a witness |
+| **Y — style transfer** | the 5×5's biggest state is a **corner-hugging L with its capitol at the corner**; test whether the 11×11's big states are the same ⇒ the candidate set collapses from 1.3e12 to a few dozen | zero search cost — one cheap test, before anything else starts |
+
+⇒ **How they compose with A/B/C.** A/B/C decide *how to search*; P/T/S/Y decide *what is worth
+searching for* and *what the answer can be*. **T is the substrate** — it is the only route that
+makes the others verifiable. **P is the cheapest deliverable** (an interval today, a witness
+later). **S is the only route that can return UNSAT**, i.e. an actual proof. **Y is a single
+experiment** that can shrink the catalogue before anything else starts.
+
+⇒ **Read `docs/NEW-ROUTES.md` §6 first.** The six area bounds of the ground map are **exactly the
+six tight edges of the d-field** ({2, 4, 6, 8, 12, 16}) ⇒ the "TIGHT" reading is not a reading of
+the picture, the "are they six different states" question is already settled, and the *nine
+singletons* claim is not what carries the narrowing.
