@@ -1,0 +1,412 @@
+{
+ "id": "register-claims-11x11",
+ "generated_by": "tools/register_claims_11x11.py",
+ "A_six_area_bounds": {
+  "n_bounds": 12,
+  "distinct_edges": 6,
+  "distinct_area_values": [
+   16,
+   12,
+   8,
+   6,
+   4,
+   2
+  ],
+  "edges": [
+   [
+    [
+     0,
+     1
+    ],
+    [
+     0,
+     2
+    ]
+   ],
+   [
+    [
+     3,
+     8
+    ],
+    [
+     4,
+     8
+    ]
+   ],
+   [
+    [
+     5,
+     9
+    ],
+    [
+     6,
+     9
+    ]
+   ],
+   [
+    [
+     6,
+     2
+    ],
+    [
+     7,
+     2
+    ]
+   ],
+   [
+    [
+     6,
+     10
+    ],
+    [
+     7,
+     10
+    ]
+   ],
+   [
+    [
+     10,
+     8
+    ],
+    [
+     10,
+     9
+    ]
+   ]
+  ],
+  "pairs_of_edges_sharing_a_cell": [],
+  "verdict": "the 12 bounds come from 6 edges, and no two edges share a cell, so they are 6 DIFFERENT edges of the d-field -- they cannot be the same state boundary",
+  "careful": "this shows six different EDGES, hence six different lower bounds on six different cells.  It does NOT yet show six different STATES: the '>=' still has to become '='.  That step is the real question."
+ },
+ "B_ball_is_inert_for_big_readings": {
+  "board_max_manhattan": 20,
+  "inert_readings": [
+   {
+    "cell": [
+     3,
+     3
+    ],
+    "d": 51,
+    "radius": 26,
+    "verdict": "the ball covers the whole board -- INERT"
+   },
+   {
+    "cell": [
+     8,
+     8
+    ],
+    "d": 45,
+    "radius": 23,
+    "verdict": "the ball covers the whole board -- INERT"
+   },
+   {
+    "cell": [
+     10,
+     8
+    ],
+    "d": 77,
+    "radius": 39,
+    "verdict": "the ball covers the whole board -- INERT"
+   },
+   {
+    "cell": [
+     10,
+     9
+    ],
+    "d": 61,
+    "radius": 31,
+    "verdict": "the ball covers the whole board -- INERT"
+   }
+  ],
+  "effective_readings": [
+   {
+    "cell": [
+     0,
+     1
+    ],
+    "d": 8,
+    "radius": 4,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     0,
+     2
+    ],
+    "d": 4,
+    "radius": 2,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     0,
+     5
+    ],
+    "d": 11,
+    "radius": 6,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     0,
+     9
+    ],
+    "d": 5,
+    "radius": 3,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     1,
+     7
+    ],
+    "d": 11,
+    "radius": 6,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     2,
+     2
+    ],
+    "d": 7,
+    "radius": 4,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     2,
+     5
+    ],
+    "d": 1,
+    "radius": 1,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     2,
+     10
+    ],
+    "d": 14,
+    "radius": 7,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     3,
+     0
+    ],
+    "d": 28,
+    "radius": 14,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     3,
+     6
+    ],
+    "d": 1,
+    "radius": 1,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     3,
+     8
+    ],
+    "d": 6,
+    "radius": 3,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     4,
+     1
+    ],
+    "d": 22,
+    "radius": 11,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     4,
+     8
+    ],
+    "d": 4,
+    "radius": 2,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     4,
+     10
+    ],
+    "d": 1,
+    "radius": 1,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     5,
+     3
+    ],
+    "d": 15,
+    "radius": 8,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     5,
+     5
+    ],
+    "d": 10,
+    "radius": 5,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     6,
+     0
+    ],
+    "d": 11,
+    "radius": 6,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     6,
+     2
+    ],
+    "d": 11,
+    "radius": 6,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     6,
+     9
+    ],
+    "d": 9,
+    "radius": 5,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     7,
+     2
+    ],
+    "d": 17,
+    "radius": 9,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     7,
+     4
+    ],
+    "d": 14,
+    "radius": 7,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     7,
+     7
+    ],
+    "d": 10,
+    "radius": 5,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     7,
+     10
+    ],
+    "d": 13,
+    "radius": 7,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     8,
+     0
+    ],
+    "d": 30,
+    "radius": 15,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     8,
+     5
+    ],
+    "d": 6,
+    "radius": 3,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     9,
+     3
+    ],
+    "d": 10,
+    "radius": 5,
+    "verdict": "the ball is smaller than the board -- it bites"
+   },
+   {
+    "cell": [
+     10,
+     1
+    ],
+    "d": 26,
+    "radius": 13,
+    "verdict": "the ball is smaller than the board -- it bites"
+   }
+  ],
+  "the_demands_that_actually_bite": [
+   [
+    0,
+    1
+   ],
+   [
+    0,
+    2
+   ],
+   [
+    0,
+    5
+   ],
+   [
+    0,
+    9
+   ],
+   [
+    2,
+    2
+   ],
+   [
+    2,
+    5
+   ],
+   [
+    3,
+    6
+   ],
+   [
+    4,
+    10
+   ],
+   [
+    6,
+    0
+   ]
+  ],
+  "verdict": "4 of the 31 published non-zero readings have a ball that covers the whole board (the four big ones: 51, 45, 77, 61).  The other 27 still bite -- and the 9 that actually generate a HIDDEN-CAPITOL demand are the ones in the TOP LEFT plus the d=1 chain.  So the pressure is there, not in the bottom-right corner."
+ },
+ "C_answer_depends_only_on_the_row_profile": {
+  "answer_formula": "sum over rows of (row sum)^2, where row sum = sum of the SIZES of the states occupying that row",
+  "cost_field_depends_on": "the partition -- which cell belongs to which state, and each state's size -- NOT on the shape of the states",
+  "consequence": "two partitions with the same row profile give the SAME answer, so the search target can be one witness per distinct row profile rather than every partition; shape legality then filters partitions instead of being a search dimension.",
+  "also": "sum of the row sums = sum over states of size^2 = Q, independently of the placement, so Q is fixed by the multiset of state sizes alone."
+ }
+}

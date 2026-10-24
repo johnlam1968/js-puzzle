@@ -26,9 +26,12 @@ THE CHAIN (every step is a published number)
         => the 12-cell state contains NEITHER (10,8) nor (10,9).
 
     d(6,9) = 9 = 8 + 1
-        => the step (6,9)->(6,10) costs 8, and (6,10)'s state is 12, so min = 8 forces
-           size(6,9) = 8 EXACTLY (12 is not 8).  (6,9) is in an 8-cell state.
-        => (6,9) is not in the 12-cell state.
+        => the tight neighbour of (6,9) has d = 1, and there are TWO of them:
+           (5,9) and (6,10).  So the "8" has TWO possible CARRIERS:
+             branch A: (6,9)'s own state has 8 cells, and the crossing is 8
+             branch B: the (5,9) state has 8 cells, and (6,9)'s state is larger
+           The step cost is min(size_6,9, size_carrier) = 8 either way, so L2/L3 alone
+           cannot tell them apart.  BOTH are enumerated below.
 
     d(10,8) = 77 = 16 + 61
         => the step (10,8)->(10,9) costs 16, so the 16-cell state holds BOTH (10,8)
@@ -151,14 +154,20 @@ def main() -> int:
     print(f"  12-cell states with (6,10),(7,10) and an entry cell: {len(T12)}"
           f"  ({time.time()-t0:.0f}s)", flush=True)
 
-    # ---- the 8-cell state: (6,9) ---------------------------------------------------
-    def build8():
-        raw = enumerate_states((6, 9), 8, blocked={SINGLETON})
+    # ---- the 8-cell state: (6,9) OR (5,9) -------------------------------------------
+    # TWO CARRIERS of the "8" in 9 = 8 + 1 (see the docstring): the 8 can be the size of
+    # (6,9)'s own state, or the size of the state holding (5,9).  Both are enumerated and
+    # kept apart, because they are different claims about the solution.
+    def build8(anchor):
+        raw = enumerate_states(anchor, 8, blocked={SINGLETON})
         return {fs for fs in raw
                 if not any(x in fs for x in CAPITOLS)
                 and (10, 8) not in fs and (10, 9) not in fs}
-    A8 = cached("chain_A8.json", build8)
-    print(f"  8-cell states with (6,9): {len(A8)}  ({time.time()-t0:.0f}s)", flush=True)
+    A8_6_9 = cached("chain_A8_6_9.json", lambda: build8((6, 9)))
+    A8_5_9 = cached("chain_A8_5_9.json", lambda: build8((5, 9)))
+    A8 = A8_6_9 | A8_5_9
+    print(f"  8-cell states: {len(A8_6_9)} with (6,9), {len(A8_5_9)} with (5,9),"
+          f" {len(A8_6_9 & A8_5_9)} with both  ({time.time()-t0:.0f}s)", flush=True)
 
     # ---- the 16-cell state: (10,8) AND (10,9) --------------------------------------
     def build16():
@@ -259,6 +268,7 @@ def main() -> int:
                 if not all_inside_ok:
                     continue
                 survivors.append({
+                    "eight_carrier": ("(6,9)" if (6, 9) in a else "(5,9)"),
                     "eight": sorted(list(c) for c in a),
                     "twelve": sorted(list(c) for c in t),
                     "sixteen": sorted(list(c) for c in p),
@@ -277,6 +287,9 @@ def main() -> int:
     out["counts"] = {
         "twelve_cell_candidates": len(T12),
         "eight_cell_candidates": len(A8),
+        "eight_cell_candidates_carrying_6_9": len(A8_6_9),
+        "eight_cell_candidates_carrying_5_9": len(A8_5_9),
+        "eight_cell_candidates_carrying_both": len(A8_6_9 & A8_5_9),
         "sixteen_cell_candidates": len(P16),
         "disjoint_8_12_pairs_with_room_for_a_16": pairs,
         "triples": triples,
@@ -286,7 +299,36 @@ def main() -> int:
         "triples_with_d_6_9_eq_9": ok9,
     }
     out["triples_that_reproduce_every_published_reading_inside"] = len(survivors)
-    out["survivors"] = survivors[:60]
+    # --- keep the derived file SLIM: a summary plus a few compact samples, not the
+    # --- whole survivor set (which is ~60k triples and would be megabytes).
+    from collections import Counter
+    branch = Counter(sv["eight_carrier"] for sv in survivors)
+    occ12, occ8, occ16 = Counter(), Counter(), Counter()
+    for sv in survivors:
+        for c in sv["twelve"]:
+            occ12[tuple(c)] += 1
+        for c in sv["eight"]:
+            occ8[tuple(c)] += 1
+        for c in sv["sixteen"]:
+            occ16[tuple(c)] += 1
+    n = max(1, len(survivors))
+    out["survivor_total"] = len(survivors)
+    out["survivor_split"] = dict(branch)
+    out["skeleton"] = {
+        "note": "cells occupied in EVERY survivor (100%), and how often the rest appear",
+        "twelve_cell_state_always": sorted([list(c) for c, v in occ12.items() if v == n]),
+        "twelve_cell_state_frequency": {("%d,%d" % c): v for c, v in
+                                        sorted(occ12.items(), key=lambda kv: -kv[1])},
+        "eight_cell_state_always": sorted([list(c) for c, v in occ8.items() if v == n]),
+        "eight_cell_state_frequency": {("%d,%d" % c): v for c, v in
+                                       sorted(occ8.items(), key=lambda kv: -kv[1])},
+        "sixteen_cell_state_always": sorted([list(c) for c, v in occ16.items() if v == n]),
+        "sixteen_cell_state_frequency": {("%d,%d" % c): v for c, v in
+                                         sorted(occ16.items(), key=lambda kv: -kv[1])},
+    }
+    out["survivors"] = [{"c": sv["eight_carrier"],
+                         "e": sv["eight"], "t": sv["twelve"], "s": sv["sixteen"]}
+                        for sv in survivors[:60]]
     out["examples"] = examples
     out["note_on_scope"] = ("a survivor is NOT REFUTED by any published reading that "
                             "falls inside the four corner states: its local d is at least "
@@ -305,6 +347,10 @@ def main() -> int:
     print(f"     reproducing d(10,8)=77                      {ok77}")
     print(f"     reproducing d(6,9)=9                        {ok9}")
     print(f"  triples NOT REFUTED by any published reading inside   {len(survivors)}")
+    from collections import Counter
+    br = Counter(sv["eight_carrier"] for sv in survivors)
+    for k, v in sorted(br.items()):
+        print(f"     of which the 8 is carried by {k}: {v}")
     print(f"\nwrote {OUT}  ({time.time()-t0:.0f}s)")
     return 0
 

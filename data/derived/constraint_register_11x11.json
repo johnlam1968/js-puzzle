@@ -1506,18 +1506,59 @@
      "hidden_capitol_within": [
       [
        0,
-       5
+       0
       ],
       [
-       4,
+       0,
+       3
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       1,
        1
       ],
       [
-       4,
-       5
+       1,
+       2
+      ],
+      [
+       1,
+       3
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       2,
+       3
+      ],
+      [
+       3,
+       1
+      ],
+      [
+       3,
+       2
       ]
      ],
-     "note": "a d>0 cell is never a capitol, so this is a hidden one"
+     "n_candidates": 13,
+     "how": "the step-count lemma: a d=v cell has a capitol within floor((v+1)/2) steps, and a published d>0 cell is never a capitol"
     },
     {
      "cell": [
@@ -1533,22 +1574,27 @@
       ],
       [
        0,
+       3
+      ],
+      [
+       0,
        4
       ],
       [
-       2,
-       0
+       1,
+       1
       ],
       [
-       2,
+       1,
        2
       ],
       [
-       2,
-       4
+       1,
+       3
       ]
      ],
-     "note": "a d>0 cell is never a capitol, so this is a hidden one"
+     "n_candidates": 6,
+     "how": "the step-count lemma: a d=v cell has a capitol within floor((v+1)/2) steps, and a published d>0 cell is never a capitol"
     },
     {
      "cell": [
@@ -1559,11 +1605,152 @@
      "step_budget": 6,
      "hidden_capitol_within": [
       [
+       0,
+       0
+      ],
+      [
+       0,
+       3
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       0,
+       6
+      ],
+      [
+       0,
+       7
+      ],
+      [
+       0,
+       8
+      ],
+      [
+       0,
+       10
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       1,
+       3
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       1,
+       5
+      ],
+      [
+       1,
+       6
+      ],
+      [
+       1,
+       8
+      ],
+      [
+       1,
+       9
+      ],
+      [
+       1,
+       10
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       2,
+       3
+      ],
+      [
+       2,
+       4
+      ],
+      [
+       2,
+       6
+      ],
+      [
+       2,
+       7
+      ],
+      [
+       2,
+       8
+      ],
+      [
+       2,
+       9
+      ],
+      [
+       3,
+       2
+      ],
+      [
+       3,
+       4
+      ],
+      [
+       3,
+       5
+      ],
+      [
+       3,
+       7
+      ],
+      [
+       4,
+       3
+      ],
+      [
+       4,
+       4
+      ],
+      [
+       4,
+       5
+      ],
+      [
+       4,
+       6
+      ],
+      [
+       4,
+       7
+      ],
+      [
+       5,
+       4
+      ],
+      [
+       5,
+       6
+      ],
+      [
        6,
        5
       ]
      ],
-     "note": "a d>0 cell is never a capitol, so this is a hidden one"
+     "n_candidates": 36,
+     "how": "the step-count lemma: a d=v cell has a capitol within floor((v+1)/2) steps, and a published d>0 cell is never a capitol"
     },
     {
      "cell": [
@@ -1578,15 +1765,44 @@
        6
       ],
       [
-       3,
-       6
+       0,
+       7
+      ],
+      [
+       0,
+       8
+      ],
+      [
+       0,
+       10
+      ],
+      [
+       1,
+       8
+      ],
+      [
+       1,
+       9
+      ],
+      [
+       1,
+       10
+      ],
+      [
+       2,
+       8
+      ],
+      [
+       2,
+       9
       ],
       [
        3,
        9
       ]
      ],
-     "note": "a d>0 cell is never a capitol, so this is a hidden one"
+     "n_candidates": 10,
+     "how": "the step-count lemma: a d=v cell has a capitol within floor((v+1)/2) steps, and a published d>0 cell is never a capitol"
     },
     {
      "cell": [
@@ -1597,19 +1813,104 @@
      "step_budget": 4,
      "hidden_capitol_within": [
       [
+       0,
+       0
+      ],
+      [
+       0,
+       3
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       1,
+       3
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       1,
+       5
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       2,
+       3
+      ],
+      [
+       2,
+       4
+      ],
+      [
        2,
        6
       ],
       [
-       6,
+       3,
+       1
+      ],
+      [
+       3,
        2
       ],
       [
-       6,
-       6
+       3,
+       4
+      ],
+      [
+       3,
+       5
+      ],
+      [
+       4,
+       0
+      ],
+      [
+       4,
+       2
+      ],
+      [
+       4,
+       3
+      ],
+      [
+       4,
+       4
+      ],
+      [
+       5,
+       1
+      ],
+      [
+       5,
+       2
       ]
      ],
-     "note": "a d>0 cell is never a capitol, so this is a hidden one"
+     "n_candidates": 24,
+     "how": "the step-count lemma: a d=v cell has a capitol within floor((v+1)/2) steps, and a published d>0 cell is never a capitol"
     },
     {
      "cell": [
@@ -1621,15 +1922,11 @@
      "hidden_capitol_within": [
       [
        1,
-       4
-      ],
-      [
-       1,
        5
       ],
       [
-       1,
-       6
+       3,
+       5
       ],
       [
        2,
@@ -1637,22 +1934,11 @@
       ],
       [
        2,
-       6
-      ],
-      [
-       3,
-       4
-      ],
-      [
-       3,
-       5
-      ],
-      [
-       3,
        6
       ]
      ],
-     "note": "a d>0 cell is never a capitol, so this is a hidden one"
+     "n_candidates": 4,
+     "how": "a d=1 demand is served by a 1x1 state ADJACENT to it (PLAN D64), so the candidates are the neighbours that could still be that singleton"
     },
     {
      "cell": [
@@ -1664,15 +1950,11 @@
      "hidden_capitol_within": [
       [
        2,
-       5
-      ],
-      [
-       2,
        6
       ],
       [
-       2,
-       7
+       4,
+       6
       ],
       [
        3,
@@ -1680,22 +1962,11 @@
       ],
       [
        3,
-       7
-      ],
-      [
-       4,
-       5
-      ],
-      [
-       4,
-       6
-      ],
-      [
-       4,
        7
       ]
      ],
-     "note": "a d>0 cell is never a capitol, so this is a hidden one"
+     "n_candidates": 4,
+     "how": "a d=1 demand is served by a 1x1 state ADJACENT to it (PLAN D64), so the candidates are the neighbours that could still be that singleton"
     },
     {
      "cell": [
@@ -1707,26 +1978,19 @@
      "hidden_capitol_within": [
       [
        3,
-       9
+       10
       ],
       [
-       3,
+       5,
        10
       ],
       [
        4,
        9
-      ],
-      [
-       5,
-       9
-      ],
-      [
-       5,
-       10
       ]
      ],
-     "note": "a d>0 cell is never a capitol, so this is a hidden one"
+     "n_candidates": 3,
+     "how": "a d=1 demand is served by a 1x1 state ADJACENT to it (PLAN D64), so the candidates are the neighbours that could still be that singleton"
     },
     {
      "cell": [
@@ -1741,15 +2005,136 @@
        0
       ],
       [
-       0,
-       6
+       1,
+       0
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       3,
+       1
+      ],
+      [
+       3,
+       2
+      ],
+      [
+       4,
+       0
+      ],
+      [
+       4,
+       2
+      ],
+      [
+       4,
+       3
+      ],
+      [
+       4,
+       4
+      ],
+      [
+       5,
+       0
+      ],
+      [
+       5,
+       1
+      ],
+      [
+       5,
+       2
+      ],
+      [
+       5,
+       4
+      ],
+      [
+       6,
+       1
+      ],
+      [
+       6,
+       3
+      ],
+      [
+       6,
+       4
+      ],
+      [
+       6,
+       5
       ],
       [
        6,
        6
+      ],
+      [
+       7,
+       0
+      ],
+      [
+       7,
+       1
+      ],
+      [
+       7,
+       3
+      ],
+      [
+       7,
+       5
+      ],
+      [
+       8,
+       1
+      ],
+      [
+       8,
+       2
+      ],
+      [
+       8,
+       3
+      ],
+      [
+       8,
+       4
+      ],
+      [
+       9,
+       0
+      ],
+      [
+       9,
+       1
+      ],
+      [
+       9,
+       2
+      ],
+      [
+       10,
+       0
+      ],
+      [
+       10,
+       2
       ]
      ],
-     "note": "a d>0 cell is never a capitol, so this is a hidden one"
+     "n_candidates": 33,
+     "how": "the step-count lemma: a d=v cell has a capitol within floor((v+1)/2) steps, and a published d>0 cell is never a capitol"
     }
    ],
    "counts": {
@@ -1777,9 +2162,15 @@
     },
     {
      "text": "the 9 one-cell states (the '9 + 2' reading): the frame is a few known sizes of small state + several big states + filler",
-     "status": "OBSERVATION -- not derived here",
-     "note": "the crashed session read it as '32 of the 121 cells are already pinned into big states'.  It is a CLAIM ABOUT THE SHAPE OF THE SOLUTION, not a constraint the engine can check, and it is the one place where the human is ahead of the arithmetic.",
-     "test": "it is testable: F-area already pins 32 cells into states of area >= 4.  The claim is that NINE of them are singletons -- which would make the d=1 demands much stronger (three more forced 1x1 states)."
+     "status": "WITHDRAWN -- the supporting arithmetic does not hold",
+     "note": "the crashed session read it as '32 of the 121 cells are already pinned into big states'.  It is a CLAIM ABOUT THE SHAPE OF THE SOLUTION, not a constraint the engine can check.",
+     "why_withdrawn": [
+      "F-area pins 12 CELLS, not 32 (10 of them with min_area >= 4, 2 with min_area = 2) -- the '32' was never measured",
+      "and 'min_area >= 4' is a LOWER bound, which points the OPPOSITE way from 'is a singleton'.  A lower bound of 4 cannot imply size 1.",
+      "so 'F-area already pins 32 cells into states of area >= 4.  The claim is that NINE of them are singletons' never had a valid inference behind it"
+     ],
+     "what_is_left": "the d=1 demands are strong on their OWN -- a d=1 cell is one cost-1 step from a 1x1 state, and a 1x1 state IS a capitol (PLAN D64).  F-singleton-demand and F-ball carry that.  The number '9' is not derived from F-area and must not be carried as if it were.",
+     "the_load_bearing_reading": "the thing that does carry weight is the TIGHT reading of 13 = 12 + 1 and 61 = 12*5 + 1 (facet F-inferred, I7), not the count '9'."
     }
    ]
   },
@@ -1913,11 +2304,13 @@
      "status": "PROVEN (the sum 121 is exact)"
     },
     {
-     "rule": "I12 (the corner chain, run): 632 surviving corner triples",
+     "rule": "I12 (the corner chain, run): the surviving corner triples",
      "the_chain": "d(6,10)=1 is free; d(7,10)=13=12+1 puts a 12-cell state on (7,10) and (6,10); d(10,9)=61=12*5+1 crosses INTO that state and walks 4 steps to (6,10) then exits to the (5,10) singleton; |77-61|=16 puts both (10,8) and (10,9) in a 16-cell state; d(6,9)=9=8+1 forces size(6,9)=8 exactly.",
-     "measured": "the chain cuts the blind search from 347,802 pairs to 149 12-cell + 483 8-cell + 7,534 16-cell candidates, and 632 triples survive every published reading inside them",
-     "skeleton": "in all 632 the 12-cell state's 12 cells are FIXED, and the readings d(4,10)=1, d(6,9)=9, d(7,10)=13, d(10,9)=61, d(10,8)=77 are explained exactly",
-     "status": "PROVEN (the chain); PROVISIONAL (the tails of the 8- and 16-cell states, and the whole thing assumes the (6,10) tight edge)"
+     "measured": "the chain cuts the blind search from 347,802 pairs to 149 12-cell + 630 8-cell + 7,534 16-cell candidates",
+     "the_two_branches": "the '8' in 9 = 8 + 1 has TWO carriers -- (6,9)'s own state, or the state holding (5,9) -- because both (5,9) and (6,10) are d=1 neighbours of (6,9).  L2/L3 cannot separate them, so both are enumerated: 483 candidates carry it at (6,9), 399 at (5,9), 252 at both.",
+     "the_surviving_split": "of the triples that survive every published reading inside them, the overwhelming majority have the 8 carried by (5,9), and only a small minority by (6,9).  The 12-cell state's 12 cells are FIXED in every survivor.",
+     "the_sampling_bias_trap": "an earlier version of this note said the 12-cell state's twelve cells were FIXED.  That was sampling bias: the stored samples are the FIRST 60 survivors, all from one branch.  Measured over all 58,765, only (6,10) and (7,10) are certain, and the 8-cell state's core is five cells ((2,9) (3,9) (4,9) (4,10) (5,9)).",
+     "status": "PROVEN (the chain and the split); PROVISIONAL (the tight-edge choices and the tails of the 16-cell state)"
     },
     {
      "rule": "I13 (the 8-cell state must not shortcut (10,9))",

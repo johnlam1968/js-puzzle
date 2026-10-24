@@ -476,28 +476,52 @@ registry of constraints to do inference?"* — **done, and it paid.**
 |---|---|
 | the blind search: (8-cell, 12-cell) pairs | 347,802 |
 | 12-cell candidates the chain allows | **149** |
-| 8-cell candidates the chain allows | **483** |
+| 8-cell candidates the chain allows | **630** |
 | 16-cell candidates the chain allows | **7,534** |
-| disjoint (8,12) pairs that leave room for a 16 | 2,525 |
-| triples | 129,138 |
-| triples whose local field **equals** d(10,9) = 61 | **36,830** |
-| triples whose local field **equals** d(10,8) = 77 | **2,048** |
-| triples **not refuted** by any published reading inside them | **632** |
+| disjoint (8,12) pairs that leave room for a 16 | 9,707 |
+| triples | 1,209,079 |
+| triples whose local field **equals** d(10,9) = 61 | **711,132** |
+| triples whose local field **equals** d(10,8) = 77 | **302,332** |
+| triples **not refuted** by any published reading inside them | **58,765** |
 
-**The 632 survivors share a skeleton.** In every one of them these cells are occupied:
+**The two branches of the "8"** — a correction, and it changed the numbers. `d(6,9) = 9`
+has **two** d=1 neighbours, (5,9) and (6,10), so the "8" in `9 = 8 + 1` has **two
+carriers**:
 
-```
-  8-cell state   (1,9) (2,9) (3,9) (4,9) (4,10) (5,9) (6,9)          + 1 more
- 12-cell state   (6,6) (6,10) (7,6) (7,8) (7,10) (8,6) (8,7)
-                 (8,8) (8,9) (8,10) (9,7) (9,9)                       = all 12
- 16-cell state   (9,5) (9,6) (10,6) (10,7) (10,8) (10,9)            + 10 more
-```
+* **branch A** — (6,9)'s own state has 8 cells (483 candidates);
+* **branch B** — the state holding (5,9) has 8 cells (399 candidates; 252 do both).
 
-and the five readings `d(4,10)=1`, `d(6,9)=9`, `d(7,10)=13`, `d(10,9)=61`, `d(10,8)=77`
-are **explained exactly** in all 632.
+An earlier version of this section hard-coded branch A and reported 632 survivors. With
+both branches enumerated the count is **58,765**, and the split is lopsided:
 
-⇒ **the corner is essentially SOLVED as a skeleton**, with only the tails of the 8- and
-16-cell states still free (60 of them are in `data/derived/chain_corner_11x11.json`).
+| the 8 is carried by | survivors |
+|---|---|
+| (5,9) | **58,133** |
+| (6,9) | 632 |
+
+⇒ **the "8" is far more likely to live at (5,9) than at (6,9)** — which is worth knowing,
+because (5,9) is also the cell the 61 path's neighbour set depends on.
+
+**The survivors share a probabilistic skeleton.** Measured over all 58,765 of them:
+
+| state | 100% of every survivor | ≥ 50% | 10–50% |
+|---|---|---|---|
+| 12-cell | (6,10) (7,10) | (8,10) 99.5%, (6,8) (6,9) 98.8%, (9,10) 87.2%, (6,7) 80.2%, (10,10) 79.5% | (7,8) 68.8%, (7,9) 65.8%, (8,9) 62.4%, (6,6) 60.6%, (9,9) 41.9%, (7,7) 41.5%, (8,8) 31.8%, (5,8) 28.6%, (4,8) 18.6%, (3,8) 13.8%, (8,7) 13.6% |
+| 8-cell | (4,9) (4,10) (5,9) | (3,9) 73.9%, (2,9) 56.4% | (4,8) 47.7%, (1,9) 39.6%, (2,10) 38.2%, (3,10) 37.9%, (3,8) 37.0%, (0,9) 27.0% |
+| 16-cell | (10,8) (10,9) | (9,6) 74.7%, (8,5) 74.5%, (8,6) 70.9%, (9,7) 69.6%, (10,7) 69.1%, (9,5) 55.9%, (7,5) 54.6%, (8,4) 53.5% | 32 cells between 10% and 50%, 50 below 10% |
+
+`d(7,10)=13`, `d(10,9)=61`, `d(10,8)=77` are **explained exactly** in every survivor.
+
+⚠ *A note on how this table was NOT to be read.* An earlier version of this section
+said the 12-cell state's twelve cells were "FIXED" — that was **sampling bias**: the
+60 stored samples are the first 60 survivors, they all come from one branch, and they
+made the state look rigid. Measured over the whole set, only two of its cells are
+certain. The counts in `data/derived/chain_corner_11x11.json` are the real ones.
+
+⇒ **the 8-cell state's core is five cells** — (2,9) (3,9) (4,9) (4,10) (5,9) — and the
+12-cell state's core is the (6,8)–(6,10) / (7,8)–(7,10) band. The 16-cell state's tail
+is the least pinned of the three: 50 of its 53 possible cells appear in under 10% of the
+survivors, so **the next constraint has to come from outside this chain**.
 
 **Two more deductions came out of the run itself**
 
@@ -512,6 +536,52 @@ are **explained exactly** in all 632.
   works is **45 = 12×3 + 9**: three steps inside the 12-cell state and then a crossing of
   cost 9 into a **nine-cell state**. So (8,8) sits exactly 3 steps from (6,10) inside the
   12-cell state, and there is a 9-cell state next to it.
+
+---
+
+## 5.8 Three register claims, MEASURED
+
+A review of the register raised three things that were worth checking rather than
+believing.  `tools/register_claims_11x11.py` recomputes all three from the register file.
+
+**A. The six area bounds come from six different edges.** The bound for x is
+`|d(x) − d(y)|` for an adjacent y.  The six bound-pairs are
+
+| edge | bound |
+|---|---|
+| (0,1)–(0,2) | ≥ 4 |
+| (3,8)–(4,8) | ≥ 2 |
+| (5,9)–(6,9) | ≥ 8 |
+| (6,2)–(7,2) | ≥ 6 |
+| (6,10)–(7,10) | ≥ 12 |
+| (10,8)–(10,9) | ≥ 16 |
+
+and **no two of them share a cell** ⇒ six different edges of the d-field, so the six
+bounds cannot be the same state boundary.  *But this still shows six different EDGES, not
+six different STATES: the "≥" has to become "=" — and that step is the real question.*
+
+**B. The step-count ball is inert for the four big readings.** The board's largest
+Manhattan distance is 20, and the radius is `floor((v+1)/2)`:
+
+| reading | radius | |
+|---|---|---|
+| d(10,8)=77 | 39 | covers the board — inert |
+| d(10,9)=61 | 31 | inert |
+| d(3,3)=51 | 26 | inert |
+| d(8,8)=45 | 23 | inert |
+
+⇒ **the bottom-right corner gets no help from the ball at all.** The 9 readings that
+actually generate a hidden-capitol demand are the ones in the **top left** plus the d=1
+chain ⇒ *the pressure is in the top left, not in the corner everybody has been staring
+at.*
+
+**C. The answer depends only on the row profile.** The answer is `Σ_rows (row sum)²`,
+and the cost field depends only on the **partition** (which cell is in which state, and
+each state's size) — **not on the shape**.  So two partitions with the same row profile
+give the same answer, and the search target can be **one witness per distinct row
+profile** instead of every partition.  Shape legality then filters partitions instead of
+being a search dimension.  (And `Σ row sums = Σ|S|² = Q` depends only on the multiset of
+sizes, so Q is fixed before anything is placed.)
 
 ---
 

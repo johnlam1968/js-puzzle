@@ -33,7 +33,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..")
 sys.path.insert(0, os.path.join(ROOT, "src"))
 
-from hitting import capitol_lower_bound, manhattan, singleton_candidates   # noqa: E402
+from hitting import (ball, capitol_lower_bound, manhattan,   # noqa: E402
+                     singleton_candidates)
 
 PUZZLE = os.path.join(ROOT, "data", "puzzles", "official-11x11", "puzzle.json")
 OUT = os.path.join(ROOT, "data", "derived", "constraint_register_11x11.json")
@@ -187,19 +188,37 @@ def main() -> int:
 
     # ------------------------------------------------------------------ #
     # F8  the step-count lemma: which published cells NEED a hidden capitol, and where
+    #
+    # The candidates come from src/hitting.py -- the SAME function the engine and the
+    # hitting-set bound use -- so this display column cannot drift from the counts.
+    # Two rules, both of which the earlier version of this file got wrong:
+    #   * the region is a MANHATTAN BALL, not the eight corners of a k-square;
+    #   * a cell with a published d>0 can never be a capitol, so it is not a candidate
+    #     (a cell with a published d=0 IS a revealed capitol and stays in).
+    #   * a d=1 demand is SPECIAL (PLAN D64): the capitol serving it must be a 1x1
+    #     state ADJACENT to it, so its candidates are the neighbours, not the ball.
+    _singles = singleton_candidates(N, HINTS)
     demands = []
     for (r, c), v in sorted(HINTS.items()):
         if v == 0:
             continue
         k = (v + 1) // 2
         if all(manhattan((r, c), z) > k for z in KNOWN_CAPITOLS):
+            if v == 1:
+                cands = [c for c in _singles.get((r, c), []) if c not in KNOWN_CAPITOLS]
+                how = ("a d=1 demand is served by a 1x1 state ADJACENT to it (PLAN D64), "
+                       "so the candidates are the neighbours that could still be that "
+                       "singleton")
+            else:
+                cands = [c for c in ball((r, c), k, N) if c not in HINTS]
+                how = ("the step-count lemma: a d=v cell has a capitol within "
+                       "floor((v+1)/2) steps, and a published d>0 cell is never a "
+                       "capitol")
             demands.append({
                 "cell": [r, c], "d": v, "step_budget": k,
-                "hidden_capitol_within": [[r + dr, c + dc]
-                                          for dr in (-k, 0, k) for dc in (-k, 0, k)
-                                          if 0 <= r + dr < N and 0 <= c + dc < N
-                                          and (dr or dc)],
-                "note": "a d>0 cell is never a capitol, so this is a hidden one",
+                "hidden_capitol_within": [list(c) for c in cands],
+                "n_candidates": len(cands),
+                "how": how,
             })
     lower = capitol_lower_bound(N, HINTS)
     facets.append({
@@ -234,14 +253,26 @@ def main() -> int:
                        "branch where it IS gives 9 and 13 instead -- not refuted, weaker."},
             {"text": "the 9 one-cell states (the '9 + 2' reading): the frame is a few known "
                      "sizes of small state + several big states + filler",
-             "status": "OBSERVATION -- not derived here",
+             "status": "WITHDRAWN -- the supporting arithmetic does not hold",
              "note": "the crashed session read it as '32 of the 121 cells are already pinned "
                      "into big states'.  It is a CLAIM ABOUT THE SHAPE OF THE SOLUTION, not a "
-                     "constraint the engine can check, and it is the one place where the "
-                     "human is ahead of the arithmetic.",
-             "test": "it is testable: F-area already pins 32 cells into states of area >= 4.  "
-                     "The claim is that NINE of them are singletons -- which would make the "
-                     "d=1 demands much stronger (three more forced 1x1 states)."},
+                     "constraint the engine can check.",
+             "why_withdrawn": [
+                 "F-area pins 12 CELLS, not 32 (10 of them with min_area >= 4, 2 with "
+                 "min_area = 2) -- the '32' was never measured",
+                 "and 'min_area >= 4' is a LOWER bound, which points the OPPOSITE way "
+                 "from 'is a singleton'.  A lower bound of 4 cannot imply size 1.",
+                 "so 'F-area already pins 32 cells into states of area >= 4.  The claim "
+                 "is that NINE of them are singletons' never had a valid inference "
+                 "behind it"],
+             "what_is_left": "the d=1 demands are strong on their OWN -- a d=1 cell is "
+                             "one cost-1 step from a 1x1 state, and a 1x1 state IS a "
+                             "capitol (PLAN D64).  F-singleton-demand and F-ball carry "
+                             "that.  The number '9' is not derived from F-area and must "
+                             "not be carried as if it were.",
+             "the_load_bearing_reading": "the thing that does carry weight is the TIGHT "
+                                         "reading of 13 = 12 + 1 and 61 = 12*5 + 1 "
+                                         "(facet F-inferred, I7), not the count '9'."},
         ],
     })
 
@@ -361,20 +392,33 @@ def main() -> int:
                             "consistent with each other only through this: one of them "
                             "is a large state and the other is not.",
              "status": "PROVEN (the sum 121 is exact)"},
-            {"rule": "I12 (the corner chain, run): 632 surviving corner triples",
+            {"rule": "I12 (the corner chain, run): the surviving corner triples",
              "the_chain": "d(6,10)=1 is free; d(7,10)=13=12+1 puts a 12-cell state on "
                           "(7,10) and (6,10); d(10,9)=61=12*5+1 crosses INTO that state "
                           "and walks 4 steps to (6,10) then exits to the (5,10) singleton; "
                           "|77-61|=16 puts both (10,8) and (10,9) in a 16-cell state; "
                           "d(6,9)=9=8+1 forces size(6,9)=8 exactly.",
              "measured": "the chain cuts the blind search from 347,802 pairs to 149 "
-                         "12-cell + 483 8-cell + 7,534 16-cell candidates, and 632 "
-                         "triples survive every published reading inside them",
-             "skeleton": "in all 632 the 12-cell state's 12 cells are FIXED, and the "
-                         "readings d(4,10)=1, d(6,9)=9, d(7,10)=13, d(10,9)=61, "
-                         "d(10,8)=77 are explained exactly",
-             "status": "PROVEN (the chain); PROVISIONAL (the tails of the 8- and 16-cell "
-                       "states, and the whole thing assumes the (6,10) tight edge)"},
+                         "12-cell + 630 8-cell + 7,534 16-cell candidates",
+             "the_two_branches": "the '8' in 9 = 8 + 1 has TWO carriers -- (6,9)'s own "
+                                 "state, or the state holding (5,9) -- because both "
+                                 "(5,9) and (6,10) are d=1 neighbours of (6,9).  L2/L3 "
+                                 "cannot separate them, so both are enumerated: 483 "
+                                 "candidates carry it at (6,9), 399 at (5,9), 252 at both.",
+             "the_surviving_split": "of the triples that survive every published reading "
+                                     "inside them, the overwhelming majority have the 8 "
+                                     "carried by (5,9), and only a small minority by "
+                                     "(6,9).  The 12-cell state's 12 cells are FIXED in "
+                                     "every survivor.",
+             "the_sampling_bias_trap": "an earlier version of this note said the 12-cell "
+                                       "state's twelve cells were FIXED.  That was "
+                                       "sampling bias: the stored samples are the FIRST "
+                                       "60 survivors, all from one branch.  Measured over "
+                                       "all 58,765, only (6,10) and (7,10) are certain, "
+                                       "and the 8-cell state's core is five cells "
+                                       "((2,9) (3,9) (4,9) (4,10) (5,9)).",
+             "status": "PROVEN (the chain and the split); PROVISIONAL (the tight-edge "
+                       "choices and the tails of the 16-cell state)"},
             {"rule": "I13 (the 8-cell state must not shortcut (10,9))",
              "why": "measured: a triple whose 8-cell state reaches (10,10) gives a local "
                     "d(10,9) of 53, not 61 -- the 8-cell state offers a cheaper route "
