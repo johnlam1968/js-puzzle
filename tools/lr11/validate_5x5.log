@@ -1,0 +1,17 @@
+==========================================================================
+the official 5x5 solution, read as a set of ASSUMPTIONS
+==========================================================================
+  size  7  sym=['refD2']  capitol=(2, 1)
+  size  4  sym=['refD1', 'refD2', 'refH', 'refV', 'rot180', 'rot270', 'rot90']  capitol=None
+        ! even size => no capitol (a state with a capitol is always odd)
+        ! no capitol: its symmetries fix refD1:2, refD2:2, refH:0, refV:0, rot180:0, rot270:0, rot90:0 cells (needs exactly 1)
+  size  3  sym=['refD1']  capitol=(2, 3)
+  size 11  sym=['refD1']  capitol=(4, 4)
+
+  known capitols : [(2, 1), (2, 3), (4, 4)]
+  covered / free  : 25 / 0
+  violations      : none
+  verdicts        : {'FORCED': 10}
+
+  the ledger reproduces every published hint: True  []
+  row sums [37, 29, 31, 43, 55]  answer 8045 (official 8045)

@@ -1,0 +1,35 @@
+# js-puzzle 11×11 — 推理笔记
+
+这份目录是**用推理**(而不是枚举脚本)攻 Jane Street《It's a Metric, Too》11×11 题的工作笔记。
+
+**题面数据**:`johnlam1968/js-puzzle` 仓库,分支 `docs/aodfs-layman`,路径 `data/`(在**仓库根目录**,不在 `docs/aodfs-layman/` 下)。
+`data/puzzles/official-11x11/puzzle.json` 的 33 个数已用 `assets/metric-too.png` 放大逐格视觉复核,**33/33 一致**。
+
+---
+
+## 目录
+
+| 文件 | 内容 | 状态 |
+|---|---|---|
+| [`03-hard-deductions.md`](03-hard-deductions.md) | 规则 R1–R9、推理工具 T1–T8、六条硬结论 D1–D6 | 定稿 |
+| [`04-05-bottom-right-inference.md`](04-05-bottom-right-inference.md) | 右下角:为什么最容易 + 怎么长出第一个形状(纯推理,含路径枚举与杀路径规则) | 推理中 |
+| [`06-top-left-observations.md`](06-top-left-observations.md) | 左上角:已知事实、候选、待办问题 | **只记录,未推理** |
+| [`07-strategies.md`](07-strategies.md) | 五条备用打法(解场 / 紧边当尺子 / 先锁首都 / 行剖面优先 / 对称假设实验) | 定稿 |
+| [`08-tools-and-review.md`](08-tools-and-review.md) | 自写的规则内核 `lr11/` + 两个工具 + DeepSeek/GLM 对抗式评审 + 本轮新硬结论 | 工具已验证 |
+| [`09-correction-and-ledger.md`](09-correction-and-ledger.md) | **更正**:偶数州没有首都 ⇒ 上一轮那张图的前提是假的;新工具 `lr11/assume.py`「假定→重算」账本 + 练习 app 的 ledger 页 | 定稿 |
+
+## 标注约定
+
+| 标记 | 含义 |
+|---|---|
+| **【硬】** | 只用规则 + 已发布数字即可证明,不依赖任何假设 |
+| **【读法】** | 需要对某个 d 值做分解假设;假设写明且可被证伪 |
+| **【分支】** | 尚未确定的活分支,列在 04-05 的活分支总表 |
+| **【简约读法】** | 最自然的解读,但没有被证明是唯一解 |
+
+## 当前进度一句话
+
+> `(5,10)` 是被逼出来的 1×1 单胞(全盘最硬的锚);
+> 右下角是唯一能把 `9 / 13 / 61 / 77` 挂到同一个 1 代价出口上的数字串,因而是最容易的一角;
+> **12 州的"核心 5 格"已被 `lr11` 工具证伪并降级为假设**(见 08);形状搜索改由工具接管;
+> 偶数州也必须有对称(D5 已更正);左上角仍是待办。

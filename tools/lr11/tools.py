@@ -220,6 +220,9 @@ def internal_consistency(S: FrozenSet[Cell], published: Dict[Cell, int]) -> Opti
     * for any two cells of the state, |d(x) - d(y)| <= k * dist_S(x, y)
     * a published 0 inside a state of even size is impossible (an even state
       has no capitol, so no cell of it can have d = 0)
+    * the state's capitol must READ 0 if it is published at all.  This is what
+      kills a 1x1 state sitting on a published 1: a singleton is its own
+      capitol, so it would read 0, never 1.
     """
     k = len(S)
     inside = {c: v for c, v in published.items() if c in S}
@@ -241,6 +244,10 @@ def internal_consistency(S: FrozenSet[Cell], published: Dict[Cell, int]) -> Opti
         for c, v in inside.items():
             if v == 0:
                 return f"published 0 at {c} inside an even-sized state (size {k})"
+    cap = K.capitol_of(S)
+    if cap is not None and cap in published and published[cap] != 0:
+        return (f"the state's capitol is {cap}, but that cell reads {published[cap]}, "
+                f"not 0 (a 1x1 state on a published 1 would be caught here too)")
     return None
 
 
