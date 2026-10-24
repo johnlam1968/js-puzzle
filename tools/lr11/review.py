@@ -13,6 +13,7 @@ import json
 import os
 import sys
 import time
+import urllib.error
 import urllib.request
 
 URL = "https://openrouter.ai/api/v1/chat/completions"
@@ -142,7 +143,8 @@ and a one-sentence justification.
 
 def collect() -> str:
     out = []
-    for name in ("kernel.py", "tools.py"):
+    names = os.environ.get("LR11_REVIEW_FILES", "kernel.py,tools.py").split(",")
+    for name in names:
         with open(os.path.join(HERE, name)) as fh:
             src = fh.read()
         out.append(f"########## FILE: lr11/{name} ##########\n{src}")
@@ -160,18 +162,15 @@ def call(model: str, tag: str, budget: int = 14000) -> None:
         "model": model,
         "messages": [{"role": "user", "content": PROMPT.replace("{file_a}", "%FILE_A%")
                       .replace("{file_b}", "%FILE_B%").replace("{rules}", RULES)}],
-        "max_tokens": 32000 if glmmode else budget,
+        "max_tokens": int(os.environ.get("LR11_MAX_TOKENS", 32000 if glmmode else budget)),
         "temperature": 0.1,
     }
     if not glmmode:
         body["reasoning"] = {"effort": "none"}
     files = collect()
-    body["messages"][0]["content"] = body["messages"][0]["content"].replace(
-        "%FILE_A%", files.split("########## FILE: lr11/kernel.py ##########")[1]
-        .split("########## FILE: lr11/tools.py")[0])
-    body["messages"][0]["content"] = body["messages"][0]["content"].replace(
-        "%FILE_B%", "########## FILE: lr11/tools.py ##########" + files.split(
-            "########## FILE: lr11/tools.py ##########")[1])
+    body["messages"][0]["content"] = (body["messages"][0]["content"]
+                                      .replace("%FILE_A%", files)
+                                      .replace("%FILE_B%", ""))
     req = urllib.request.Request(
         URL, data=json.dumps(body).encode(),
         headers={"Authorization": f"Bearer {KEY}",
@@ -179,14 +178,37 @@ def call(model: str, tag: str, budget: int = 14000) -> None:
                  "HTTP-Referer": "https://openrouter.ai",
                  "X-Title": "js-puzzle lr11 code review"})
     t0 = time.time()
-    with urllib.request.urlopen(req, timeout=2400) as r:
-        raw = r.read()
-    # the OpenRouter gateway can prepend whitespace/newlines before the JSON
-    payload = json.loads(raw.decode("utf-8", "replace").strip())
+    payload = None
+    for attempt in range(4):
+        try:
+            with urllib.request.urlopen(req, timeout=2400) as r:
+                raw = r.read()
+        except urllib.error.HTTPError as e:
+            body = e.read()
+            print(f"[{tag}] attempt {attempt}: HTTP {e.code} {body[:400]!r}", flush=True)
+            time.sleep(10 + 20 * attempt)
+            continue
+        text = raw.decode("utf-8", "replace").strip()
+        if not text:
+            print(f"[{tag}] attempt {attempt}: empty body", flush=True)
+            time.sleep(10 + 20 * attempt)
+            continue
+        try:
+            # the gateway can prepend whitespace/newlines before the JSON
+            payload = json.loads(text)
+            break
+        except json.JSONDecodeError as e:
+            print(f"[{tag}] attempt {attempt}: bad JSON ({e}); head={text[:200]!r}", flush=True)
+            with open(os.path.join(HERE, f"review-{tag}-raw-{attempt}.txt"), "w") as fh:
+                fh.write(text)
+            time.sleep(10 + 20 * attempt)
+    if payload is None:
+        raise RuntimeError(f"[{tag}] no usable response after 4 attempts")
     ch = payload["choices"][0]
     msg = ch["message"]
     content = msg.get("content") or ""
-    reasoning = msg.get("reasoning_content") or ""
+    # DeepSeek puts the trace in `reasoning_content`; GLM puts it in `reasoning`
+    reasoning = msg.get("reasoning_content") or msg.get("reasoning") or ""
     print(f"[{tag}] finish={ch.get('finish_reason')} content={len(content)} "
           f"reasoning={len(reasoning)} {time.time()-t0:.0f}s", flush=True)
     md = (f"# {tag} — CODE REVIEW of lr11/\n\n- model: `{model}`\n"

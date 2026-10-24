@@ -56,7 +56,16 @@ def _board(n: int) -> Set[Cell]:
 
 
 def symmetry_instances(n: int = N) -> List[Tuple[str, object]]:
-    """All (name, map) pairs whose map preserves the n x n board.
+    """Every (name, map) pair that could be a self-symmetry of a SUBSET of the
+    n x n board.
+
+    NOTE: most of these maps do NOT preserve the whole board -- only the board
+    midline does.  That is deliberate and it is the right thing to do here: a
+    state's own symmetry only has to preserve the STATE, not the board.  A
+    state in the corner can be symmetric about a vertical axis at column 3.5
+    even though the board's midline is at column 5.  `orbits_of` drops the
+    orbits that leave the board, which is exactly the set of cells that cannot
+    belong to any such state.
 
     Half-integer axes and centres are allowed: a reflection may run between two
     columns, a rotation may be about the centre of a square.
