@@ -35,9 +35,42 @@ r10    ·  26   ·   ·   ·   0   ·   ·  77  61   ·
 
 ---
 
-## 1. 规则(从 5×5 官方例子反推,并用它全部 10 个数复核通过)
+## 1. 规则(官方原文 + 5×5 官方例子全量复核)
 
-官方例子(已解)的答案是 8045,行剖面 `[37,29,31,43,55]`,州面积 7 / 4 / 3 / 11,三个首都。把它当作标尺,唯一能同时复现全部 10 个已发布数的代价模型是:
+### 1.0 官方原文(2026-10-24 抓自 https://www.janestreet.com/puzzles/current-puzzle/)
+
+> The 11-by-11 region above can be subdivided into various **states**. A "state" is a connected group of 1 or more
+> squares **that is symmetric in some way, be it via rotation or reflection**. If **every nontrivial rotation or
+> reflection of the plane** that takes a state to itself leaves exactly 1 of its squares fixed, then that square is
+> its capitol. (So, for example, a 1-by-3 region has no capitol, nor does the "X" pentomino.)
+>
+> The cost of traveling from one square to an orthogonally adjacent square in this nation is equal to the size
+> (i.e. number of squares) of **the state you are travelling in**, or, **if travelling between two states, the
+> lesser of the two states' sizes**. A number in a cell (below) denotes the **lowest cost** of travelling from the
+> numbered square to any state capitol.
+>
+> After determining the shapes of the states, label each cell with the size of the state it is in. Compute the sum
+> of these values in each row, and submit as your answer **the sum of the squares of these row sums** (as in the example).
+
+同页的图片路径是 `/puzzles/metric-too.png`,与仓库 `assets/metric-too.png` 一致 ⇒ **仓库的那张图就是官方原图**。
+
+**从原文读出的三条要点(与本文档的其余部分直接相关):**
+
+| # | 原文措辞 | 含义 | 状态 |
+|---|---|---|---|
+| N1 | "the size of the state you are travelling in, **or**, if travelling between two states, the lesser of the two states' sizes" | 同州内一步 = 本州面积;跨州一步 = 两州面积的较小者。**合起来正好是 `w(x,y) = min(s(x), s(y))`** | ✅ 与本文 R1 一致 |
+| N2 | "every nontrivial rotation or reflection **of the plane**" | 对称是**平面的任意旋转/反射**(任意中心、任意轴),不只是格点 D4。半格点中心也算 | ⚠️ 待核对仓库的 2,422 个 11×11 对称是否覆盖这一范围 |
+| N3 | "A state is a connected group of squares **that is symmetric in some way**" | 可能要求**每个州至少有一个非平凡对称** | ⚠️ **与本文 D5 的"偶数州形状自由"直接冲突,需要裁定** |
+
+> **N3 的旁证**:仓库自己的 `data/puzzles/counterexample-4x4-two-answers/truth.json` 的 note 写着
+> "Both partitions are legal (**every state connected and symmetric**; the 12 single cells are capitols)."
+> 而该文件的 `d_field` / `row_sums` / `answer` 我手算复核过(304 = 16²+4²×3,112 = 8²+4²×3)✅ 与模型一致。
+> ⇒ 仓库的约定很可能是"州必须有对称";若 N3 成立,**D5 要改写成:偶面积州也必须有一个非平凡对称(且它固定偶数个格)**,
+> 形状空间比本文 D5 说的更小。**这一条会直接改变右下角 8/12/16 三个州的形状搜索空间。**
+
+### 1.1 用 5×5 官方例子反向验证
+
+官方例子的答案是 8,045,行剖面 `[37,29,31,43,55]`,州面积 7 / 4 / 3 / 11,三个首都。把它当作标尺,唯一能同时复现全部 10 个已发布数的代价模型是:
 
 > **w(x,y) = min( s(x), s(y) )** —— 相邻两格之间的步长代价 = 两格所属州面积的**较小者**。
 
