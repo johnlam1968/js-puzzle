@@ -191,6 +191,11 @@ row sums [37, 29, 31, 43, 55]  answer 8045 (official 8045)
   导出**不只靠下载**:页面顶部有 toast,板子下面直接显示 JSON 文本(可复制)和 PNG 预览(可长按保存),
   因为 `<a download>` 在部分浏览器(尤其老 Safari、以及 file:// 打开时)会被静默拦掉。
 
+**"保存到沙箱"通道**:`lr11/receive.py` 起一个小服务,既发页面又收 POST;
+页面上的 **Send to sandbox** 按钮把板子(JSON + PNG)直接 POST 过去,
+文件落到 `/workspace/output/incoming/`,规则工具立刻能读 —— 不用再猜"下载目录在哪"。
+页面收不到时会明确报错并让你退回"复制 JSON 文本"。
+
 **导出时的三个坑**(回环测试实测出来的):
 1. `download()` 里**不能立刻把 `<a>` 从 DOM 删掉** —— 老 Safari 异步处理下载,anchor 一删下载就废;
    现在 4 秒后才移除。
