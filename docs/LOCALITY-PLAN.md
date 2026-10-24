@@ -6,7 +6,7 @@ Everything in it is measured, and every number has a tool behind it.*
 
 | what | where | measured |
 |---|---|---|
-| the constraint register | `data/derived/constraint_register_11x11.json` | 10 facets, 98 instances |
+| the constraint register | `data/derived/constraint_register_11x11.json` | 10 facets, 97 instances |
 | the trim itself | `tools/ground_map_11x11.py`, `docs/NEXT-APPROACHES.md` §4.7 | the 8 and the 12 |
 | the two blocks | `tools/trim_510.py` | 40,862 pairs survive three filters |
 | per-facet pinning power | `tools/facet_pinning_11x11.py` | F2 cuts the space in half; the rest do almost nothing |
