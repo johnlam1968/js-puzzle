@@ -83,7 +83,7 @@ def main():
     for c in (S1 | {HID1}):
         fills[c] = C_SINGLE
 
-    W, H = 1420, 720
+    W, H = 1420, 760
     img = Image.new("RGB", (W, H), BG)
     dr = ImageDraw.Draw(img)
 
@@ -94,9 +94,15 @@ def main():
     dr.text((22, 64), "salmon = the 11-cell Γ state (capitol at 5,6)   sand = the 8-cell state "
                       "(NO capitol)   green = the 16-cell state (NO capitol)   red = a 1×1 state",
             font=fnt(13), fill=MUTED)
+    dr.text((22, 84), "Top-left of a square = the area of its state (✱ = that state has no capitol).  "
+                      "Bottom-right = the cheapest distance from that square to a capitol we already know "
+                      "about,", font=fnt(13), fill=MUTED)
+    dr.text((22, 102, ), "with every unknown square assumed as small as possible.  It is a FLOOR, not the "
+                        "answer: a hidden capitol can be nearer — which is exactly what a number below "
+                        "that floor demands.", font=fnt(13), fill=MUTED)
 
     # ---------------- panel A: the board ----------------
-    ax, ay = 22, 104
+    ax, ay = 22, 128
     dr.text((ax, ay - 26), "A · what the assumptions say, square by square",
             font=fnt(16, True), fill=INK)
     N = 11
@@ -127,7 +133,7 @@ def main():
                 dr.ellipse([x0 + CELL // 2 - 5, y0 + CELL // 2 - 5, x0 + CELL // 2 + 5, y0 + CELL // 2 + 5],
                             fill=C_SINGLE)
             # the lower bound on the distance, when the square's own state is known
-            lo = rep["lower_bounds"].get(f"({r}, {c})")
+            lo = rep["near_known_optimistic"].get(f"({r}, {c})")
             if lo is not None and lo > 0:
                 dr.text((x0 + CELL - 3, y0 + CELL - 3), str(lo), font=fnt(9),
                         fill=MUTED, anchor="rs")

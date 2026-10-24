@@ -387,8 +387,10 @@ def check_partial(states: Sequence[FrozenSet[Cell]],
         "contradicted": contradicted,
         "needs_hidden_capitol": needs_hidden_capitol,
         "structural_problems": problems,
-        "lower_bounds": {str(c): v for c, v in sorted(lb.items()) if v is not None},
-        "upper_bounds": {str(c): v for c, v in sorted(ub.items()) if v is not None},
+        # not bounds on the true d(x): the two ends of the distance to the
+        # capitols we already KNOW about.  A hidden capitol can be nearer.
+        "near_known_optimistic": {str(c): v for c, v in sorted(lb.items()) if v is not None},
+        "near_known_pessimistic": {str(c): v for c, v in sorted(ub.items()) if v is not None},
         "covered_cells": len(known_size),
         "free_cells": n * n - len(known_size),
     }

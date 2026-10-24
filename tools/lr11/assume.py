@@ -201,39 +201,42 @@ def analyse(states: Sequence[Iterable[Cell]],
     ub, ub_route = _dijkstra(n, known_capitols, size_of, optimistic=False)
 
     # ---- verdicts on the published numbers ------------------------------- #
-    # NOTE the asymmetry, and it is the whole point of the ledger:
+    # NOTE the asymmetry, and it is the whole point of the ledger.
+    # The two books are about the distance to the capitols we ALREADY KNOW
+    # about (the published 0s, the capitols of the assumed states, and the
+    # assumed capitols).  They are NOT bounds on the true d(x): an UNREVEALED
+    # capitol can be nearer than both.  Hence:
     #   ub < v   is a CONTRADICTION  (a known capitol is strictly cheaper)
-    #   lb > v   is NOT a contradiction -- d(x) may be smaller because an
-    #            UNREVEALED capitol can be closer.  It is a DEMAND: a hidden
-    #            capitol has to exist within v of x.
+    #   lb > v   is NOT a contradiction -- it is a DEMAND: a hidden capitol
+    #            has to exist, strictly nearer than the nearest known one.
     verdicts: Dict[Cell, dict] = {}
     for c, v in sorted(published.items()):
         L = lb.get(c)
         U = ub.get(c)
         if L is not None and U is not None and L == U == v:
             verdict = "FORCED"
-            why = f"the distance is pinned to {v} by the assumption alone"
+            why = f"the assumptions pin the distance to exactly {v}"
         elif U is not None and U < v:
             verdict = "CONTRADICTED"
             why = (f"a KNOWN capitol is already reachable for {U} < the published {v}: "
                    f"the number cannot be the minimum")
         elif U is not None and U == v:
             verdict = "TIGHT_GEODESIC"
-            why = (f"the route to a known capitol costs exactly {v}: it is the geodesic, "
-                   f"so no hidden capitol may be nearer")
+            why = (f"a known capitol is reachable for at most {v}, and the number says the "
+                   f"minimum is {v}: no hidden capitol may be nearer")
         elif L is not None and L > v:
             verdict = "NEEDS_HIDDEN_CAPITOL"
-            why = (f"the nearest KNOWN capitol is at least {L} away but the cell reads {v}, "
-                   f"so an UNREVEALED capitol must be within {v}")
+            why = (f"the nearest KNOWN capitol is at least {L} away, but the cell reads {v}, "
+                   f"so an UNREVEALED capitol has to be strictly nearer than that")
         elif L is not None and L == v:
             verdict = "TIGHT_CHEAPEST"
-            why = (f"{v} is the cheapest possible distance to a known capitol: a hidden "
-                   f"capitol must sit exactly on the cheapest route, no nearer")
+            why = (f"{v} is the floor: no capitol can be nearer than {v}, and one has to sit "
+                   f"at exactly {v}")
         else:
             verdict = "NEEDS_EXACT_PATH"
             why = (f"the published {v} sits inside the range "
-                   f"[{L if L is not None else '-'}, {U if U is not None else '-'}]: it has "
-                   f"to be paid for by a route whose cost can be tuned to {v}")
+                   f"[{L if L is not None else '-'}, {U if U is not None else '-'}]: a capitol "
+                   f"has to be reachable at exactly {v}")
         verdicts[c] = {
             "published": v, "lb": L, "ub": U, "verdict": verdict, "why": why,
             "route_to_known_capitol": [list(x) for x in ub_route.get(c, [])] or None,
@@ -261,8 +264,11 @@ def analyse(states: Sequence[Iterable[Cell]],
         "free_capitols": sorted(free_capitols),
         "covered_cells": len(size_of),
         "free_cells": n * n - len(size_of),
-        "lower_bounds": {str(c): v for c, v in sorted(lb.items())},
-        "upper_bounds": {str(c): v for c, v in sorted(ub.items())},
+        # NOT bounds on the true d: they are the two ends of the distance to
+        # the capitols we already KNOW about.  A hidden capitol can be nearer
+        # than both, which is why "lb > v" is a demand and not a contradiction.
+        "near_known_optimistic": {str(c): v for c, v in sorted(lb.items())},
+        "near_known_pessimistic": {str(c): v for c, v in sorted(ub.items())},
         "verdicts": {str(c): d for c, d in verdicts.items()},
         "violations": [(str(c), d["verdict"]) for c, d in violations],
         "impact": impact,

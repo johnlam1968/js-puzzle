@@ -153,8 +153,8 @@ def main():
           f"{[nm for nm, S in zip(names, states) if (2,10) in S] or 'no - it is free'}")
     u = ub.get((2, 10))
     print(f"  upper bound from known states alone: {u}")
-    lo = rep["lower_bounds"].get("(2, 10)")
-    hi = rep["upper_bounds"].get("(2, 10)")
+    lo = rep["near_known_optimistic"].get("(2, 10)")
+    hi = rep["near_known_pessimistic"].get("(2, 10)")
     print(f"  check_partial lower bound (optimistic) : {lo}")
     print(f"  check_partial upper bound (to a revealed capitol): {hi}")
     # what sizes could the state of (2,10) have for d = 14 to be reachable?
