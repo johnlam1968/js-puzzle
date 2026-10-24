@@ -150,14 +150,21 @@ def collect() -> str:
 
 
 def call(model: str, tag: str, budget: int = 14000) -> None:
+    # GLM's endpoint makes reasoning MANDATORY and refuses effort:none
+    # ("Reasoning is mandatory for this endpoint and cannot be disabled."),
+    # so for GLM we omit the parameter and give it a bigger token budget; the
+    # reasoning trace then IS the payload (same convention as the repository's
+    # own harnesses).
+    glmmode = ("glm" in model or "z-ai" in model)
     body = {
         "model": model,
         "messages": [{"role": "user", "content": PROMPT.replace("{file_a}", "%FILE_A%")
                       .replace("{file_b}", "%FILE_B%").replace("{rules}", RULES)}],
-        "max_tokens": budget,
+        "max_tokens": 32000 if glmmode else budget,
         "temperature": 0.1,
-        "reasoning": {"effort": "none"},
     }
+    if not glmmode:
+        body["reasoning"] = {"effort": "none"}
     files = collect()
     body["messages"][0]["content"] = body["messages"][0]["content"].replace(
         "%FILE_A%", files.split("########## FILE: lr11/kernel.py ##########")[1]
@@ -173,7 +180,9 @@ def call(model: str, tag: str, budget: int = 14000) -> None:
                  "X-Title": "js-puzzle lr11 code review"})
     t0 = time.time()
     with urllib.request.urlopen(req, timeout=2400) as r:
-        payload = json.loads(r.read())
+        raw = r.read()
+    # the OpenRouter gateway can prepend whitespace/newlines before the JSON
+    payload = json.loads(raw.decode("utf-8", "replace").strip())
     ch = payload["choices"][0]
     msg = ch["message"]
     content = msg.get("content") or ""
